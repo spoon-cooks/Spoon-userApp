@@ -55,6 +55,7 @@ export {
   useUpdateProfile,
   useVerifyOtp,
 } from './api';
+export { useCrashIdentity } from './useCrashIdentity';
 export type {
   LoginVerifyFailure,
   AuthApi,

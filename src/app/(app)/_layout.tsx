@@ -1,7 +1,8 @@
 import { Redirect, Stack, useSegments } from 'expo-router';
 
-import { canBrowseApp, isGuest, isResolving } from '@core/auth';
+import { canAccessApp, canBrowseApp, isGuest, isResolving } from '@core/auth';
 import { useSessionStore } from '@core/store';
+import { useCrashIdentity } from '@features/auth';
 import { usePushNotifications } from '@features/notifications';
 import { ErrorBoundary } from '@ui';
 
@@ -46,6 +47,8 @@ export default function AppLayout() {
   const status = useSessionStore((state) => state.status);
   const segments = useSegments();
   usePushNotifications();
+  // Crash reports name the account by its opaque id, and only once there is a session to name.
+  useCrashIdentity(canAccessApp(status));
 
   if (!isResolving(status) && !canBrowseApp(status)) {
     return <Redirect href="/login" />;

@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react-native';
 
 import { useSessionStore } from '@core/store';
+import { useCrashIdentity } from '@features/auth';
 
 import AppLayout from '@/app/(app)/_layout';
 
@@ -51,11 +52,41 @@ jest.mock('@features/notifications', () => ({
   usePushNotifications: () => undefined,
 }));
 
+// Crash-report identity reads `/me`, which needs the runtime provider this file does not build. What
+// matters here is WHEN the shell asks for it, asserted below, not what it does with the answer.
+jest.mock('@features/auth', () => ({
+  __esModule: true,
+  useCrashIdentity: jest.fn(),
+}));
+
+const mockedUseCrashIdentity = jest.mocked(useCrashIdentity);
+
 describe('authenticated shell — session gate', () => {
+  beforeEach(() => {
+    mockedUseCrashIdentity.mockClear();
+  });
+
   afterEach(() => {
     useSessionStore.getState().reset();
     mockSegments = ['(app)', 'home'];
   });
+
+  it.each([
+    ['authenticated', true],
+    ['refreshing', true],
+    ['bootstrapping', false],
+    ['expired', false],
+    ['unauthenticated', false],
+    ['guest', false],
+  ] as const)(
+    'asks for the crash-report identity only when a session can use it (%s -> %s)',
+    (status, expected) => {
+      useSessionStore.setState({ status });
+      render(<AppLayout />);
+
+      expect(mockedUseCrashIdentity).toHaveBeenLastCalledWith(expected);
+    },
+  );
 
   it('renders the stack for an authenticated session', () => {
     useSessionStore.setState({ status: 'authenticated' });

@@ -1,20 +1,24 @@
 import { getConfig } from '@core/config';
+import { crashReporter } from '@core/crash';
 
-import { consoleSink, createLogger, noopSink } from './logger';
+import { createCrashlyticsSink } from './crashlyticsSink';
+import { combineSinks, consoleSink, createLogger } from './logger';
 import type { Logger } from './logger';
 
 let root: Logger | undefined;
 
 /**
- * The app logger. Sink choice is environment-driven: console in development, no-op in
- * production until a real sink is chosen (crash reporting is deferred — §12).
+ * The app logger. Sink choice is environment-driven: crash reporting everywhere, plus the console
+ * outside production. Crash reporting itself is a no-op in Metro dev, in Jest and on iOS (see
+ * `core/crash`), so development output is unchanged.
  */
 export function getLogger(scope?: string): Logger {
   if (root === undefined) {
     const { logLevel, appEnv } = getConfig();
+    const crashSink = createCrashlyticsSink(crashReporter);
     root = createLogger({
       level: logLevel,
-      sink: appEnv === 'production' ? noopSink : consoleSink,
+      sink: appEnv === 'production' ? crashSink : combineSinks(consoleSink, crashSink),
     });
   }
   return scope === undefined ? root : root.child(scope);
@@ -25,6 +29,7 @@ export function resetLoggerCache(): void {
   root = undefined;
 }
 
-export { consoleSink, createLogger, noopSink } from './logger';
+export { combineSinks, consoleSink, createLogger, noopSink } from './logger';
+export { createCrashlyticsSink } from './crashlyticsSink';
 export type { Logger, LogContext, LogRecord, LogSink } from './logger';
 export { redact, REDACTED } from './redact';
