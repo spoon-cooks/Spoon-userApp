@@ -6,8 +6,9 @@ import { redact } from './redact';
  * Thin logger with levels, pluggable sinks and mandatory redaction.
  * (FRONTEND_FOUNDATION_PLAN.md §12)
  *
- * Crash reporting is deliberately NOT wired up — that decision has privacy implications and
- * the redaction layer had to exist first.
+ * Crash reporting is a SINK (`crashlyticsSink.ts`), chosen per environment in `index.ts`. It was
+ * held back until the redaction layer existed, because what it sends leaves the device; every
+ * record it forwards is redacted again on the way out (`core/crash`).
  */
 
 export type LogContext = Readonly<Record<string, unknown>>;
@@ -54,9 +55,27 @@ export const consoleSink: LogSink = {
 
 export const noopSink: LogSink = {
   write() {
-    // Intentionally empty — production has no sink until one is chosen.
+    // Intentionally empty. Kept for tests and for any environment that wants no output at all.
   },
 };
+
+/**
+ * Writes to every sink, in order. One sink throwing must not stop the others, and must never
+ * reach the caller: logging is not allowed to break the code that logs.
+ */
+export function combineSinks(...sinks: readonly LogSink[]): LogSink {
+  return {
+    write(record) {
+      for (const sink of sinks) {
+        try {
+          sink.write(record);
+        } catch {
+          // A broken sink is its own problem; the app carries on.
+        }
+      }
+    },
+  };
+}
 
 export interface Logger {
   debug(message: string, context?: LogContext): void;

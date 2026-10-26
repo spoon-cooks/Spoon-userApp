@@ -419,7 +419,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-notifications',
 
     /**
-     * Firebase, for ONE reason: an FCM token on iOS.
+     * Firebase, for an FCM token on iOS (and, on Android only, Crashlytics -- see below).
      *
      * `expo-notifications` returns a raw APNs device token there, and the backend has a single
      * provider -- FCM -- with no APNs path anywhere in it, so every iOS send was addressed to a
@@ -430,6 +430,32 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
      */
     '@react-native-firebase/app',
     '@react-native-firebase/messaging',
+
+    /**
+     * Crashlytics -- Android only, for now.
+     *
+     * The plugin itself only edits Gradle (the Crashlytics Gradle plugin, which also uploads the R8
+     * mapping file so native frames are readable). Everything iOS about this module -- its pod and
+     * its "[RNFB] Crashlytics Configuration" dSYM-upload build phase -- arrives through AUTOLINKING,
+     * not through this plugin, and is switched off in `package.json`:
+     *
+     *   "expo": { "autolinking": { "ios": { "exclude": ["@react-native-firebase/crashlytics"] } } }
+     *
+     * That is deliberate. iOS here is delicate (`useFrameworks: 'static'`, `withRNFirebasePods`,
+     * and RNFB 26 wants every RNFB module in `forceStaticLinking`), and a crash-reporting change
+     * must not be able to break a working iOS release as a side effect.
+     *
+     * A `react-native.config.js` with `platforms: { ios: null }` does NOT do this on Expo 57: its
+     * merge treats `null` as "nothing to merge" and the iOS config survives. Checked with
+     * `npx expo-modules-autolinking react-native-config --json --platform ios`, which is the exact
+     * command the generated Podfile runs.
+     *
+     * To turn iOS on, remove that `exclude` AND, in the same change: add RNFBCrashlytics to the
+     * `forceStaticLinking` list, confirm `GoogleService-Info.plist` reaches the build, confirm the
+     * dSYM upload phase runs on EAS, re-test an iOS preview build, and drop the
+     * `Platform.OS === 'android'` guard in `src/core/crash/crashReporter.ts`.
+     */
+    '@react-native-firebase/crashlytics',
 
     /**
      * `useFrameworks: 'static'` is REQUIRED by react-native-firebase, and it changes how every

@@ -205,6 +205,20 @@ jest.mock('@react-native-firebase/remote-config', () => ({
   getString: jest.fn(() => ''),
 }));
 
+/**
+ * Firebase Crashlytics. `core/crash` loads it lazily and never under Jest (`__DEV__` is true), so
+ * this is a backstop: a test that deliberately enables reporting, or a future import of the module,
+ * gets inert functions rather than a missing native module.
+ */
+jest.mock('@react-native-firebase/crashlytics', () => ({
+  getCrashlytics: jest.fn(() => ({})),
+  log: jest.fn(),
+  recordError: jest.fn(),
+  setUserId: jest.fn(async () => null),
+  setAttributes: jest.fn(async () => null),
+  setAttribute: jest.fn(async () => null),
+}));
+
 jest.mock('expo-notifications', () => ({
   AndroidImportance: { DEFAULT: 3 },
   IosAuthorizationStatus: {

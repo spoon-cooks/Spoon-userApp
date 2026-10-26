@@ -10,6 +10,7 @@ import { createSessionController, secureGuestFlagStore, secureTokenStore } from 
 import type { SessionController } from './auth';
 import { getConfig } from './config';
 import type { AppConfig } from './config';
+import { crashReporter } from './crash';
 import { getLogger } from './logging';
 import type { Logger } from './logging';
 import { createQueryClient } from './query';
@@ -68,6 +69,8 @@ export function createAppRuntime(): AppRuntime {
       // and session status (via the machine). Missing the cache reset leaks the previous
       // user's bookings into the next session.
       queryClient.clear();
+      // And the crash reports must stop naming the account that just signed out.
+      crashReporter.clearUser();
     },
     guestFlag: secureGuestFlagStore,
     isGuestModeAvailable,

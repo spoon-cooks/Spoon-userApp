@@ -8,7 +8,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { isResolving } from '@core/auth';
-import { logBuildProvenance } from '@core/buildProvenance';
+import { getBuildProvenance, logBuildProvenance } from '@core/buildProvenance';
+import { crashReporter } from '@core/crash';
 import { QueryProvider, useAppStateFocus } from '@core/query';
 import { createAppRuntime } from '@core/runtime';
 import { RuntimeProvider } from '@core/runtimeContext';
@@ -61,6 +62,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     logBuildProvenance();
+    // Every crash report says which build it came from: the release SHA is what picks the source
+    // map for a JS frame (Crashlytics does not symbolicate those itself).
+    crashReporter.init(getBuildProvenance());
   }, []);
 
   // A font failure must not strand the user on the splash — fall through to the system face.
