@@ -432,28 +432,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     '@react-native-firebase/messaging',
 
     /**
-     * Crashlytics -- Android only, for now.
+     * Crashlytics, on both platforms.
      *
-     * The plugin itself only edits Gradle (the Crashlytics Gradle plugin, which also uploads the R8
-     * mapping file so native frames are readable). Everything iOS about this module -- its pod and
-     * its "[RNFB] Crashlytics Configuration" dSYM-upload build phase -- arrives through AUTOLINKING,
-     * not through this plugin, and is switched off in `package.json`:
+     * Android: the plugin edits Gradle (the Crashlytics Gradle plugin, which also uploads the R8
+     * mapping file so native frames are readable).
      *
-     *   "expo": { "autolinking": { "ios": { "exclude": ["@react-native-firebase/crashlytics"] } } }
+     * iOS: the plugin does nothing there. The pod and its "[RNFB] Crashlytics Configuration" dSYM
+     * upload build phase arrive through AUTOLINKING, which is why this module was once excluded for
+     * iOS in `package.json` while Android shipped first. That exclusion is gone. The dSYM script
+     * runs from `${PODS_ROOT}/FirebaseCrashlytics/run`, which is the path that exists because
+     * `withRNFirebasePods` keeps Firebase on CocoaPods rather than SPM.
      *
-     * That is deliberate. iOS here is delicate (`useFrameworks: 'static'`, `withRNFirebasePods`,
-     * and RNFB 26 wants every RNFB module in `forceStaticLinking`), and a crash-reporting change
-     * must not be able to break a working iOS release as a side effect.
+     * ## Only PRODUCTION iOS builds may report
      *
-     * A `react-native.config.js` with `platforms: { ios: null }` does NOT do this on Expo 57: its
-     * merge treats `null` as "nothing to merge" and the iOS config survives. Checked with
-     * `npx expo-modules-autolinking react-native-config --json --platform ios`, which is the exact
-     * command the generated Podfile runs.
-     *
-     * To turn iOS on, remove that `exclude` AND, in the same change: add RNFBCrashlytics to the
-     * `forceStaticLinking` list, confirm `GoogleService-Info.plist` reaches the build, confirm the
-     * dSYM upload phase runs on EAS, re-test an iOS preview build, and drop the
-     * `Platform.OS === 'android'` guard in `src/core/crash/crashReporter.ts`.
+     * `GoogleService-Info.plist` is registered for `com.spoonhelp.customer` ONLY; there is no iOS
+     * Firebase app for `.dev` or `.staging`. A non-production iOS build carrying that file would
+     * file its crashes under the PRODUCTION app and pollute the numbers that matter most, so
+     * `src/core/crash/crashReporter.ts` switches collection off there. If iOS dev/staging apps are
+     * registered in Firebase later, give each build its own plist and relax that rule.
      */
     '@react-native-firebase/crashlytics',
 

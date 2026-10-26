@@ -1,11 +1,13 @@
 import type * as CrashlyticsModule from '@react-native-firebase/crashlytics';
 import { Platform } from 'react-native';
 
+import { getBuildProvenance } from '@core/buildProvenance';
 import type { BuildProvenance } from '@core/buildProvenance';
 import { redact } from '@core/logging/redact';
 
 /**
- * Crash reporting -- Firebase Crashlytics, Android only for now.
+ * Crash reporting -- Firebase Crashlytics. Android always; iOS in production only (see
+ * `reportingPolicy`).
  *
  * Everything the rest of the app does with Crashlytics goes through this module, for three reasons:
  *
@@ -14,9 +16,9 @@ import { redact } from '@core/logging/redact';
  *  2. Nothing personal may reach Firebase. Messages, stacks and context all pass through the same
  *     `redact` the logger uses (phone numbers, tokens and JWTs scrubbed; address, OTP, coordinates
  *     and name-like keys removed), and the only identity ever attached is an opaque account id.
- *  3. The SDK is loaded lazily, and only where it exists. iOS does not link Crashlytics yet (see
- *     the note beside the plugin in `app.config.ts`), so importing the module there must not even
- *     be attempted.
+ *  3. The SDK is loaded lazily, and only where it is wanted: never in Metro dev or Jest, and on iOS
+ *     only for a build that is allowed to report (see the note beside the plugin in
+ *     `app.config.ts`).
  *
  * What it is NOT: it does not install the crash handlers. `@react-native-firebase/crashlytics`
  * does that itself the moment it is loaded -- native crashes through the Firebase SDK and fatal JS
@@ -187,17 +189,55 @@ export function createCrashReporter(options: CrashReporterOptions): CrashReporte
 }
 
 /**
- * The real SDK, or `null` when it cannot be used.
+ * What this build does with Crashlytics.
  *
- * `require` and not `import`, on purpose: on iOS (no native module), in Jest and under Metro dev
- * the file must never be evaluated. It is also wrapped, because a native module that failed to
- * link throws on first use rather than at import.
+ *  - `report`  -- send crashes and handled errors.
+ *  - `silence` -- the SDK is linked and would collect on its own, so switch collection OFF.
+ *  - `off`     -- leave the SDK alone (Metro dev, Jest, any platform it is not linked on).
+ *
+ * Android is always `report`: each environment is its own package, so its own Firebase app.
+ *
+ * iOS is `report` only in PRODUCTION. `GoogleService-Info.plist` is registered for
+ * `com.spoonhelp.customer` alone -- there is no iOS Firebase app for `.dev` or `.staging` -- so a
+ * non-production iOS build that reported would file its crashes under the PRODUCTION app, and the
+ * production crash numbers are the ones that must be trusted. Those builds are `silence`d.
+ * Registering iOS dev/staging apps in Firebase (each with its own plist) is what would lift this.
  */
-function loadAndroidSdk(): CrashlyticsSdk | null {
+export type ReportingPolicy = 'report' | 'silence' | 'off';
+
+export function reportingPolicy(input: {
+  readonly platform: string;
+  readonly environment: string;
+  readonly isDev: boolean;
+}): ReportingPolicy {
+  if (input.isDev) return 'off';
+  if (input.platform === 'android') return 'report';
+  if (input.platform === 'ios') return input.environment === 'production' ? 'report' : 'silence';
+  return 'off';
+}
+
+/**
+ * The real SDK for a `report` build, or `null` when it cannot be used. For a `silence` build it
+ * switches collection off and returns `null`.
+ *
+ * `require` and not `import`, on purpose: in Jest and under Metro dev the file must never be
+ * evaluated. It is also wrapped, because a native module that failed to link throws on first use
+ * rather than at import.
+ *
+ * Switching collection off is persisted by the SDK, so a build that is `silence`d stays silent on
+ * its next launch from the first native instant, before any JS runs. Only the very first launch of
+ * a fresh non-production iOS install has a short window before this line executes.
+ */
+function loadSdk(policy: ReportingPolicy): CrashlyticsSdk | null {
+  if (policy === 'off') return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const sdk = require('@react-native-firebase/crashlytics') as typeof CrashlyticsModule;
     const crashlytics = sdk.getCrashlytics();
+    if (policy === 'silence') {
+      void sdk.setCrashlyticsCollectionEnabled(crashlytics, false).catch(() => undefined);
+      return null;
+    }
     return {
       setUserId: (id) => sdk.setUserId(crashlytics, id),
       setAttributes: (attributes) => sdk.setAttributes(crashlytics, attributes),
@@ -209,14 +249,12 @@ function loadAndroidSdk(): CrashlyticsSdk | null {
   }
 }
 
-/**
- * Reporting is on only in a release build on Android. Metro dev builds (`__DEV__`) and Jest have
- * red boxes and a console already, and iOS does not link the module.
- */
-function reportingEnabled(): boolean {
-  return Platform.OS === 'android' && !__DEV__;
-}
-
 export const crashReporter: CrashReporter = createCrashReporter({
-  sdk: reportingEnabled() ? loadAndroidSdk() : null,
+  sdk: loadSdk(
+    reportingPolicy({
+      platform: Platform.OS,
+      environment: getBuildProvenance().environment,
+      isDev: __DEV__,
+    }),
+  ),
 });
