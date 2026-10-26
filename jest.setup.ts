@@ -217,6 +217,7 @@ jest.mock('@react-native-firebase/crashlytics', () => ({
   setUserId: jest.fn(async () => null),
   setAttributes: jest.fn(async () => null),
   setAttribute: jest.fn(async () => null),
+  setCrashlyticsCollectionEnabled: jest.fn(async () => null),
 }));
 
 jest.mock('expo-notifications', () => ({

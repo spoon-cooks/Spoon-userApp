@@ -73,14 +73,5 @@
     "prettier": "^3.6.2",
     "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3"
-  },
-  "expo": {
-    "autolinking": {
-      "ios": {
-        "exclude": [
-          "@react-native-firebase/crashlytics"
-        ]
-      }
-    }
   }
 }
