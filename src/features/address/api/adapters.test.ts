@@ -39,6 +39,8 @@ const SAVED: AddressDto = {
   placeName: null,
   locality: null,
   areaLine: null,
+  societyId: null,
+  customSociety: null,
   lastUsedAt: null,
 };
 

@@ -14,10 +14,13 @@ import type { ImageSourcePropType, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { AddressPropertyType } from '../api';
+import type { DataState } from '@core/data';
+
+import type { AddressPropertyType, SocietyDto } from '../api';
 
 import { ADDRESS_ART } from './art';
 import { AddIcon, FieldInput, GradientHeader, PrimaryButton } from './components';
+import { SocietyPicker } from './SocietyPicker';
 import type { AddressLabelKind } from './components';
 import { C, GRADIENT, T } from './theme';
 
@@ -46,7 +49,17 @@ export interface AddressDetailsForm {
   readonly number: string;
   readonly floor: string;
   readonly tower: string;
+  /**
+   * The society field (R-AREA-18 to 20): `society` is the name it shows (the picked entry's, or
+   * the filter text while choosing); `societyId` the picked entry; `societyOthers` that "Others"
+   * was picked, with the typed name in `customSociety`. A society is chosen only through the list.
+   */
   readonly society: string;
+  readonly societyId: string | null;
+  readonly societyOthers: boolean;
+  readonly customSociety: string;
+  /** Saved as plain text before the list existed; valid as it is until the field is changed. */
+  readonly societyLegacy: boolean;
   readonly lane: string;
   readonly landmark: string;
   readonly label: AddressLabelKind | null;
@@ -64,6 +77,10 @@ export const EMPTY_DETAILS_FORM: AddressDetailsForm = {
   floor: '',
   tower: '',
   society: '',
+  societyId: null,
+  societyOthers: false,
+  customSociety: '',
+  societyLegacy: false,
   lane: '',
   landmark: '',
   label: null,
@@ -93,7 +110,10 @@ export function isDetailsFormComplete(form: AddressDetailsForm): boolean {
   const filled = (value: string) => value.trim().length > 0;
   const fields =
     form.propertyType === 'apartment'
-      ? filled(form.number) && filled(form.society)
+      ? filled(form.number) &&
+        (form.societyId !== null ||
+          (form.societyOthers && filled(form.customSociety)) ||
+          (form.societyLegacy && filled(form.society)))
       : filled(form.number);
   const label = form.label !== null && (form.label !== 'others' || filled(form.otherName));
   const receiver =
@@ -112,7 +132,8 @@ export function detailsFingerprint(form: AddressDetailsForm): string {
     form.number.trim(),
     form.floor.trim(),
     apartment ? form.tower.trim() : '',
-    apartment ? form.society.trim() : '',
+    apartment ? (form.societyId ?? '') : '',
+    apartment && form.societyOthers ? form.customSociety.trim() : '',
     apartment ? '' : form.lane.trim(),
     apartment ? '' : form.landmark.trim(),
     form.label,
@@ -135,6 +156,9 @@ export interface AddressDetailsScreenProps {
   readonly locationReady: boolean;
   /** Editing: the pin itself was moved on the map, which is a change even with the form as it was. */
   readonly pinMoved?: boolean;
+  /** The society dropdown's options at the pin (`GET /v1/societies`), and its retry. */
+  readonly societies?: DataState<readonly SocietyDto[]>;
+  readonly onRetrySocieties?: () => void;
   readonly testID?: string;
 }
 
@@ -149,6 +173,8 @@ export function AddressDetailsScreen({
   saving,
   locationReady,
   pinMoved = false,
+  societies = { status: 'ready', data: [] },
+  onRetrySocieties = () => undefined,
   testID = 'address-details',
 }: AddressDetailsScreenProps) {
   const { bottom } = useSafeAreaInsets();
@@ -178,9 +204,7 @@ export function AddressDetailsScreen({
   const order: FieldKey[] = [
     'number',
     'floor',
-    ...(form.propertyType === 'apartment'
-      ? (['tower', 'society'] as const)
-      : (['lane', 'landmark'] as const)),
+    ...(form.propertyType === 'apartment' ? (['tower'] as const) : (['lane', 'landmark'] as const)),
     ...(form.label === 'others' ? (['otherName'] as const) : []),
     ...(form.receiverOpen ? (['receiverName', 'receiverPhone'] as const) : []),
   ];
@@ -341,15 +365,11 @@ export function AddressDetailsScreen({
                     }}
                     testID={`${testID}-tower`}
                   />
-                  <FieldInput
-                    value={form.society}
-                    onChangeText={(society) => set({ society })}
-                    placeholder="Society / Building name *"
-                    inputRef={societyRef}
-                    inputProps={{
-                      ...returnKey('society'),
-                      onSubmitEditing: () => focusNext('society'),
-                    }}
+                  <SocietyPicker
+                    value={form}
+                    societies={societies}
+                    onRetry={onRetrySocieties}
+                    onChange={set}
                     testID={`${testID}-society`}
                   />
                 </>

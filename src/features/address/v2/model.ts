@@ -102,6 +102,14 @@ export function detailsFormFrom(address: AddressDto): AddressDetailsForm {
     floor: address.floor ?? '',
     tower: address.tower ?? '',
     society: address.society ?? '',
+    // A society saved before the list existed has neither: it must be picked again from the list.
+    societyId: address.societyId,
+    societyOthers: address.customSociety !== null,
+    customSociety: address.customSociety ?? '',
+    societyLegacy:
+      address.societyId === null &&
+      address.customSociety === null &&
+      (address.society ?? '').trim() !== '',
     lane: address.lane ?? '',
     landmark: address.landmark ?? '',
     label: kind,
@@ -128,6 +136,8 @@ export function detailsFieldsFrom(form: AddressDetailsForm): {
   readonly floor: string;
   readonly tower?: string;
   readonly society?: string;
+  readonly societyId?: string;
+  readonly customSociety?: string;
   readonly lane: string;
   readonly landmark: string;
   readonly receiverName?: string;
@@ -148,7 +158,17 @@ export function detailsFieldsFrom(form: AddressDetailsForm): {
     propertyType: form.propertyType,
     ...optional('flat', form.number),
     ...optional('tower', form.tower, apartment),
-    ...optional('society', form.society, apartment),
+    // A listed society by id (the server names it); "Others" as its typed name, kept apart.
+    ...(apartment && form.societyId !== null
+      ? { society: form.society.trim(), societyId: form.societyId }
+      : {}),
+    ...(apartment && form.societyId === null && form.societyOthers
+      ? { society: form.customSociety.trim(), customSociety: form.customSociety.trim() }
+      : {}),
+    // Saved before the list existed and left as it was: the text goes back unchanged.
+    ...(apartment && form.societyId === null && !form.societyOthers && form.societyLegacy
+      ? optional('society', form.society)
+      : {}),
     /*
      * The redesign's own fields are ALWAYS sent, empty as `''`. `PUT` reads an absent key as
      * "unchanged" (so older builds replaying a row cannot erase them), which means clearing Floor,

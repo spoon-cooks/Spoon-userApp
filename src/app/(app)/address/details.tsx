@@ -19,6 +19,7 @@ import {
   useCreateAddress,
   useDeleteAddress,
   useUpdateAddress,
+  useSocieties,
   AddressToast,
 } from '@features/address';
 import type { AddressDetailsForm, AddressToastNotice, SavedAddressItem } from '@features/address';
@@ -104,6 +105,12 @@ export default function AddressDetailsRoute() {
   const draftIsOurs =
     draft.editingId === editingId && draft.latitude !== null && draft.longitude !== null;
   const pinned = pinnedSummaryOf(draftIsOurs ? draft : (savedArea ?? draft));
+  /** The society dropdown's options: the societies at the pin being saved (R-AREA-19). */
+  const societies = useSocieties(
+    draftIsOurs && draft.latitude !== null && draft.longitude !== null
+      ? { latitude: draft.latitude, longitude: draft.longitude }
+      : savedPoint,
+  );
   const pinMoved =
     editingId !== null &&
     draftIsOurs &&
@@ -141,11 +148,18 @@ export default function AddressDetailsRoute() {
   // One screen per tap: a quick double tap must not open the same screen twice.
   const guard = useNavigationGuard();
 
-  /** Leaves the flow: the map/details pair collapses, then Home (onboarding) or the saved list. */
+  /**
+   * Leaves the flow: the map/details pair collapses, then Home (onboarding) or the saved list,
+   * which shows the "Address saved" toast (dev note `2075:11932`).
+   */
   const exit = () => {
     // Guarded: a deep link straight here has nothing to dismiss, and popping an only-child throws.
     if (router.canDismiss()) router.dismissAll();
-    router.replace(onboarding === '1' ? '/home' : listHref);
+    router.replace(
+      onboarding === '1'
+        ? '/home'
+        : ((from === undefined ? '/address?saved=1' : `/address?from=${from}&saved=1`) as Href),
+    );
   };
 
   const save = (form: AddressDetailsForm) => {
@@ -248,6 +262,8 @@ export default function AddressDetailsRoute() {
                     }),
                 })}
             saving={create.isPending || update.isPending}
+            societies={societies.state}
+            onRetrySocieties={societies.refetch}
             locationReady={locationReady}
             pinMoved={pinMoved}
           />

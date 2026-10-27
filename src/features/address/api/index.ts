@@ -15,6 +15,7 @@ export {
   useCreateAddress,
   useDeleteAddress,
   useServiceabilityCheck,
+  useSocieties,
   useSetDefaultAddress,
   useUpdateAddress,
 } from './hooks';
@@ -26,6 +27,8 @@ export {
   addressWriteResponseSchema,
   serviceabilitySchema,
   serviceabilityStatusSchema,
+  societyListSchema,
+  societySchema,
 } from './schemas';
 export type {
   AddressServiceabilityDto,
@@ -35,4 +38,5 @@ export type {
   AddressWriteResponse,
   ServiceabilityDto,
   ServiceabilityStatus,
+  SocietyDto,
 } from './schemas';

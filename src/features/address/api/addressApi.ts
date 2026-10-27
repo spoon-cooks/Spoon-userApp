@@ -2,12 +2,18 @@ import type { ApiClient, JsonValue } from '@core/api';
 import { expectNoContent, idempotencyHeader } from '@core/api';
 import { toE164 } from '@features/auth';
 
-import { addressListSchema, addressWriteResponseSchema, serviceabilitySchema } from './schemas';
+import {
+  addressListSchema,
+  addressWriteResponseSchema,
+  serviceabilitySchema,
+  societyListSchema,
+} from './schemas';
 import type {
   AddressDto,
   AddressWriteInput,
   AddressWriteResponse,
   ServiceabilityDto,
+  SocietyDto,
 } from './schemas';
 
 /**
@@ -41,6 +47,7 @@ export const ADDRESS_PATHS = {
   list: '/v1/me/addresses',
   byId: (addressId: string) => `/v1/me/addresses/${addressId}`,
   serviceability: '/v1/serviceability/check',
+  societies: '/v1/societies',
 } as const;
 
 function bodyOf(input: AddressWriteInput): JsonValue {
@@ -63,6 +70,8 @@ function bodyOf(input: AddressWriteInput): JsonValue {
     ...(input.lane === undefined ? {} : { lane: input.lane }),
     ...(input.landmark === undefined ? {} : { landmark: input.landmark }),
     ...(input.placeName === undefined ? {} : { placeName: input.placeName }),
+    ...(input.societyId === undefined ? {} : { societyId: input.societyId }),
+    ...(input.customSociety === undefined ? {} : { customSociety: input.customSociety }),
     ...(input.locality === undefined ? {} : { locality: input.locality }),
     ...(input.areaLine === undefined ? {} : { areaLine: input.areaLine }),
     ...(input.city === undefined ? {} : { city: input.city }),
@@ -157,6 +166,21 @@ export function createAddressApi(api: ApiClient) {
      * asks. It does not answer "can we cook at this address" — that additionally requires a
      * supported society, and only the address write and the availability reads know it.
      */
+    /** `GET /v1/societies`: the societies the Apartment form offers at a pin (R-AREA-19). */
+    async societies(
+      point: { readonly latitude: number; readonly longitude: number },
+      signal?: AbortSignal,
+    ): Promise<readonly SocietyDto[]> {
+      return api.request(
+        `${ADDRESS_PATHS.societies}?latitude=${point.latitude}&longitude=${point.longitude}`,
+        {
+          method: 'GET',
+          ...(signal === undefined ? {} : { signal }),
+          parse: (data) => societyListSchema.parse(data).societies,
+        },
+      );
+    },
+
     async check(point: ServiceabilityCheckInput, signal?: AbortSignal): Promise<ServiceabilityDto> {
       // The geocoder's reading is optional and only names a refused place as demand; coverage is
       // decided by the coordinates alone. Empty values are omitted, never sent as null.
