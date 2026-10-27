@@ -168,11 +168,25 @@ export default function AddressDetailsRoute() {
     const stateName = area?.state ?? savedArea?.state ?? null;
     const input = {
       ...detailsFieldsFrom(form),
-      street: area?.street ?? savedArea?.street ?? form.society.trim(),
+      // With no road name (common inside a society) the pin's locality is the street, not the
+      // society the customer typed, so the address keeps its area (R-AREA-15).
+      street: area?.street ?? savedArea?.street ?? area?.locality ?? form.society.trim(),
       pincode:
         area?.pincode ?? (savedArea?.pincode === '' ? recoveredPincode : savedArea?.pincode) ?? '',
       ...(city === null ? {} : { city }),
       ...(stateName === null ? {} : { state: stateName }),
+      /*
+       * The whole area the map read, sent only with a pin placed on this visit. An edit that never
+       * went through the map leaves it untouched (absent = unchanged); a new pin replaces all
+       * three, `''` clearing what that point did not have.
+       */
+      ...(area === null
+        ? {}
+        : {
+            placeName: area.placeName ?? '',
+            locality: area.locality ?? '',
+            areaLine: area.areaLine ?? '',
+          }),
       ...point,
     };
 

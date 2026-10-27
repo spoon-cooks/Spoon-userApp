@@ -96,6 +96,9 @@ describe('adding an address', () => {
       city: 'Bengaluru',
       state: 'Karnataka',
       pincode: '560038',
+      placeName: 'Purva Skydale',
+      locality: 'HAL 2nd Stage',
+      areaLine: '100 Feet Road, HAL 2nd Stage, Bengaluru, Karnataka 560038',
     });
   });
 
@@ -153,6 +156,10 @@ describe('adding an address', () => {
         pincode: '560038',
         city: 'Bengaluru',
         state: 'Karnataka',
+        // The whole area the map read (R-AREA-15).
+        placeName: 'Purva Skydale',
+        locality: 'HAL 2nd Stage',
+        areaLine: '100 Feet Road, HAL 2nd Stage, Bengaluru, Karnataka 560038',
         latitude: 12.9716,
         longitude: 77.6412,
         isDefault: true,
@@ -238,6 +245,8 @@ describe('editing an address (1870:2672)', () => {
       }),
     );
     expect(writes[0]?.body).not.toHaveProperty('isDefault');
+    // Never through the map on this visit: the stored area is left as it is.
+    expect(writes[0]?.body).not.toHaveProperty('locality');
     await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile'));
   });
 

@@ -99,6 +99,19 @@ export const addressSchema = z.object({
     .string()
     .nullish()
     .transform((value) => value ?? null),
+  // The whole area the map read at the pin (R-AREA-15). Absent from a backend that predates them.
+  placeName: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  locality: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  areaLine: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
   lastUsedAt: z
     .string()
     .nullish()
@@ -171,4 +184,8 @@ export interface AddressWriteInput {
   readonly floor?: string;
   readonly lane?: string;
   readonly landmark?: string;
+  /** The area the map read at the pin. Sent only with a newly placed pin; `''` clears. */
+  readonly placeName?: string;
+  readonly locality?: string;
+  readonly areaLine?: string;
 }

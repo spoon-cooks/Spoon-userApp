@@ -129,6 +129,9 @@ export function useCreateAddress() {
         floor: variables.input.floor ?? null,
         lane: variables.input.lane ?? null,
         landmark: variables.input.landmark ?? null,
+        placeName: variables.input.placeName || null,
+        locality: variables.input.locality || null,
+        areaLine: variables.input.areaLine || null,
         // Just created: the address has not been used for an order yet.
         lastUsedAt: null,
       };

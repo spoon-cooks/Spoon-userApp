@@ -33,6 +33,13 @@ export interface AddressDraft {
   readonly state: string | null;
   readonly pincode: string | null;
   /**
+   * The rest of the area the map read at the pin (R-AREA-15: the whole area is saved): the place
+   * name it showed as the title, the locality ("HAL 2nd Stage") and the full address line.
+   */
+  readonly placeName: string | null;
+  readonly locality: string | null;
+  readonly areaLine: string | null;
+  /**
    * WHICH address this point belongs to — `null` while adding, the record's id while editing.
    *
    * This store persists across an entire add/edit round trip and is cleared only on a successful
@@ -53,6 +60,9 @@ export const EMPTY_ADDRESS_DRAFT: AddressDraft = {
   city: null,
   state: null,
   pincode: null,
+  placeName: null,
+  locality: null,
+  areaLine: null,
   editingId: null,
 };
 
