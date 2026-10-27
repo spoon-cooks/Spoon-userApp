@@ -19,8 +19,9 @@ import {
   useCreateAddress,
   useDeleteAddress,
   useUpdateAddress,
+  AddressToast,
 } from '@features/address';
-import type { AddressDetailsForm, SavedAddressItem } from '@features/address';
+import type { AddressDetailsForm, AddressToastNotice, SavedAddressItem } from '@features/address';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
 import { getUserMessage, isAppError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
@@ -56,6 +57,7 @@ export default function AddressDetailsRoute() {
   const update = useUpdateAddress();
   const remove = useDeleteAddress();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<AddressToastNotice | null>(null);
   const [removing, setRemoving] = useState<SavedAddressItem | null>(null);
 
   /**
@@ -194,6 +196,15 @@ export default function AddressDetailsRoute() {
         exit();
       })
       .catch((thrown: unknown) => {
+        // An upcoming booking uses this address, so the backend refuses any edit (R-AREA-10).
+        // Not a failure to retry: a toast, and the customer stays on the form.
+        if (isAppError(thrown) && thrown.code === 'ADDRESS_IN_USE') {
+          setNotice((previous) => ({
+            id: (previous?.id ?? 0) + 1,
+            message: 'This address is already used in an upcoming booking',
+          }));
+          return;
+        }
         // The backend refuses an unserviceable point here too; its own message is shown.
         setError(isAppError(thrown) ? getUserMessage(thrown) : 'We could not save this address.');
       });
@@ -254,6 +265,7 @@ export default function AddressDetailsRoute() {
         body={error ?? ''}
         testID="address-save-error"
       />
+      <AddressToast notice={notice} testID="address-details-toast" />
     </>
   );
 }

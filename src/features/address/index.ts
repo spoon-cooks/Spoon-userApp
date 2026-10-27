@@ -76,6 +76,7 @@ export {
 export type { AddressDetailsForm, AddressDetailsScreenProps } from './v2/AddressDetailsScreen';
 export type { SavedAddressItem, SavedListContext } from './v2/model';
 export type { ToastNotice as AddressToastNotice } from '@ui/v2/Toast';
+export { AddressToast } from '@ui/v2/Toast';
 export * from './api';
 export { useAddressLocation } from './location/useAddressLocation';
 export type { AddressLocationState } from './location/useAddressLocation';

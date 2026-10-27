@@ -6,6 +6,7 @@ import {
   createTestRuntime,
   renderWithRuntime,
 } from '@/test/renderWithRuntime';
+import type { AppError } from '@core/errors';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
 
 /**
@@ -50,7 +51,7 @@ const WRITTEN = {
   serviceability: { status: 'serviceable', reason: 'AVAILABLE' },
 };
 
-function render() {
+function render(stubs: Parameters<typeof createStubApi>[0] = {}) {
   const api = createStubApi({
     ...DEFAULT_API_STUBS,
     'POST /v1/me/addresses': (body) => {
@@ -61,6 +62,7 @@ function render() {
       writes.push({ method: 'PUT', body });
       return { address: { ...WRITTEN, id: 'addr-1' } };
     },
+    ...stubs,
   });
   return renderWithRuntime(<AddressDetailsRoute />, { runtime: createTestRuntime({ api }) });
 }
@@ -237,6 +239,31 @@ describe('editing an address (1870:2672)', () => {
     );
     expect(writes[0]?.body).not.toHaveProperty('isDefault');
     await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile'));
+  });
+
+  it('shows a toast and stays on the form when an upcoming booking uses the address', async () => {
+    const inUse: AppError = {
+      kind: 'validation',
+      status: 409,
+      message: 'This address is used in an upcoming booking.',
+      code: 'ADDRESS_IN_USE',
+    };
+    render({
+      'PUT /v1/me/addresses/addr-1': () => {
+        throw inUse;
+      },
+    });
+    await screen.findByTestId('address-details');
+
+    fireEvent.changeText(screen.getByTestId('address-details-floor'), '2');
+    fireEvent.press(save());
+
+    expect(
+      await screen.findByText('This address is already used in an upcoming booking'),
+    ).toBeTruthy();
+    expect(screen.queryByTestId('address-save-error')).toBeNull();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    expect(mockRouter.back).not.toHaveBeenCalled();
   });
 
   it('opens the remove sheet from "Remove this address"', async () => {
