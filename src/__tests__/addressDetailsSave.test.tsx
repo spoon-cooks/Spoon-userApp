@@ -176,7 +176,8 @@ describe('adding an address', () => {
         isDefault: true,
       },
     });
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address'));
+    // Back to the list, which shows the Address saved toast.
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?saved=1'));
   });
 
   it('swaps to the house fields, keeping Floor', async () => {
@@ -316,7 +317,9 @@ describe('editing an address (1870:2672)', () => {
     expect(writes[0]?.body).not.toHaveProperty('isDefault');
     // Never through the map on this visit: the stored area is left as it is.
     expect(writes[0]?.body).not.toHaveProperty('locality');
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile'));
+    await waitFor(() =>
+      expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile&saved=1'),
+    );
   });
 
   it('shows a toast and stays on the form when an upcoming booking uses the address', async () => {

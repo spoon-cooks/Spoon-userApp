@@ -38,22 +38,25 @@ describe('Address details · receiver', () => {
   });
 });
 
-/** The keyboard's return key walks the fields on screen; only the last one says Done. */
+/**
+ * The keyboard's return key walks the typed fields on screen; only the last one says Done. Society
+ * is picked from a list (R-AREA-18), so it is not one of them.
+ */
 describe('Address details · return key', () => {
   const returnKeys = () =>
-    ['number', 'floor', 'tower', 'society', 'receiver-name', 'receiver-phone']
+    ['number', 'floor', 'tower', 'receiver-name', 'receiver-phone']
       .map((id) => screen.queryByTestId(`address-details-${id}`))
       .filter((input) => input !== null)
       .map((input) => input.props.returnKeyType as string);
 
   it('says Next down the form and Done on its last field', () => {
     renderForm();
-    expect(returnKeys()).toEqual(['next', 'next', 'next', 'done']);
+    expect(returnKeys()).toEqual(['next', 'next', 'done']);
   });
 
   it('moves Done to the receiver phone once the receiver is open', () => {
     renderForm();
     fireEvent.press(screen.getByTestId('address-details-receiver-toggle'));
-    expect(returnKeys()).toEqual(['next', 'next', 'next', 'next', 'next', 'done']);
+    expect(returnKeys()).toEqual(['next', 'next', 'next', 'next', 'done']);
   });
 });

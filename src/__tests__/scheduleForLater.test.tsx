@@ -95,8 +95,11 @@ describe('Schedule for Later', () => {
     expect(await screen.findByText('Schedule for Later')).toBeTruthy();
     // The overview's own days (before it lands, the next three days by the device clock show).
     await waitFor(() => expect(day(DATES[2]!)).toBeTruthy());
-    expect(screen.getByText('Tomorrow')).toBeTruthy();
-    expect(screen.getByText('Today')).toBeTruthy();
+    // Days are named by date (R-SLOT-16); these are far from the clock, so none is Today/Tomorrow.
+    expect(screen.queryByText('Today')).toBeNull();
+    expect(screen.queryByText('Tomorrow')).toBeNull();
+    expect(screen.getByText('Tuesday')).toBeTruthy();
+    expect(screen.getByText('Wednesday')).toBeTruthy();
     expect(screen.getByText('Thursday')).toBeTruthy();
     expect(screen.queryByTestId('schedule-later-period-afternoon')).toBeNull();
     expect(screen.getByTestId('schedule-later-confirm').props.accessibilityState?.disabled).toBe(
