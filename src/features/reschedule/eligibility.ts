@@ -1,9 +1,9 @@
 /**
  * Reschedule eligibility — ruling R-3.
  *
- * "A booking may be rescheduled only once. After it has already been rescheduled, the Reschedule
- * option is NOT shown. Do not independently infer eligibility on the client if the backend
- * exposes authoritative action/eligibility state."
+ * "Do not independently infer eligibility on the client if the backend exposes authoritative
+ * action/eligibility state." The cap itself is the server's: up to 10 reschedules per booking
+ * (DEC-112; it was once).
  *
  * This module exists to make that rule impossible to violate by accident. It is a rendering
  * policy, not business logic: it reads a value the server supplies and fails CLOSED.
