@@ -18,9 +18,9 @@ import type {
 /** A cook who has served the household, as the backend would send them. */
 export interface ServedCook {
   readonly cookId: string;
-  /** The profile's title — "Cook Sanchita". */
+  /** The profile's title — "Cook Meera". */
   readonly name: string;
-  /** The pool grid's caption — "Sanchita". */
+  /** The pool grid's caption — "Meera". */
   readonly shortName: string;
   readonly photo?: CookPoolImage | undefined;
   readonly badges: readonly string[];

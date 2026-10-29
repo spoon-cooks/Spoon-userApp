@@ -7,7 +7,7 @@ import type { CookPoolImage } from '../types';
 /**
  * A cook's cut-out portrait in a square: always as tall as the square, standing on its foot, and
  * centred across it. A portrait wider than it is tall is trimmed at the sides (its edges are mostly
- * empty) rather than shrunk to float above the foot — `contain` drew Jyoti's 300×248 cut-out 17pt
+ * empty) rather than shrunk to float above the foot — `contain` drew a 300×248 cut-out 17pt
  * short of the others. The parent clips.
  */
 export interface CookPortraitProps {
