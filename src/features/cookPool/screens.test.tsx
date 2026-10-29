@@ -135,6 +135,24 @@ describe('Cook profile (demo source)', () => {
 
 const COOK_ID = '986ff249-ab67-5ee5-8eb0-5c24a8187f9a';
 
+/** DEC-114: the profile as the backend lays it out. */
+const PRESENTATION = {
+  timeSlot: 'lunch',
+  badges: ['Spoon trained', 'Verified'],
+  details: [{ id: 'region', label: null, value: 'West Bengal', icon: null }],
+  stats: [
+    { id: 'visits', label: 'Visits with you', value: '3', icon: null },
+    { id: 'rating', label: 'Your rating', value: '4.5', icon: 'star' },
+  ],
+  shelves: [
+    {
+      id: 'proteins',
+      title: 'Proteins',
+      dishes: [{ dishCode: 'V-016', name: 'Palak paneer', imageUrl: null }],
+    },
+  ],
+};
+
 const CARD = {
   cookId: COOK_ID,
   profileCode: 'COOK_SANCHITA',
@@ -163,6 +181,7 @@ const PROFILE = {
   inPool: true,
   addedAt: '2026-10-01T06:00:00.000Z',
   dishesByCategory: [{ category: 'veg', dishes: CARD.specialtyDishes }],
+  presentation: PRESENTATION,
 };
 
 /** Eligibility is Recurring's; these tests are about the pool, so it is simply unavailable. */
@@ -236,7 +255,7 @@ describe('Cook Pool on the API (default source)', () => {
 
   it('deals the candidates', async () => {
     renderApi(<CookPoolDeckScreen onDone={jest.fn()} />, {
-      'GET /v1/me/cooks/candidates': () => ({ cooks: [CARD] }),
+      'GET /v1/me/cooks/candidates': () => ({ cooks: [{ ...CARD, presentation: PRESENTATION }] }),
     });
 
     await waitFor(() => expect(screen.getByTestId('cook-pool-deck-swipes')).toBeTruthy());
@@ -264,7 +283,12 @@ describe('Cook Pool on the API (default source)', () => {
     const posted: unknown[] = [];
     const second = { ...CARD, cookId: 'cook-rekha', displayName: 'Cook Rekha' };
     renderApi(<CookPoolDeckScreen onDone={jest.fn()} />, {
-      'GET /v1/me/cooks/candidates': () => ({ cooks: [CARD, second] }),
+      'GET /v1/me/cooks/candidates': () => ({
+        cooks: [
+          { ...CARD, presentation: PRESENTATION },
+          { ...second, presentation: PRESENTATION },
+        ],
+      }),
       'POST /v1/me/cooks': (body) => {
         posted.push(body);
         return { cookId: COOK_ID, added: true, addedAt: '2026-10-06T06:00:00.000Z', count: 1 };

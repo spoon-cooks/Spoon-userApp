@@ -16,7 +16,7 @@ export type CookPoolImage = ImageSourcePropType;
 /** One cook on the landing's pool grid (`719:1507`). */
 export interface CookPoolMember {
   readonly cookId: string;
-  /** The caption under the avatar — "Sanchita". */
+  /** The caption under the avatar — "Meera". */
   readonly name: string;
   readonly photo?: CookPoolImage | undefined;
 }
@@ -64,7 +64,7 @@ export interface CookMenuSection {
 /** A cook as the deck card (`755:2347`) and the profile page (`719:1568`) draw them. */
 export interface CookProfile {
   readonly cookId: string;
-  /** The header's title — "Cook Sanchita". */
+  /** The header's title — "Cook Meera". */
   readonly name: string;
   readonly photo?: CookPoolImage | undefined;
   /**

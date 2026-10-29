@@ -30,7 +30,7 @@ import { BlurredScrim } from '@ui/v2/Backdrop';
  */
 export interface RemoveCookDialogProps {
   readonly visible: boolean;
-  /** The profile's title — "Cook Sanchita". */
+  /** The profile's title — "Cook Meera". */
   readonly cookName: string;
   readonly onKeep: () => void;
   readonly onRemove: () => void;
