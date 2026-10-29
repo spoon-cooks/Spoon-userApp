@@ -261,6 +261,7 @@ describe('useInstantData', () => {
         <Text testID="cta">{view.ctaLabel}</Text>
         <Text testID="eta">{view.etaLabel}</Text>
         <Text testID="blocked">{view.unavailable?.icon ?? 'none'}</Text>
+        <Text testID="blocked-message">{view.unavailable?.message ?? ''}</Text>
       </>
     );
   }
@@ -376,7 +377,31 @@ describe('useInstantData', () => {
     await waitFor(() => expect(getByTestId('eta')).toHaveTextContent('15 mins'));
   });
 
-  it('shows the out-of-shift state when the server is outside its operating window', async () => {
+  it('shows the out-of-shift state, with the hub opening time, for OUTSIDE_OPERATING_HOURS', async () => {
+    // R-INST-13: Instant's own code. The hub's hours come from the catalogue read for the address.
+    const { calls, api } = recordingApi({
+      ...BASE_STUBS,
+      'GET /v1/availability/instant': () => ({
+        available: false,
+        arrivalTargetMinutes: 30,
+        reason: 'OUTSIDE_OPERATING_HOURS',
+        validUntil: '2026-08-18T12:00:00.000Z',
+      }),
+      'POST /v1/bookings/quote': () => quoteFor(13545),
+    });
+
+    const { getByTestId } = renderWithRuntime(<InstantHarness durationId="dur-60" />, {
+      runtime: createTestRuntime({ api }),
+    });
+
+    await waitFor(() => expect(getByTestId('blocked')).toHaveTextContent('moon'));
+    expect(getByTestId('blocked-message')).toHaveTextContent(
+      /^Slots open at 5 AM (today|tomorrow)$/,
+    );
+    expect(calls.some((call) => call.key.startsWith('GET /v1/catalogue?addressId='))).toBe(true);
+  });
+
+  it('no longer treats OUTSIDE_OPERATING_WINDOW, which Instant never sends, as closed', async () => {
     const { api } = recordingApi({
       ...BASE_STUBS,
       'GET /v1/availability/instant': () => ({
@@ -392,7 +417,7 @@ describe('useInstantData', () => {
       runtime: createTestRuntime({ api }),
     });
 
-    await waitFor(() => expect(getByTestId('blocked')).toHaveTextContent('moon'));
+    await waitFor(() => expect(getByTestId('blocked')).toHaveTextContent('calendar'));
   });
 
   it('falls back to the no-slots state for any other refusal', async () => {
