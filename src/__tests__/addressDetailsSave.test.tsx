@@ -6,6 +6,7 @@ import {
   createTestRuntime,
   renderWithRuntime,
 } from '@/test/renderWithRuntime';
+import type { AppError } from '@core/errors';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
 
 /**
@@ -50,9 +51,15 @@ const WRITTEN = {
   serviceability: { status: 'serviceable', reason: 'AVAILABLE' },
 };
 
-function render() {
+function render(stubs: Parameters<typeof createStubApi>[0] = {}) {
   const api = createStubApi({
     ...DEFAULT_API_STUBS,
+    'GET /v1/societies': () => ({
+      societies: [
+        { id: 'soc-purva', name: 'Purva Skydale' },
+        { id: 'soc-prestige', name: 'Prestige Shantiniketan' },
+      ],
+    }),
     'POST /v1/me/addresses': (body) => {
       writes.push({ method: 'POST', body });
       return { address: WRITTEN };
@@ -61,6 +68,7 @@ function render() {
       writes.push({ method: 'PUT', body });
       return { address: { ...WRITTEN, id: 'addr-1' } };
     },
+    ...stubs,
   });
   return renderWithRuntime(<AddressDetailsRoute />, { runtime: createTestRuntime({ api }) });
 }
@@ -80,6 +88,10 @@ beforeEach(() => {
 });
 
 const save = () => screen.getByTestId('address-details-save');
+async function pickSociety(typed: string, id: string) {
+  fireEvent.changeText(screen.getByTestId('address-details-society-input'), typed);
+  fireEvent.press(await screen.findByTestId(`address-details-society-option-${id}`));
+}
 const isDisabled = () => save().props.accessibilityState.disabled as boolean;
 
 describe('adding an address', () => {
@@ -94,6 +106,9 @@ describe('adding an address', () => {
       city: 'Bengaluru',
       state: 'Karnataka',
       pincode: '560038',
+      placeName: 'Purva Skydale',
+      locality: 'HAL 2nd Stage',
+      areaLine: '100 Feet Road, HAL 2nd Stage, Bengaluru, Karnataka 560038',
     });
   });
 
@@ -112,7 +127,7 @@ describe('adding an address', () => {
     expect(isDisabled()).toBe(true);
 
     fireEvent.changeText(screen.getByTestId('address-details-number'), '402');
-    fireEvent.changeText(screen.getByTestId('address-details-society'), 'Purva Skydale');
+    await pickSociety('Purva', 'soc-purva');
     expect(isDisabled()).toBe(true);
 
     fireEvent.press(screen.getByTestId('address-details-label-home'));
@@ -126,7 +141,7 @@ describe('adding an address', () => {
     fireEvent.changeText(screen.getByTestId('address-details-number'), '402');
     fireEvent.changeText(screen.getByTestId('address-details-floor'), '4');
     fireEvent.changeText(screen.getByTestId('address-details-tower'), 'B');
-    fireEvent.changeText(screen.getByTestId('address-details-society'), 'Purva Skydale');
+    await pickSociety('Purva', 'soc-purva');
     fireEvent.press(screen.getByTestId('address-details-label-parents'));
     fireEvent.press(screen.getByTestId('address-details-receiver-toggle'));
     fireEvent.changeText(screen.getByTestId('address-details-receiver-name'), 'Asha');
@@ -143,6 +158,7 @@ describe('adding an address', () => {
         floor: '4',
         tower: 'B',
         society: 'Purva Skydale',
+        societyId: 'soc-purva',
         lane: '',
         landmark: '',
         receiverName: 'Asha',
@@ -151,12 +167,17 @@ describe('adding an address', () => {
         pincode: '560038',
         city: 'Bengaluru',
         state: 'Karnataka',
+        // The whole area the map read (R-AREA-15).
+        placeName: 'Purva Skydale',
+        locality: 'HAL 2nd Stage',
+        areaLine: '100 Feet Road, HAL 2nd Stage, Bengaluru, Karnataka 560038',
         latitude: 12.9716,
         longitude: 77.6412,
         isDefault: true,
       },
     });
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address'));
+    // Back to the list, which shows the Address saved toast.
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?saved=1'));
   });
 
   it('swaps to the house fields, keeping Floor', async () => {
@@ -186,6 +207,63 @@ describe('adding an address', () => {
   });
 });
 
+describe('the society dropdown (2825:4858, 2825:5126, 2829:4973)', () => {
+  beforeEach(() => {
+    useAddressDraftStore.getState().setPoint({
+      latitude: 12.9716,
+      longitude: 77.6412,
+      placeId: null,
+      serviceable: true,
+      editingId: null,
+      street: '100 Feet Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      pincode: '560038',
+    });
+  });
+
+  const fillRest = () => {
+    fireEvent.changeText(screen.getByTestId('address-details-number'), '402');
+    fireEvent.press(screen.getByTestId('address-details-label-home'));
+  };
+
+  it('lists matches with Others last, and holds Save until a society is picked', async () => {
+    render();
+    await screen.findByTestId('address-details');
+    fillRest();
+    fireEvent.changeText(screen.getByTestId('address-details-society-input'), 'pres');
+    expect(await screen.findByTestId('address-details-society-option-soc-prestige')).toBeTruthy();
+    expect(screen.queryByTestId('address-details-society-option-soc-purva')).toBeNull();
+    expect(screen.getByTestId('address-details-society-others')).toBeTruthy();
+    expect(isDisabled()).toBe(true);
+
+    fireEvent.press(screen.getByTestId('address-details-society-option-soc-prestige'));
+    expect(screen.queryByTestId('address-details-society-list')).toBeNull();
+    expect(isDisabled()).toBe(false);
+  });
+
+  it('offers only Others when nothing matches, and saves the typed name apart', async () => {
+    render();
+    await screen.findByTestId('address-details');
+    fillRest();
+    fireEvent.changeText(screen.getByTestId('address-details-society-input'), 'Prestage Shanti');
+    await screen.findByTestId('address-details-society-others');
+    expect(screen.queryByTestId('address-details-society-option-soc-prestige')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('address-details-society-others'));
+    expect(isDisabled()).toBe(true);
+    fireEvent.changeText(screen.getByTestId('address-details-society-custom'), 'Green Acres');
+    expect(isDisabled()).toBe(false);
+    fireEvent.press(save());
+
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect(writes[0]?.body).toEqual(
+      expect.objectContaining({ society: 'Green Acres', customSociety: 'Green Acres' }),
+    );
+    expect(writes[0]?.body).not.toHaveProperty('societyId');
+  });
+});
+
 describe('editing an address (1870:2672)', () => {
   beforeEach(() => {
     mockSearchParams = { addressId: 'addr-1', from: 'profile' };
@@ -199,7 +277,8 @@ describe('editing an address (1870:2672)', () => {
     expect(screen.getByText('Save changes')).toBeTruthy();
     expect(screen.getByTestId('address-details-remove')).toBeTruthy();
     expect(screen.getByTestId('address-details-number').props.value).toBe('E102');
-    expect(screen.getByTestId('address-details-society').props.value).toBe('Purva Skydale');
+    // Saved before the list existed: shown as it is, valid until changed.
+    expect(screen.getByText('Purva Skydale')).toBeTruthy();
   });
 
   it('enables Save changes only once something changed', async () => {
@@ -236,7 +315,47 @@ describe('editing an address (1870:2672)', () => {
       }),
     );
     expect(writes[0]?.body).not.toHaveProperty('isDefault');
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile'));
+    // Never through the map on this visit: the stored area is left as it is.
+    expect(writes[0]?.body).not.toHaveProperty('locality');
+    await waitFor(() =>
+      expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=profile&saved=1'),
+    );
+  });
+
+  it('shows a toast and stays on the form when an upcoming booking uses the address', async () => {
+    const inUse: AppError = {
+      kind: 'validation',
+      status: 409,
+      message: 'This address is used in an upcoming booking.',
+      code: 'ADDRESS_IN_USE',
+    };
+    render({
+      'PUT /v1/me/addresses/addr-1': () => {
+        throw inUse;
+      },
+    });
+    await screen.findByTestId('address-details');
+
+    fireEvent.changeText(screen.getByTestId('address-details-floor'), '2');
+    fireEvent.press(save());
+
+    expect(
+      await screen.findByText('This address is already used in an upcoming booking'),
+    ).toBeTruthy();
+    expect(screen.queryByTestId('address-save-error')).toBeNull();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    expect(mockRouter.back).not.toHaveBeenCalled();
+  });
+
+  it('keeps a text-only society as it was when something else is edited', async () => {
+    render();
+    await screen.findByTestId('address-details');
+    fireEvent.changeText(screen.getByTestId('address-details-floor'), '2');
+    fireEvent.press(save());
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect(writes[0]?.body).toEqual(expect.objectContaining({ society: 'Purva Skydale' }));
+    expect(writes[0]?.body).not.toHaveProperty('societyId');
+    expect(writes[0]?.body).not.toHaveProperty('customSociety');
   });
 
   it('opens the remove sheet from "Remove this address"', async () => {

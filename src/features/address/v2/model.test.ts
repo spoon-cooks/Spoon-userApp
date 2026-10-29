@@ -21,6 +21,8 @@ function address(overrides: Partial<AddressDto> = {}): AddressDto {
     flat: '402',
     tower: 'B',
     society: 'Purva Skydale',
+    societyId: 'soc-purva',
+    customSociety: null,
     street: 'Silver County Road',
     pincode: '560102',
     city: 'Bengaluru',
@@ -112,9 +114,27 @@ describe('detailsFormFrom — Edit opens prefilled (1870:2672)', () => {
         floor: '4',
         tower: 'B',
         society: 'Purva Skydale',
+        societyId: 'soc-purva',
         label: 'home',
       }),
     );
+  });
+
+  it('reads a society typed under Others back as Others with its name', () => {
+    const read = detailsFormFrom(
+      address({ society: 'Green Acres', societyId: null, customSociety: 'Green Acres' }),
+    );
+    expect(read.societyId).toBeNull();
+    expect(read.societyOthers).toBe(true);
+    expect(read.customSociety).toBe('Green Acres');
+    expect(read.societyLegacy).toBe(false);
+  });
+
+  it('marks a society saved before the list as legacy, neither listed nor Others', () => {
+    const read = detailsFormFrom(address({ societyId: null, customSociety: null }));
+    expect(read.societyId).toBeNull();
+    expect(read.societyOthers).toBe(false);
+    expect(read.societyLegacy).toBe(true);
   });
 
   it('opens an address saved before property types as an Apartment', () => {
@@ -143,6 +163,7 @@ describe('detailsFieldsFrom — what Save sends', () => {
           floor: '4',
           tower: 'B',
           society: 'Purva Skydale',
+          societyId: 'soc-purva',
           lane: 'left over from a house',
           label: 'parents',
         }),
@@ -154,6 +175,7 @@ describe('detailsFieldsFrom — what Save sends', () => {
       floor: '4',
       tower: 'B',
       society: 'Purva Skydale',
+      societyId: 'soc-purva',
       lane: '',
       landmark: '',
     });
@@ -205,11 +227,32 @@ describe('detailsFieldsFrom — what Save sends', () => {
 });
 
 describe('isDetailsFormComplete — Save’s gate (dev notes 2075:11932, 2075:11941)', () => {
-  const apartment = form({ number: '402', society: 'Purva', label: 'home' });
+  const apartment = form({
+    number: '402',
+    society: 'Purva',
+    societyId: 'soc-purva',
+    label: 'home',
+  });
 
   it('needs Flat no. and Society for an apartment, and a label', () => {
     expect(isDetailsFormComplete(apartment)).toBe(true);
-    expect(isDetailsFormComplete({ ...apartment, society: ' ' })).toBe(false);
+    expect(isDetailsFormComplete({ ...apartment, societyId: null })).toBe(false);
+    expect(
+      isDetailsFormComplete({
+        ...apartment,
+        societyId: null,
+        societyOthers: true,
+        customSociety: ' ',
+      }),
+    ).toBe(false);
+    expect(
+      isDetailsFormComplete({
+        ...apartment,
+        societyId: null,
+        societyOthers: true,
+        customSociety: 'Green Acres',
+      }),
+    ).toBe(true);
     expect(isDetailsFormComplete({ ...apartment, number: '' })).toBe(false);
     expect(isDetailsFormComplete({ ...apartment, label: null })).toBe(false);
   });

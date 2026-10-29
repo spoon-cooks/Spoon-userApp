@@ -255,7 +255,11 @@ function SignedInHomeRoute() {
                 },
                 // The backend takes no channel; push permission is asked for its own sake.
                 register: async () => {
-                  await join.mutateAsync({ name, addressId: home.addressId });
+                  await join.mutateAsync({
+                    name,
+                    addressId: home.addressId,
+                    pincode: model.address.pincode ?? null,
+                  });
                 },
               },
             ).catch((error: unknown) => {

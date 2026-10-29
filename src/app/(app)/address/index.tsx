@@ -8,8 +8,11 @@ import {
   useAddresses,
   useDeleteAddress,
   useSetDefaultAddress,
+  useTriedPlace,
 } from '@features/address';
 import type { AddressToastNotice } from '@features/address';
+import { useMe } from '@features/auth';
+import { useJoinWaitlist, useWaitlistState } from '@features/homeRedesign';
 import { getUserMessage, isAppError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
 import { InfoDialog, QueryBoundary } from '@ui';
@@ -34,12 +37,15 @@ import { InfoDialog, QueryBoundary } from '@ui';
  */
 export default function SavedAddressesRoute() {
   const router = useRouter();
-  const { from } = useLocalSearchParams<{ from?: string }>();
+  const { from, saved } = useLocalSearchParams<{ from?: string; saved?: string }>();
   const addresses = useAddresses();
   const remove = useDeleteAddress();
   const setDefault = useSetDefaultAddress();
   const [error, setError] = useState<{ title: string; body: string } | null>(null);
-  const [notice, setNotice] = useState<AddressToastNotice | null>(null);
+  // Arrived from a successful save on Address details: the list opens saying so, once.
+  const [notice, setNotice] = useState<AddressToastNotice | null>(() =>
+    saved === '1' ? { id: 1, message: 'Address saved' } : null,
+  );
   const toast = (message: string) =>
     setNotice((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 
@@ -57,6 +63,38 @@ export default function SavedAddressesRoute() {
     };
   }, [addresses.state, choosing]);
 
+  /*
+   * No saved address and a last place outside every live hub (`2355:6094`, dev note `2355:14298`):
+   * that place's area and live hubs (remembered on this device by the map step) and the waitlist
+   * state, the same data as Home's inactive-pincode variant. No place ever captured: no card.
+   */
+  const me = useMe();
+  const meData = me.state.status === 'ready' ? me.state.data : null;
+  const tried = useTriedPlace(meData?.id ?? null);
+  const waitlist = useWaitlistState({ enabled: tried !== null && tried !== undefined });
+  const join = useJoinWaitlist();
+  const waitlistData = waitlist.state.status === 'ready' ? waitlist.state.data : null;
+  const notLive =
+    tried === null || tried === undefined
+      ? null
+      : {
+          locality: tried.locality,
+          liveAreas: tried.liveAreas,
+          waiting: waitlistData?.countForArea ?? tried.neighbours + 1,
+          notify:
+            waitlistData?.joined === true
+              ? ('joined' as const)
+              : join.isPending
+                ? ('pending' as const)
+                : ('idle' as const),
+          onNotify: () => {
+            const name = meData?.name?.trim() || meData?.phone || 'Spoon customer';
+            join
+              .mutateAsync({ name, addressId: null, pincode: null })
+              .catch(() => toast('Couldn’t add you to the list. Please try again.'));
+          },
+        };
+
   return (
     <>
       <QueryBoundary state={state} onRetry={addresses.refetch} loadingVariant="screen">
@@ -65,6 +103,7 @@ export default function SavedAddressesRoute() {
             addresses={list}
             onBack={guard(goBack)}
             notice={notice}
+            notLive={notLive}
             onAdd={guard(() =>
               router.push(
                 (from === undefined

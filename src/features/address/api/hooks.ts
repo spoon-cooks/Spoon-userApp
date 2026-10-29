@@ -14,6 +14,7 @@ import type {
   AddressWriteInput,
   AddressWriteResponse,
   ServiceabilityDto,
+  SocietyDto,
 } from './schemas';
 
 /**
@@ -35,6 +36,24 @@ export function useAddresses(
     queryKey: addressKeys.list(),
     queryFn: ({ signal }) => addresses.list(signal),
     enabled: options.enabled ?? true,
+  });
+}
+
+/**
+ * The Apartment form's society dropdown for a pin (R-AREA-19). Disabled until there is a point;
+ * the list changes only with the hub, so it is read once per pin.
+ */
+export function useSocieties(
+  point: { readonly latitude: number; readonly longitude: number } | null,
+): ScreenQuery<readonly SocietyDto[]> {
+  const { api } = useRuntime();
+  const addresses = createAddressApi(api);
+
+  return useApiQuery<readonly SocietyDto[]>({
+    queryKey: addressKeys.societies(point?.latitude ?? 0, point?.longitude ?? 0),
+    queryFn: ({ signal }) =>
+      point === null ? Promise.resolve([]) : addresses.societies(point, signal),
+    enabled: point !== null,
   });
 }
 
@@ -129,6 +148,11 @@ export function useCreateAddress() {
         floor: variables.input.floor ?? null,
         lane: variables.input.lane ?? null,
         landmark: variables.input.landmark ?? null,
+        placeName: variables.input.placeName || null,
+        locality: variables.input.locality || null,
+        areaLine: variables.input.areaLine || null,
+        societyId: variables.input.societyId ?? null,
+        customSociety: variables.input.customSociety ?? null,
         // Just created: the address has not been used for an order yet.
         lastUsedAt: null,
       };

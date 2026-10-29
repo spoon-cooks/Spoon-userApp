@@ -106,6 +106,22 @@ describe('Schedule for Later model', () => {
     expect(model.periods).toEqual([]);
   });
 
+  it('names the first day "Tomorrow" when the server has rolled today over (R-SLOT-16)', () => {
+    const rolled = overview();
+    const model = laterModelFrom({
+      catalogue: CATALOGUE,
+      overview: {
+        ...rolled,
+        dates: DATES.slice(1),
+        durations: rolled.durations.map((d) => ({ ...d, days: d.days.slice(1) })),
+      },
+      durationMinutes: 60,
+      dayId: null,
+      now: NOW,
+    });
+    expect(model.days.map((d) => d.caption)).toEqual(['Tomorrow', 'Thursday']);
+  });
+
   it('greys a time of day with nothing free, and opens on the first one that has', () => {
     const model = laterModelFrom({
       catalogue: CATALOGUE,

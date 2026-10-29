@@ -169,6 +169,14 @@ export default function AddressLocationRoute() {
         city: outcome.geocoded?.city ?? null,
         state: outcome.geocoded?.region ?? null,
         pincode: outcome.geocoded?.pincode ?? null,
+        // The whole area, not only the parts above (R-AREA-15). "Selected location" is the
+        // geocoder's placeholder for an unnamed point, not a place name.
+        placeName:
+          outcome.geocoded?.title === undefined || outcome.geocoded.title === 'Selected location'
+            ? null
+            : outcome.geocoded.title,
+        locality: outcome.geocoded?.locality ?? null,
+        areaLine: outcome.geocoded?.line ?? null,
       });
 
       /**

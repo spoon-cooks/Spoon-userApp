@@ -99,6 +99,28 @@ export const addressSchema = z.object({
     .string()
     .nullish()
     .transform((value) => value ?? null),
+  // The whole area the map read at the pin (R-AREA-15). Absent from a backend that predates them.
+  placeName: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  locality: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  areaLine: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  /** The society picked from the list, or the name typed under "Others" (R-AREA-18 to 20). */
+  societyId: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  customSociety: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
   lastUsedAt: z
     .string()
     .nullish()
@@ -171,4 +193,16 @@ export interface AddressWriteInput {
   readonly floor?: string;
   readonly lane?: string;
   readonly landmark?: string;
+  /** The area the map read at the pin. Sent only with a newly placed pin; `''` clears. */
+  readonly placeName?: string;
+  readonly locality?: string;
+  readonly areaLine?: string;
+  /** A society from `GET /v1/societies`; or, under "Others", the name typed. Never both. */
+  readonly societyId?: string;
+  readonly customSociety?: string;
 }
+
+/** One row of the society dropdown: an entry of `GET /v1/societies`. */
+export const societySchema = z.object({ id: z.string(), name: z.string() });
+export const societyListSchema = z.object({ societies: z.array(societySchema) });
+export type SocietyDto = z.infer<typeof societySchema>;

@@ -8,6 +8,8 @@ import type { ImageSourcePropType } from 'react-native';
 const img = (source: unknown) => source as ImageSourcePropType;
 
 export const ADDRESS_ART = {
+  /** The not-live map art Home's inactive-pincode card draws, reused on `2355:6094`. */
+  notLiveMap: img(require('../../../../assets/figma/home2/map-art.png')),
   /** `43:63` Icon/Chevron left. */
   chevronLeft: img(require('../../../../assets/figma/address-v2/icon-chevron-left.png')),
   /** `167:23` Icon/Chevron right. */

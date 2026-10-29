@@ -152,14 +152,17 @@ export function laterModelFrom(input: {
       addServiceDays(today, offset),
     );
   const chosenLength = lengthOf(input.durationMinutes);
-  const days = dates.map((date, offset): LaterDay => {
+  // Named by date, not by position: after today's last slot the server starts the list at
+  // tomorrow (R-SLOT-16), and that first day must read "Tomorrow", not "Today".
+  const tomorrow = addServiceDays(today, 1);
+  const days = dates.map((date): LaterDay => {
     const answer = chosenLength?.days.find((day) => day.date === date);
     return {
       id: date,
       caption:
-        offset === 0
+        date === today
           ? 'Today'
-          : offset === 1
+          : date === tomorrow
             ? 'Tomorrow'
             : formatServiceDate(date, { weekday: 'long' }),
       dayNumber: formatServiceDate(date, { day: 'numeric' }),

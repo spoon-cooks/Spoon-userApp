@@ -19,8 +19,10 @@ import {
   useCreateAddress,
   useDeleteAddress,
   useUpdateAddress,
+  useSocieties,
+  AddressToast,
 } from '@features/address';
-import type { AddressDetailsForm, SavedAddressItem } from '@features/address';
+import type { AddressDetailsForm, AddressToastNotice, SavedAddressItem } from '@features/address';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
 import { getUserMessage, isAppError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
@@ -56,6 +58,7 @@ export default function AddressDetailsRoute() {
   const update = useUpdateAddress();
   const remove = useDeleteAddress();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<AddressToastNotice | null>(null);
   const [removing, setRemoving] = useState<SavedAddressItem | null>(null);
 
   /**
@@ -102,6 +105,12 @@ export default function AddressDetailsRoute() {
   const draftIsOurs =
     draft.editingId === editingId && draft.latitude !== null && draft.longitude !== null;
   const pinned = pinnedSummaryOf(draftIsOurs ? draft : (savedArea ?? draft));
+  /** The society dropdown's options: the societies at the pin being saved (R-AREA-19). */
+  const societies = useSocieties(
+    draftIsOurs && draft.latitude !== null && draft.longitude !== null
+      ? { latitude: draft.latitude, longitude: draft.longitude }
+      : savedPoint,
+  );
   const pinMoved =
     editingId !== null &&
     draftIsOurs &&
@@ -139,11 +148,18 @@ export default function AddressDetailsRoute() {
   // One screen per tap: a quick double tap must not open the same screen twice.
   const guard = useNavigationGuard();
 
-  /** Leaves the flow: the map/details pair collapses, then Home (onboarding) or the saved list. */
+  /**
+   * Leaves the flow: the map/details pair collapses, then Home (onboarding) or the saved list,
+   * which shows the "Address saved" toast (dev note `2075:11932`).
+   */
   const exit = () => {
     // Guarded: a deep link straight here has nothing to dismiss, and popping an only-child throws.
     if (router.canDismiss()) router.dismissAll();
-    router.replace(onboarding === '1' ? '/home' : listHref);
+    router.replace(
+      onboarding === '1'
+        ? '/home'
+        : ((from === undefined ? '/address?saved=1' : `/address?from=${from}&saved=1`) as Href),
+    );
   };
 
   const save = (form: AddressDetailsForm) => {
@@ -166,11 +182,25 @@ export default function AddressDetailsRoute() {
     const stateName = area?.state ?? savedArea?.state ?? null;
     const input = {
       ...detailsFieldsFrom(form),
-      street: area?.street ?? savedArea?.street ?? form.society.trim(),
+      // With no road name (common inside a society) the pin's locality is the street, not the
+      // society the customer typed, so the address keeps its area (R-AREA-15).
+      street: area?.street ?? savedArea?.street ?? area?.locality ?? form.society.trim(),
       pincode:
         area?.pincode ?? (savedArea?.pincode === '' ? recoveredPincode : savedArea?.pincode) ?? '',
       ...(city === null ? {} : { city }),
       ...(stateName === null ? {} : { state: stateName }),
+      /*
+       * The whole area the map read, sent only with a pin placed on this visit. An edit that never
+       * went through the map leaves it untouched (absent = unchanged); a new pin replaces all
+       * three, `''` clearing what that point did not have.
+       */
+      ...(area === null
+        ? {}
+        : {
+            placeName: area.placeName ?? '',
+            locality: area.locality ?? '',
+            areaLine: area.areaLine ?? '',
+          }),
       ...point,
     };
 
@@ -194,6 +224,15 @@ export default function AddressDetailsRoute() {
         exit();
       })
       .catch((thrown: unknown) => {
+        // An upcoming booking uses this address, so the backend refuses any edit (R-AREA-10).
+        // Not a failure to retry: a toast, and the customer stays on the form.
+        if (isAppError(thrown) && thrown.code === 'ADDRESS_IN_USE') {
+          setNotice((previous) => ({
+            id: (previous?.id ?? 0) + 1,
+            message: 'This address is already used in an upcoming booking',
+          }));
+          return;
+        }
         // The backend refuses an unserviceable point here too; its own message is shown.
         setError(isAppError(thrown) ? getUserMessage(thrown) : 'We could not save this address.');
       });
@@ -223,6 +262,8 @@ export default function AddressDetailsRoute() {
                     }),
                 })}
             saving={create.isPending || update.isPending}
+            societies={societies.state}
+            onRetrySocieties={societies.refetch}
             locationReady={locationReady}
             pinMoved={pinMoved}
           />
@@ -254,6 +295,7 @@ export default function AddressDetailsRoute() {
         body={error ?? ''}
         testID="address-save-error"
       />
+      <AddressToast notice={notice} testID="address-details-toast" />
     </>
   );
 }

@@ -108,6 +108,11 @@ export function addressWriteInputFrom(dto: AddressDto): AddressWriteInput {
     ...(dto.floor === null ? {} : { floor: dto.floor }),
     ...(dto.lane === null ? {} : { lane: dto.lane }),
     ...(dto.landmark === null ? {} : { landmark: dto.landmark }),
+    ...(dto.placeName === null ? {} : { placeName: dto.placeName }),
+    ...(dto.locality === null ? {} : { locality: dto.locality }),
+    ...(dto.areaLine === null ? {} : { areaLine: dto.areaLine }),
+    ...(dto.societyId === null ? {} : { societyId: dto.societyId }),
+    ...(dto.customSociety === null ? {} : { customSociety: dto.customSociety }),
   };
 }
 

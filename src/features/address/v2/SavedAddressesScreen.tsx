@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ADDRESS_ART } from './art';
 import { AddIcon, GradientHeader, LabelWell, OutlineButton, PrimaryButton } from './components';
 import type { SavedAddressItem } from './model';
+import { NotLiveEmptyState } from './NotLiveEmptyState';
+import type { NotLiveEmptyStateProps } from './NotLiveEmptyState';
 import { AddressToast } from '@ui/v2/Toast';
 import type { ToastNotice } from '@ui/v2/Toast';
 import { C, GRADIENT, SHADOW_1, SHADOW_2, SHADOW_3, SHADOW_HAIRLINE, T } from './theme';
@@ -55,6 +57,11 @@ export interface SavedAddressesScreenProps {
    */
   readonly onRemove: (id: string) => Promise<'removed' | 'in_use' | 'failed'>;
   readonly notice?: ToastNotice | null;
+  /**
+   * With no saved address and a last captured place outside every live hub (`2355:6094`): the
+   * area, live hubs, waiting count and Notify me. Absent: the empty list shows only the banner.
+   */
+  readonly notLive?: Omit<NotLiveEmptyStateProps, 'testID'> | null;
   readonly testID?: string;
 }
 
@@ -73,6 +80,7 @@ export function SavedAddressesScreen({
   onEdit,
   onRemove,
   notice = null,
+  notLive = null,
   testID = 'saved-addresses',
 }: SavedAddressesScreenProps) {
   const { bottom } = useSafeAreaInsets();
@@ -127,6 +135,9 @@ export function SavedAddressesScreen({
           </LinearGradient>
         </Pressable>
 
+        {addresses.length === 0 && notLive !== null ? (
+          <NotLiveEmptyState {...notLive} testID={`${testID}-not-live`} />
+        ) : null}
         {addresses.length === 0 ? null : (
           <>
             <Text style={styles.emphasis} accessibilityRole="header">
