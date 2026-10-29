@@ -11,6 +11,7 @@ import {
   discardProfileDraft,
   firstIncompleteStep,
   saveProfileDraft,
+  useAutosaveProfileDetails,
   useProfileDetailsData,
   useProfileDraft,
   useSaveProfileDetails,
@@ -38,7 +39,9 @@ import type { ProfileDetailsData, ProfileDetailsValues, WizardStepId } from '@fe
  * ## The draft (dev note `2505:4916`)
  *
  * During onboarding every change is kept on the device, per customer, and a customer who leaves
- * mid-flow comes back to the step and answers they left. It is removed once the save lands. The
+ * mid-flow comes back to the step and answers they left. It is removed once the save lands. Each
+ * change is also saved to the server once there is a name (R-AREA-23), so on another device the
+ * wizard opens with those answers and at the first step still missing one. The
  * edit context keeps none: Back out of an edit is a cancel, and the next edit opens from what is
  * saved.
  *
@@ -83,6 +86,7 @@ function WizardRoute({
 }) {
   const router = useRouter();
   const save = useSaveProfileDetails();
+  const autosave = useAutosaveProfileDetails();
 
   /**
    * Where a first-run save lands. A customer can owe the profile while already having an address
@@ -114,9 +118,14 @@ function WizardRoute({
   const error = save.error === null ? undefined : getUserMessage(normalizeError(save.error));
 
   const initialValues = draft?.values ?? data.values;
-  // Resume where the customer left, but never past a step whose required answer is missing.
+  // Resume where the customer left, but never past a step whose required answer is missing. With
+  // no device draft, answers already saved to the server (R-AREA-23) resume at the first gap.
   const initialStep =
-    draft === null || draft === undefined ? 'family' : resumeStep(draft.step, draft.values);
+    draft === null || draft === undefined
+      ? onboarding
+        ? firstIncompleteStep(data.values)
+        : 'family'
+      : resumeStep(draft.step, draft.values);
 
   return (
     <TasteProfileWizard
@@ -127,10 +136,10 @@ function WizardRoute({
         onboarding
           ? (step, values) => {
               if (pending.current !== null) clearTimeout(pending.current);
-              pending.current = setTimeout(
-                () => saveProfileDraft(data.userId, { step, values }),
-                400,
-              );
+              pending.current = setTimeout(() => {
+                saveProfileDraft(data.userId, { step, values });
+                autosave(values);
+              }, 400);
             }
           : undefined
       }

@@ -399,7 +399,7 @@ describe('the taste-profile wizard', () => {
 /* ------------------------------------------------------------------------------ saving */
 
 describe('saving', () => {
-  it('saves every answer once, then opens the address step on a first run', async () => {
+  it('saves every answer, then opens the address step on a first run', async () => {
     mockSearchParams = { context: 'onboarding' };
     const put = jest.fn(() => savedProfile());
 
@@ -412,12 +412,11 @@ describe('saving', () => {
     });
 
     await answerRequiredSteps();
-    // Nothing is saved while moving between steps.
-    expect(put).not.toHaveBeenCalled();
     fireEvent.press(cta());
 
-    await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
-    expect(put).toHaveBeenCalledWith(REQUIRED_ONLY_PAYLOAD);
+    // Answers may also have been autosaved on the way (R-AREA-23); the last save is the whole form.
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put).toHaveBeenLastCalledWith(REQUIRED_ONLY_PAYLOAD);
     await waitFor(() =>
       expect(mockRouter.replace).toHaveBeenCalledWith('/address/location?onboarding=1'),
     );
@@ -538,6 +537,44 @@ describe('saving', () => {
       const stored = await SecureStore.getItemAsync(DRAFT_KEY);
       expect(JSON.parse(stored ?? '{}').values.dietaryPreference).toBe('jain');
     });
+  });
+
+  it('saves answers to the server as they are given, once there is a name (R-AREA-23)', async () => {
+    mockSearchParams = { context: 'onboarding' };
+    const put = jest.fn(() => savedProfile({ mealStructure: null, dietaryPreference: null }));
+
+    renderWithRuntime(<ProfileDetailsRoute />, {
+      runtime: runtimeWith({ 'GET /v1/me': () => ME_INCOMPLETE, 'PUT /v1/me/profile': put }),
+    });
+
+    fireEvent.press(await screen.findByTestId('taste-profile-continue'));
+    fireEvent.changeText(screen.getByTestId('taste-profile-name'), '   ');
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    // No name yet: the PUT requires one, so nothing is sent.
+    expect(put).not.toHaveBeenCalled();
+
+    fireEvent.changeText(screen.getByTestId('taste-profile-name'), 'Aarav');
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Aarav' }));
+    // Still on the wizard: an autosave never moves the customer on.
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
+  it('resumes at the first unanswered step from answers saved on the server', async () => {
+    mockSearchParams = { context: 'onboarding' };
+    renderWithRuntime(<ProfileDetailsRoute />, {
+      runtime: runtimeWith({
+        'GET /v1/me': () => ({
+          ...ME_INCOMPLETE,
+          name: 'Aarav',
+          householdAdults: 2,
+          dietaryPreference: 'vegetarian',
+        }),
+      }),
+    });
+
+    // Family and Diet are answered and Taste has no required answer, so it opens on Cook.
+    expect(await screen.findByTestId('taste-profile-meal-regular-cook')).toBeTruthy();
   });
 
   it('never resumes a draft past a step whose required answer is missing', async () => {

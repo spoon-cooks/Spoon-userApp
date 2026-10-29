@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { clearProfileDraft, readProfileDraft, writeProfileDraft } from '@core/auth';
 import { ready } from '@core/data';
 import type { ScreenQuery } from '@core/data';
-import { useMe, useUpdateProfile } from '@features/auth';
+import { useRuntime } from '@core/runtimeContext';
+import { authKeys, createAuthApi, useMe, useUpdateProfile } from '@features/auth';
 import type { MeResponse, ProfileUpdateRequest } from '@features/auth';
 
 import {
@@ -24,13 +26,16 @@ import type { ProfileDetailsValues } from './validation';
  * The taste-profile wizard's data layer: `GET /v1/me` → the form, the form → `PUT /v1/me/profile`,
  * and the on-device draft between the two.
  *
- * ## The whole form is submitted, once
+ * ## Saved as the customer answers (R-AREA-23)
  *
  * `PUT /v1/me/profile` is a PATCH, but the wizard opens PREFILLED and submits every answer it asks,
- * so what the screens show and what is stored are the same object. It is sent once, from the last
- * step's Save & Continue; the steps before it only update the on-device draft. Saving per step
- * would let a customer who quit after step 1 read as onboarded (V0's completion rule needs the
- * diet and the meal setup), so the draft is what carries a half-finished wizard instead.
+ * so what the screens show and what is stored are the same object. During onboarding every change
+ * is also sent to the server a moment after it is made (`useAutosaveProfileDetails`), once a name
+ * exists — the PUT requires one — so a customer who leaves mid-flow keeps what they entered on any
+ * device. That does not onboard them early: `profileComplete` needs the name, the diet and the
+ * meal setup, all of which are mandatory anyway. Save & Continue still sends the final answers and
+ * is the only thing that moves the customer on; the on-device draft carries the step and anything
+ * entered before the name.
  *
  * `householdStructure` is no longer asked and is never sent, so an answer given on the V8 page is
  * left as it was rather than cleared.
@@ -131,6 +136,51 @@ export function useSaveProfileDetails() {
       });
     },
   };
+}
+
+/**
+ * Sends the wizard's answers to the server as they change (R-AREA-23).
+ *
+ * One request at a time: a change made while one is in flight is held, and only the newest held
+ * answers are sent when it returns, so a slow reply can never overwrite a later answer. Nothing is
+ * sent until there is a name (the PUT requires one). A failure is silent and is retried by the next
+ * change; the device draft and the final Save are what the customer relies on. The reply updates
+ * the cached `/me` in place rather than refetching it on every answer.
+ */
+export function useAutosaveProfileDetails(): (values: ProfileDetailsValues) => void {
+  const { api } = useRuntime();
+  const queryClient = useQueryClient();
+  const inFlight = useRef(false);
+  const queued = useRef<ProfileDetailsValues | null>(null);
+
+  // Sends the newest queued answers until none are left; only one request is ever out.
+  const drain = useCallback(async () => {
+    const auth = createAuthApi(api);
+    while (queued.current !== null) {
+      const values = queued.current;
+      queued.current = null;
+      try {
+        const profile = await auth.updateProfile(profileUpdateFrom(values));
+        queryClient.setQueryData<MeResponse>(authKeys.me(), (current) =>
+          current === undefined ? current : { ...current, ...profile },
+        );
+      } catch {
+        // Silent: the next change retries, and the final Save reports its own failure.
+      }
+    }
+    inFlight.current = false;
+  }, [api, queryClient]);
+
+  return useCallback(
+    (values: ProfileDetailsValues) => {
+      if (values.name.trim() === '') return;
+      queued.current = values;
+      if (inFlight.current) return;
+      inFlight.current = true;
+      void drain();
+    },
+    [drain],
+  );
 }
 
 /* --------------------------------------------------------------------------------- draft */
