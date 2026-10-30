@@ -36,6 +36,7 @@ export { HomeBookingBanner } from './components/HomeBookingBanner';
 export type { HomeBookingBannerProps } from './components/HomeBookingBanner';
 export { HomeBookingCarousel } from './components/HomeBookingCarousel';
 export type { HomeBookingCarouselProps } from './components/HomeBookingCarousel';
+export { useLoopingCarousel } from './hooks/useLoopingCarousel';
 export { HomeScreen, HomeView } from './screens/HomeScreen';
 export type { HomeActions, HomeViewProps } from './screens/HomeScreen';
 export type * from './types';

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Animated, Image, LayoutAnimation, StyleSheet, View } from 'react-native';
+import { AppState, Animated, Image, LayoutAnimation, StyleSheet, View } from 'react-native';
 import type { ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -109,6 +109,11 @@ export interface HomeRedesignViewProps extends HomeRedesignActions {
    * while the bank confirms a mandate (Autopay note 2317:13605). No Home frame draws one.
    */
   readonly banner?: ReactNode;
+  /**
+   * Home is the focused route. It stays mounted under a pushed screen, so this is what stops the
+   * Active bookings carousel advancing for a screen nobody is looking at. Defaults to true.
+   */
+  readonly focused?: boolean;
 }
 
 /**
@@ -128,6 +133,7 @@ export function HomeRedesignView({
   bookingBusy = false,
   notice = null,
   banner = null,
+  focused = true,
   ...actions
 }: HomeRedesignViewProps) {
   const { top, bottom } = useSafeAreaInsets();
@@ -227,6 +233,26 @@ export function HomeRedesignView({
     toast.current?.show(`${lost?.label ?? 'That duration'} is no longer available.`);
     dispatch({ type: 'clearSelection' });
   }, [lostSelection, draft.selectedDurationId, durations]);
+
+  /**
+   * Every time the app comes back to the foreground, the strip opens on 45 mins again (owner,
+   * 2026-10-30), as it does on a cold start. Home stays mounted while the app is away, so without
+   * this the last swipe would still be at the front. A tile the customer selected stays put.
+   */
+  const away = useRef(AppState.currentState !== 'active');
+  const homeFocus = model.focusedDurationId;
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (status) => {
+      if (status !== 'active') {
+        away.current = true;
+        return;
+      }
+      if (!away.current) return;
+      away.current = false;
+      if (selectedId === null) dispatch({ type: 'focusDuration', id: homeFocus });
+    });
+    return () => subscription.remove();
+  }, [homeFocus, selectedId]);
 
   /** Selecting a duration (a tap, or Help me pick) also brings it to the front. */
   const selectDuration = (id: string, source: 'tile' | 'dial') => {
@@ -351,6 +377,7 @@ export function HomeRedesignView({
             cards={model.activeBookings ?? []}
             onPressCard={actions.onPressActiveBooking ?? comingSoon}
             onPressViewAll={actions.onPressViewAllBookings ?? comingSoon}
+            focused={focused}
           />
 
           {variant === 'inactive' && model.waitlist !== null ? (

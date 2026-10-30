@@ -16,8 +16,7 @@ import type { ActiveBookingCard, ActiveBookingState, ActiveBookingTimeOfDay } fr
  * Sources:
  *   GET /v1/me/bookings/active   the bookings, already filtered by the server: live ones, plus
  *                                completed ones not yet rated (120 h backstop)
- *   GET /v1/bookings/:id         in progress / completed only — the service window the progress
- *                                bar fills across, and the duration with extensions
+ *   GET /v1/bookings/:id         in progress / completed only — the duration with extensions
  *   GET /v1/recurring/bookings   which bookings are Recurring visits (a visit carries its
  *                                `bookingId` once its T−3h debit succeeded)
  *
@@ -148,8 +147,6 @@ export function activeBookingCardsFrom(sources: ActiveBookingSources): ActiveBoo
     const detail = sources.details.get(booking.id);
     const minutes =
       detail?.totalDurationMinutes ?? detail?.durationMinutes ?? booking.durationMinutes;
-    const serviceStart = epochOf(detail?.timing.actualStart);
-    const serviceEnd = epochOf(detail?.timing.expectedEnd);
 
     cards.push({
       startMs,
@@ -161,13 +158,6 @@ export function activeBookingCardsFrom(sources: ActiveBookingSources): ActiveBoo
         timeOfDay: timeOfDayAt(timeZone, start),
         whenLabel: bannerWhenLabel(start, state, timeZone, now),
         duration: bannerDuration(minutes),
-        service:
-          state === 'in_progress' &&
-          serviceStart !== null &&
-          serviceEnd !== null &&
-          serviceEnd > serviceStart
-            ? { startMs: serviceStart, endMs: serviceEnd }
-            : null,
       },
     });
   }

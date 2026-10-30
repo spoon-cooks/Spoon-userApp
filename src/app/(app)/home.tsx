@@ -201,6 +201,7 @@ function SignedInHomeRoute() {
           model={model}
           bookingBusy={submission.submitting}
           notice={shownNotice}
+          focused={focused}
           banner={
             confirmingAutopay === null ? null : (
               <ConfirmingAutopayBanner

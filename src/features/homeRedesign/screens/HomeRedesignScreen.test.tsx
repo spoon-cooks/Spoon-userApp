@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AppState } from 'react-native';
 
 import {
   DEMO_HOME_ACTIVE,
@@ -122,6 +123,44 @@ describe('Duration carousel', () => {
     expect(front('30 minutes')).toBe(true);
     settleAt(5); // one before the middle set's 30 mins
     expect(front('2.5 hours')).toBe(true);
+  });
+
+  it('opens on 45 mins again when the app comes back, unless a tile is selected', () => {
+    const listeners = new Set<(status: string) => void>();
+    // React Native's AppState mock is itself a `jest.fn`; restoring a spy on it would strip its
+    // implementation, so the original is put back by hand.
+    const addEventListener = jest.mocked(AppState.addEventListener);
+    const original = addEventListener.getMockImplementation();
+    addEventListener.mockImplementation(((_type: string, handler: (status: string) => void) => {
+      listeners.add(handler);
+      return { remove: () => listeners.delete(handler) };
+    }) as never);
+    const reopen = () =>
+      act(() => {
+        [...listeners].forEach((listener) => listener('background'));
+        [...listeners].forEach((listener) => listener('active'));
+      });
+    try {
+      render(<HomeRedesignView model={DEMO_HOME_FIRST_TIME} {...actions()} />);
+      const carousel = screen.getByLabelText('Duration');
+      const front = (label: string) =>
+        screen.getByRole('button', { name: `Show ${label}` }).props.accessibilityState.selected;
+
+      fireEvent(carousel, 'scrollBeginDrag');
+      fireEvent(carousel, 'momentumScrollEnd', {
+        nativeEvent: { contentOffset: { x: 9 * 112, y: 0 } },
+      });
+      expect(front('1.5 hours')).toBe(true);
+      reopen();
+      expect(front('45 minutes')).toBe(true);
+
+      // A selected tile is the customer's choice: coming back leaves it at the front.
+      fireEvent.press(tile(/^1.5 hours/));
+      reopen();
+      expect(front('1.5 hours')).toBe(true);
+    } finally {
+      if (original !== undefined) addEventListener.mockImplementation(original);
+    }
   });
 
   it('opens on the middle set once prices arrive, so the first swipe back still loops', () => {
@@ -282,7 +321,12 @@ describe('Active bookings', () => {
     );
     expect(screen.getByText('3')).toBeTruthy();
     expect(screen.getByText('In progress')).toBeTruthy();
-    expect(screen.getAllByText('Upcoming')).toHaveLength(2);
+    // The two upcoming cards sit further along the track, hidden from screen readers until the
+    // carousel brings them on screen.
+    expect(screen.queryByText('Upcoming')).toBeNull();
+    expect(
+      screen.getAllByText('Upcoming', { includeHiddenElements: true }).length,
+    ).toBeGreaterThanOrEqual(2);
     fireEvent.press(screen.getByRole('link', { name: 'View all bookings' }));
     expect(onPressViewAllBookings).toHaveBeenCalled();
   });

@@ -99,7 +99,7 @@ describe('activeBookingCardsFrom', () => {
     ]);
   });
 
-  it('reads In progress as "Today · start time" and fills the bar from the detail', () => {
+  it('reads In progress as "Today · start time" and its duration from the detail', () => {
     const [card] = activeBookingCardsFrom(
       sources({
         bookings: [booking('c', 'cooking', '2026-10-12T03:30:00Z')],
@@ -116,19 +116,8 @@ describe('activeBookingCardsFrom', () => {
       }),
     );
     expect(card?.whenLabel.replace(/\s/g, ' ')).toBe('Today · 9:00 AM');
-    expect(card?.service).toEqual({
-      startMs: Date.parse('2026-10-12T03:35:00Z'),
-      endMs: Date.parse('2026-10-12T06:05:00Z'),
-    });
     // Extended to 2.5 hrs: the duration follows the detail, not the original booking.
     expect(card?.duration).toEqual({ value: '2.5', unit: 'HRS' });
-  });
-
-  it('draws no bar until the in-progress detail lands', () => {
-    const [card] = activeBookingCardsFrom(
-      sources({ bookings: [booking('c', 'cooking', '2026-10-12T03:30:00Z')] }),
-    );
-    expect(card?.service).toBeNull();
   });
 
   it('tags a booking that is a Recurring visit, and every other one ONE-TIME', () => {
