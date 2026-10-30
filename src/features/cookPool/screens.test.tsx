@@ -254,8 +254,21 @@ describe('Cook Pool on the API (default source)', () => {
   });
 
   it('deals the candidates', async () => {
+    const liked = new Set<string>();
+    const sent: string[] = [];
     renderApi(<CookPoolDeckScreen onDone={jest.fn()} />, {
       'GET /v1/me/cooks/candidates': () => ({ cooks: [{ ...CARD, presentation: PRESENTATION }] }),
+      'GET /v1/me/dish-likes': () => ({ dishCodes: [...liked] }),
+      'PUT /v1/me/dish-likes/V-016': () => {
+        sent.push('PUT V-016');
+        liked.add('V-016');
+        return { dishCode: 'V-016', liked: true };
+      },
+      'DELETE /v1/me/dish-likes/V-016': () => {
+        sent.push('DELETE V-016');
+        liked.delete('V-016');
+        return undefined;
+      },
     });
 
     await waitFor(() => expect(screen.getByTestId('cook-pool-deck-swipes')).toBeTruthy());
@@ -266,17 +279,43 @@ describe('Cook Pool on the API (default source)', () => {
     });
     expect(screen.getAllByText('Cook Meera').length).toBeGreaterThan(0);
 
-    // `755:2333` — each dish on the card carries its heart, the profile's favourites: one cook
-    // dealt is drawn on top and again behind it, and both hearts follow the one store.
+    // `755:2333` — each dish on the card carries its heart, the household's likes (DEC-115): one
+    // cook dealt is drawn on top and again behind it, and both hearts follow the one read.
     const selected = () =>
       screen
         .getAllByLabelText('Favourite Palak paneer')
         .map((heart) => (heart.props.accessibilityState as { selected?: boolean }).selected);
     expect(selected()).toEqual([false, false]);
     fireEvent.press(screen.getAllByLabelText('Favourite Palak paneer')[1]!);
-    expect(selected()).toEqual([true, true]);
+    await waitFor(() => expect(selected()).toEqual([true, true]));
     fireEvent.press(screen.getAllByLabelText('Favourite Palak paneer')[1]!);
-    expect(selected()).toEqual([false, false]);
+    await waitFor(() => expect(selected()).toEqual([false, false]));
+    // Saved by dish code, in the order tapped.
+    await waitFor(() => expect(sent).toEqual(['PUT V-016', 'DELETE V-016']));
+  });
+
+  it('draws saved likes filled, and puts a heart back when the like fails', async () => {
+    let attempts = 0;
+    renderApi(<CookProfileScreen cookId={COOK_ID} onBack={jest.fn()} onRemoved={jest.fn()} />, {
+      [`GET /v1/me/cooks/${COOK_ID}`]: () => PROFILE,
+      'GET /v1/me/dish-likes': () => ({ dishCodes: ['V-016'] }),
+      'DELETE /v1/me/dish-likes/V-016': () => {
+        attempts += 1;
+        throw fromStatus(500, { code: 'INTERNAL_ERROR' });
+      },
+    });
+    const heart = () =>
+      (
+        screen.getByLabelText('Favourite Palak paneer').props.accessibilityState as {
+          selected?: boolean;
+        }
+      ).selected;
+
+    await waitFor(() => expect(heart()).toBe(true));
+    fireEvent.press(screen.getByLabelText('Favourite Palak paneer'));
+    // The unlike is refused, so the heart fills again.
+    await waitFor(() => expect(attempts).toBeGreaterThan(0));
+    await waitFor(() => expect(heart()).toBe(true));
   });
 
   it('adds the top cook with POST /v1/me/cooks, and skipping stores nothing', async () => {

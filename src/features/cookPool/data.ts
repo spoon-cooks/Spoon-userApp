@@ -17,12 +17,12 @@ import {
   useCookPoolCandidates,
   useCookPoolList,
   useCookPoolProfile,
+  useDishLikesQuery,
   useRemoveCookFromPool,
+  useSetDishLike,
 } from './api';
 import type { CookPoolCandidatesDto } from './api';
 import type { CookPoolSummary, CookProfile } from './types';
-
-export { toggleFavouriteDish, useFavouriteDishIds } from './favourites';
 
 /**
  * The Cook Pool's data seam — DEC-085's `/v1/me/cooks` routes.
@@ -32,9 +32,10 @@ export { toggleFavouriteDish, useFavouriteDishIds } from './favourites';
  *  - the deck (`755:2333`)     ← `GET /v1/me/cooks/candidates`
  *  - a profile (`719:1568`)    ← `GET /v1/me/cooks/:cookId`
  *  - Add / swipe right         → `POST /v1/me/cooks`; Remove → `DELETE /v1/me/cooks/:cookId`
+ *  - a dish's heart            ← `GET /v1/me/dish-likes`; → `PUT` / `DELETE /v1/me/dish-likes/:dishCode`
  *
- * Skip and Undo stay on the device (the backend stores no skips), and so do dish favourites,
- * which have no endpoint (`favourites.ts`).
+ * Skip and Undo stay on the device: the backend stores no skips. Dish likes (DEC-115) belong to
+ * the household, so a dish liked on one cook is liked on every cook who cooks it.
  *
  * The reads come from a `CookPoolSource`. The app's is the API, and it is the default, so a
  * screen outside any provider reads the backend. The dev preview, which runs with no session,
@@ -51,11 +52,19 @@ export interface CookPoolActions {
   readonly removeCook: (cookId: string) => Promise<void>;
 }
 
+/** The dish cards' hearts: which dishes the household likes, and a tap on one. */
+export interface DishLikes {
+  /** Liked dish codes. Empty until the likes have loaded, or if they could not be read. */
+  readonly liked: ReadonlySet<string>;
+  readonly toggle: (dishCode: string) => void;
+}
+
 export interface CookPoolSource {
   readonly usePool: () => ScreenQuery<CookPoolSummary>;
   readonly useDeck: () => ScreenQuery<readonly CookProfile[]>;
   readonly useProfile: (cookId: string) => ScreenQuery<CookProfile>;
   readonly useActions: () => CookPoolActions;
+  readonly useDishLikes: () => DishLikes;
 }
 
 /**
@@ -133,11 +142,30 @@ function useApiActions(): CookPoolActions {
   );
 }
 
+const NO_DISH_CODES: readonly string[] = [];
+
+/**
+ * The hearts as the server has them. A heart that cannot be read draws empty rather than failing
+ * the profile: the menu is still worth showing, and the next read fills it in.
+ */
+function useApiDishLikes(): DishLikes {
+  const { state } = useDishLikesQuery();
+  const { mutate } = useSetDishLike();
+  const codes = state.status === 'ready' ? state.data.dishCodes : NO_DISH_CODES;
+  const liked = useMemo<ReadonlySet<string>>(() => new Set(codes), [codes]);
+  const toggle = useCallback(
+    (dishCode: string) => mutate({ dishCode, liked: !liked.has(dishCode) }),
+    [mutate, liked],
+  );
+  return useMemo(() => ({ liked, toggle }), [liked, toggle]);
+}
+
 export const API_COOK_POOL_SOURCE: CookPoolSource = {
   usePool: useApiPool,
   useDeck: useApiDeck,
   useProfile: useApiProfile,
   useActions: useApiActions,
+  useDishLikes: useApiDishLikes,
 };
 
 const CookPoolSourceContext = createContext<CookPoolSource>(API_COOK_POOL_SOURCE);
@@ -174,4 +202,9 @@ export function useCookProfile(cookId: string): ScreenQuery<CookProfile> {
 
 export function useCookPoolActions(): CookPoolActions {
   return useContext(CookPoolSourceContext).useActions();
+}
+
+/** The dish cards' hearts, on the profile and the deck alike. */
+export function useDishLikes(): DishLikes {
+  return useContext(CookPoolSourceContext).useDishLikes();
 }

@@ -1,13 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Dish favourites — the dish card's heart (`848:7809`).
- *
- * LOCAL AND PER SESSION, ON PURPOSE: the backend has no favourites endpoint (dropped in V2,
- * DEC-085), so a heart lives in memory until the app is closed and is never sent anywhere.
- * Favourites are keyed by the backend's `dishKey`, so the same dish is hearted on every cook who
- * cooks it — whether a favourite is per household or per cook is still open
- * (`docs/COOK_POOL_BACKEND.md` §5).
+ * DEVELOPMENT ONLY — the dish card's heart (`848:7809`) for the dev preview (`demoSource.ts`),
+ * which runs with no session to save a like against. A heart lives in memory until the app is
+ * closed. The signed-in app saves likes on the backend instead (`useDishLikes`, DEC-115).
  */
 
 let favourites: ReadonlySet<string> = new Set();

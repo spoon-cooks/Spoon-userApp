@@ -5,12 +5,15 @@ import {
   addCookToPoolSchema,
   cookPoolCandidatesSchema,
   cookPoolListSchema,
+  dishLikesSchema,
+  likeDishSchema,
   poolCookProfileSchema,
 } from './schemas';
 import type {
   AddCookToPoolDto,
   CookPoolCandidatesDto,
   CookPoolListDto,
+  DishLikesDto,
   PoolCookProfileDto,
 } from './schemas';
 
@@ -25,12 +28,17 @@ import type {
  * The add is refused with 403 `FORBIDDEN` (`reason` `COOK_NOT_TRIED`) for a cook who has never
  * completed a booking for the household, and 409 `INVALID_BOOKING_STATE` (`COOK_UNAVAILABLE`) for
  * one Operations has paused. The deck only ever offers candidates, so neither is expected there.
+ *
+ * Dish likes (DEC-115) are a PUT and a DELETE on the dish, both idempotent on the backend, so
+ * neither needs a key: sending a tap again after a lost response lands in the same state.
  */
 
 export const COOK_POOL_PATHS = {
   pool: '/v1/me/cooks',
   candidates: '/v1/me/cooks/candidates',
   cook: (cookId: string) => `/v1/me/cooks/${cookId}`,
+  dishLikes: '/v1/me/dish-likes',
+  dishLike: (dishCode: string) => `/v1/me/dish-likes/${encodeURIComponent(dishCode)}`,
 } as const;
 
 /** The intent an add's Idempotency-Key belongs to: this cook, into this household's pool. */
@@ -81,6 +89,30 @@ export function createCookPoolApi(api: ApiClient) {
     /** `DELETE /v1/me/cooks/:cookId` — 204. */
     async remove(cookId: string): Promise<void> {
       return api.request(COOK_POOL_PATHS.cook(cookId), {
+        method: 'DELETE',
+        parse: expectNoContent,
+      });
+    },
+
+    /** `GET /v1/me/dish-likes` — the household's liked dish codes. */
+    async dishLikes(signal?: AbortSignal): Promise<DishLikesDto> {
+      return api.request(COOK_POOL_PATHS.dishLikes, {
+        parse: (data) => dishLikesSchema.parse(data),
+        ...withSignal(signal),
+      });
+    },
+
+    /** `PUT /v1/me/dish-likes/:dishCode` — likes the dish; liking it again changes nothing. */
+    async likeDish(dishCode: string): Promise<void> {
+      await api.request(COOK_POOL_PATHS.dishLike(dishCode), {
+        method: 'PUT',
+        parse: (data) => likeDishSchema.parse(data),
+      });
+    },
+
+    /** `DELETE /v1/me/dish-likes/:dishCode` — 204, liked or not. */
+    async unlikeDish(dishCode: string): Promise<void> {
+      return api.request(COOK_POOL_PATHS.dishLike(dishCode), {
         method: 'DELETE',
         parse: expectNoContent,
       });

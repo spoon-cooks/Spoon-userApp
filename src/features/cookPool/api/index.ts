@@ -5,7 +5,9 @@ export {
   useCookPoolCandidates,
   useCookPoolList,
   useCookPoolProfile,
+  useDishLikesQuery,
   useRemoveCookFromPool,
+  useSetDishLike,
 } from './hooks';
 export { cookPoolKeys } from './keys';
 export {
@@ -14,6 +16,8 @@ export {
   cookPoolListSchema,
   cookProfilePresentationSchema,
   cookSpecialtyDishSchema,
+  dishLikesSchema,
+  likeDishSchema,
   poolCookCardSchema,
   poolCookProfileSchema,
 } from './schemas';
@@ -23,6 +27,7 @@ export type {
   CookPoolListDto,
   CookProfilePresentationDto,
   CookSpecialtyDishDto,
+  DishLikesDto,
   PoolCookCardDto,
   PoolCookProfileDto,
 } from './schemas';

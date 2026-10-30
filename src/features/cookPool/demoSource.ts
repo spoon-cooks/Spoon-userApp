@@ -5,6 +5,7 @@ import type { ScreenQuery } from '@core/data';
 import { fromStatus } from '@core/errors';
 
 import type { CookPoolActions, CookPoolSource } from './data';
+import { toggleFavouriteDish, useFavouriteDishIds } from './favourites';
 import { addCook, cookProfile, deckCooks, poolSummary, removeCook } from './pool';
 import type { CookPoolState } from './pool';
 import type { CookPoolSummary, CookProfile } from './types';
@@ -64,5 +65,10 @@ export function createDemoCookPoolSource(seed: CookPoolState): CookPoolSource {
       }, [state, cookId]);
     },
     useActions: () => actions,
+    // The preview has no session to save a like against: its hearts last until the app closes.
+    useDishLikes() {
+      const liked = useFavouriteDishIds();
+      return useMemo(() => ({ liked, toggle: toggleFavouriteDish }), [liked]);
+    },
   };
 }
