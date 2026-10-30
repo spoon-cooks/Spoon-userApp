@@ -12,7 +12,7 @@ import {
   spoonCancelHelpMessage,
   spoonCancelledFrom,
 } from './cancelledVisit';
-import { cookStatLines, reassignedOneTime } from './model';
+import { reassignedOneTime } from './model';
 import type { ServicePhase } from './model';
 import { SpoonCancelledCard } from './notices';
 
@@ -60,7 +60,7 @@ function cancelledBy(
     cancellation: {
       cancelledBy: by,
       reasonCode,
-      reasonDetail: 'Cook Sanchita called in sick',
+      reasonDetail: 'Cook Meera called in sick',
       cancelledAt: CANCELLED_AT,
       refundAmountPaise: 29900,
       chargeAmountPaise: 0,
@@ -85,9 +85,9 @@ const MODEL: ServiceVisitModel = {
   title: 'On-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
-  cook: { eyebrow: '', name: 'Cook Sanchita', note: '' },
+  cook: { eyebrow: '', name: 'Cook Meera', note: '' },
   menu: [],
-  cookFirstName: 'Sanchita',
+  cookFirstName: 'Meera',
   cookPhoto: null,
   prepChecked: [],
   arrival: { by: '8:57 AM', minutes: 24, onTime: true },
@@ -160,36 +160,6 @@ describe('Cook reassigned (2353:17562, dev note 2353:17578)', () => {
   it('is not drawn for a visit that was never reassigned', () => {
     renderScreen({ phase: 'assigned' });
     expect(screen.queryByTestId('service-visit-reassigned')).toBeNull();
-  });
-});
-
-describe('Cook card stat lines', () => {
-  const rating = { average: 4.66, count: 12 };
-
-  it('a first visit: "First visit with you" and the overall rating', () => {
-    expect(cookStatLines({ visitsWithYou: 0, rating, yourRating: null })).toEqual({
-      visits: 'First visit with you',
-      rating: 'Rated 4.7 by Spoon users',
-    });
-  });
-
-  it('a first visit with a cook nobody has rated: no rating line', () => {
-    expect(cookStatLines({ visitsWithYou: 0, rating: { average: 0, count: 0 } })).toEqual({
-      visits: 'First visit with you',
-    });
-  });
-
-  it('a returning cook: visits with you and this customer’s own rating, never the overall', () => {
-    expect(
-      cookStatLines({ visitsWithYou: 3, rating, yourRating: { average: 4.5, count: 2 } }),
-    ).toEqual({ visits: 'Visits with you: 3', rating: 'Your rating: 4.5' });
-    expect(cookStatLines({ visitsWithYou: 3, rating, yourRating: null })).toEqual({
-      visits: 'Visits with you: 3',
-    });
-  });
-
-  it('no card yet: no lines', () => {
-    expect(cookStatLines(null)).toEqual({});
   });
 });
 

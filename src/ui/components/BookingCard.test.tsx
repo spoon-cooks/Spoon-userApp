@@ -8,7 +8,7 @@ describe('BookingCard — history variant', () => {
     render(<BookingCard booking={DEMO_BOOKING_COMPLETED} />);
 
     expect(screen.getByText('12th April • 1 hr')).toBeTruthy();
-    expect(screen.getByText('Cook Rekha')).toBeTruthy();
+    expect(screen.getByText('Cook Asha')).toBeTruthy();
     expect(screen.getByText('Scheduled • 4:00 PM')).toBeTruthy();
     expect(screen.getByTestId('booking-card-amount')).toBeTruthy();
     expect(screen.getByTestId('booking-card-rating')).toBeTruthy();

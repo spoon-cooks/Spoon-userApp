@@ -192,10 +192,10 @@ describe('submit', () => {
   it('trims text, and sends an emptied box as an explicit clear', () => {
     const body = profileUpdateFrom({
       ...EMPTY_PROFILE_DETAILS,
-      name: '  Rekha S  ',
+      name: '  Asha S  ',
       pressingIssue: '   ',
     });
-    expect(body.name).toBe('Rekha S');
+    expect(body.name).toBe('Asha S');
     expect(body.pressingIssue).toBeNull();
   });
 

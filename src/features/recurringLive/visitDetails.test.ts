@@ -84,6 +84,20 @@ const PROFILE = {
   inPool: true,
   addedAt: null,
   dishesByCategory: [],
+  // DEC-114: the lines as the backend sends them; the app adds no wording of its own.
+  presentation: {
+    timeSlot: 'lunch',
+    badges: ['Spoon trained', 'Verified'],
+    details: [
+      { id: 'region', label: null, value: 'West Bengal', icon: null },
+      { id: 'languages', label: null, value: 'Speaks Hindi, Bengali', icon: null },
+    ],
+    stats: [
+      { id: 'visits', label: 'Visits with you', value: '7', icon: null },
+      { id: 'rating', label: 'Your rating', value: '4.8', icon: 'star' },
+    ],
+    shelves: [],
+  },
 } as unknown as PoolCookProfileDto;
 
 const CARD = {
@@ -142,14 +156,21 @@ describe('visitDetailsFrom', () => {
         visit: visit({ displayState: 'cook_assigned', cook: COOK, bookingId: 'b-1' }),
         cookProfile: PROFILE,
         cookCard: CARD,
+        cookLines: {
+          eyebrow: 'SPOON TRAINED · VERIFIED',
+          origin: 'West Bengal · Speaks Hindi, Bengali',
+          visits: 'Visits with you: 7',
+          rating: 'Your rating: 4.8',
+        },
       }),
     );
     expect(model.variant).toBe('assigned');
     expect(model.cook).toMatchObject({
+      eyebrow: 'SPOON TRAINED · VERIFIED',
       name: 'Cook Meera',
       origin: 'West Bengal · Speaks Hindi, Bengali',
       visits: 'Visits with you: 7',
-      rating: 'Rating: 4.8',
+      rating: 'Your rating: 4.8',
       photo: { uri: 'https://img/meera.jpg' },
     });
     expect(model.menu).toEqual([

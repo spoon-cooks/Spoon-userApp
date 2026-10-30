@@ -135,10 +135,8 @@ export const bookingCookSchema = z
      * used to strip. Every one is `nullish`-tolerant so an older deployment still parses; the
      * card was built to drop what is absent, never to invent it.
      *
-     * `profileCode` is the STABLE card identity (`COOK_JYOTI`, ...) that resolves bundled card
-     * content — the photograph and the designed dish-chip lists — in
-     * `@ui/components/cookCardContent.ts`. Resolution is by this code alone: never by display
-     * name, phone or array position.
+     * `profileCode` is the backend's stable card identity. The app no longer resolves anything
+     * by it: a cook's photo and dishes come from the backend (DEC-114).
      *
      * `profileVariant` is the backend's veg/mixed presentation decision, derived server-side
      * from the CUSTOMER's stored `dietaryPreference`. The client renders the variant it is

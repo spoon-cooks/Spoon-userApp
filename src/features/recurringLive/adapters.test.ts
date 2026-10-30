@@ -31,16 +31,16 @@ function visit(
   };
 }
 
-const SANCHITA = {
+const MEERA = {
   cookId: 'cook-1',
-  displayName: 'Cook Sanchita',
+  displayName: 'Cook Meera',
   profileImageUrl: null,
   rating: { average: 4.5, count: 12 },
 };
 
 function booking(overrides: Partial<RecurringBookingDto> = {}): RecurringBookingDto {
   const past = [
-    visit({ date: '2026-09-28', status: 'completed', displayState: 'completed', cook: SANCHITA }),
+    visit({ date: '2026-09-28', status: 'completed', displayState: 'completed', cook: MEERA }),
     visit({
       date: '2026-09-28',
       visitNumber: 2,
@@ -52,7 +52,7 @@ function booking(overrides: Partial<RecurringBookingDto> = {}): RecurringBooking
     }),
   ];
   const today = [
-    visit({ date: TODAY, status: 'charged', displayState: 'cook_assigned', cook: SANCHITA }),
+    visit({ date: TODAY, status: 'charged', displayState: 'cook_assigned', cook: MEERA }),
   ];
   const upcoming = [visit({ date: '2026-10-14', durationMinutes: 150, startTime: '20:00' })];
   return {
@@ -142,13 +142,13 @@ describe('liveCalendarFrom', () => {
         expect.objectContaining({
           status: 'completed',
           title: '1st Visit · 7:00 PM · 1 hr',
-          meta: 'Completed · Cook Sanchita',
+          meta: 'Completed · Cook Meera',
         }),
       ],
     });
     expect(model.visitsByDay[TODAY]?.visits[0]).toMatchObject({
       status: 'assigned',
-      meta: 'Upcoming · Cook Sanchita',
+      meta: 'Upcoming · Cook Meera',
     });
     expect(model.visitsByDay[TODAY]?.visits[0]?.pool).toBeUndefined();
   });
@@ -172,7 +172,7 @@ describe('liveCalendarFrom', () => {
     expect(model.upNext).toEqual({
       label: 'UP NEXT · TODAY',
       title: '1st Visit, 7:00 PM',
-      meta: '1 hr • Cook Sanchita',
+      meta: '1 hr • Cook Meera',
     });
     // No `profileImageUrl` for this cook: the banner draws no face rather than a stock one.
     expect(model.upNext?.photo).toBeUndefined();
@@ -191,10 +191,10 @@ describe('liveCalendarFrom', () => {
     expect(liveCalendarFrom(booking({ upNext: null }), TODAY).upNext).toBeNull();
     const pictured = visit({
       date: TODAY,
-      cook: { ...SANCHITA, profileImageUrl: 'https://img/sanchita.jpg' },
+      cook: { ...MEERA, profileImageUrl: 'https://img/meera.jpg' },
     });
     expect(liveCalendarFrom(booking({ upNext: pictured }), TODAY).upNext?.photo).toEqual({
-      uri: 'https://img/sanchita.jpg',
+      uri: 'https://img/meera.jpg',
     });
   });
 

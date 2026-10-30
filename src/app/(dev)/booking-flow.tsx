@@ -74,7 +74,7 @@ const MODEL: ServiceVisitModel = {
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: {
     eyebrow: 'SPOON TRAINED · VERIFIED',
-    name: 'Cook Sanchita',
+    name: 'Cook Meera',
     origin: 'West Bengal · Speaks Hindi, Bengali',
     visits: 'Visits with you: 45',
     rating: 'Your rating: 4.5',
@@ -85,7 +85,7 @@ const MODEL: ServiceVisitModel = {
   },
   // The frames' own sample menu and cook photo, so the preview compares like for like.
   menu: visitDemoModel('assigned').menu,
-  cookFirstName: 'Sanchita',
+  cookFirstName: 'Meera',
   cookPhoto: visitDemoModel('assigned').cook.photo ?? null,
   prepChecked: [],
   arrival: { by: '8:57 AM', minutes: 24, onTime: true },
@@ -105,7 +105,7 @@ const MODEL: ServiceVisitModel = {
 const VISIT: CancelVisit = {
   startsAt: new Date(Date.now() + (14 * 60 + 20) * 60_000).toISOString(),
   durationMinutes: 90,
-  cookName: 'Sanchita',
+  cookName: 'Meera',
   cookOnTheWay: false,
   etaMinutes: null,
   wasRescheduled: true,
@@ -350,7 +350,7 @@ function VisitPreview({ view }: { view: string }) {
   const refund = bySpoon
     ? ({ ...REFUND, reason: 'spoon_cancel', state: 'requested' } as RefundDto)
     : REFUND;
-  const model = cancelledVisitModelFrom(detail, refund, 'Cook Sanchita');
+  const model = cancelledVisitModelFrom(detail, refund, 'Cook Meera');
   const spoon = spoonCancelledFrom(detail, refund);
   return (
     <>
@@ -409,7 +409,7 @@ function VisitPreview({ view }: { view: string }) {
         visible={open}
         data={paymentSheetFrom(
           view === 'payment-sheet-basic' ? { ...DETAIL, charges: null } : DETAIL,
-          'Cook Sanchita',
+          'Cook Meera',
         )}
         onClose={() => setOpen(false)}
       />
@@ -515,9 +515,9 @@ function BookingFlowPreview({ view, recurring }: { view: string; recurring: bool
               live
               variant="service"
               visit={{
-                title: 'Cook Sanchita',
+                title: 'Cook Meera',
                 meta: 'Sun, 12 Apr · 1:15 PM · 1 hr',
-                cookName: 'Sanchita',
+                cookName: 'Meera',
                 // The frames' cook photo (`1517:9293`), so the first look compares like for like.
                 photoUri: PREVIEW_COOK_PHOTO_URI,
               }}

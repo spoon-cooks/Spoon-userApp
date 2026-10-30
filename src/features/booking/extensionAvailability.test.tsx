@@ -88,7 +88,7 @@ function bookingDto(canExtend: boolean): Record<string, unknown> {
     mealNotes: null,
     referenceUrl: null,
     mealBrief: null,
-    cook: { id: COOK_ID, name: 'Sanchita', phone: null, rating: null, photoUrl: null },
+    cook: { id: COOK_ID, name: 'Meera', phone: null, rating: null, photoUrl: null },
     timing: {
       arrivedAt: null,
       actualStart: '2026-08-20T06:32:00.000Z',

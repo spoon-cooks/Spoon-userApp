@@ -101,7 +101,7 @@ function bookingDto(overrides: {
     mealBrief: null,
     cook:
       overrides.cook === undefined
-        ? { id: COOK_ID, name: 'Sanchita', phone: null, rating: null, photoUrl: null }
+        ? { id: COOK_ID, name: 'Meera', phone: null, rating: null, photoUrl: null }
         : overrides.cook,
     timing: {
       arrivedAt: null,
@@ -246,8 +246,8 @@ describe('booking lifecycle from real DTOs', () => {
 
     expect(screen.getByTestId('tracking-banner')).toBeTruthy();
     expect(screen.queryByTestId('booking-unknown-view')).toBeNull();
-    // The banner names the booking's OWN cook, not the frame's "Rekha".
-    expect(screen.getByText('Cook Sanchita is arriving in')).toBeTruthy();
+    // The banner names the booking's OWN cook, not the frame's "Asha".
+    expect(screen.getByText('Cook Meera is arriving in')).toBeTruthy();
   });
 
   /**
@@ -733,7 +733,7 @@ describe('booking lifecycle from real DTOs', () => {
     });
 
     await jest.advanceTimersByTimeAsync(50);
-    expect(screen.getByText('Cook Sanchita is arriving in')).toBeTruthy();
+    expect(screen.getByText('Cook Meera is arriving in')).toBeTruthy();
 
     arrived = true;
     // `LIVE_POLL_MS` is 30s for the detail; tracking follows the server's `refreshAfterSeconds`.

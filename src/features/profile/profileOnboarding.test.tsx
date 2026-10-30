@@ -616,16 +616,16 @@ describe('saving', () => {
   });
 
   it('returns to the Account hub after an edit, and never diverts to Address', async () => {
-    const put = jest.fn(() => savedProfile({ name: 'Rekha S' }));
+    const put = jest.fn(() => savedProfile({ name: 'Asha S' }));
     renderWithRuntime(<ProfileDetailsRoute />, {
       runtime: runtimeWith({ 'GET /v1/me': () => ME_COMPLETE, 'PUT /v1/me/profile': put }),
     });
 
-    await answerRequiredSteps('Rekha S');
+    await answerRequiredSteps('Asha S');
     fireEvent.press(cta());
 
     await waitFor(() =>
-      expect(put).toHaveBeenCalledWith({ ...REQUIRED_ONLY_PAYLOAD, name: 'Rekha S' }),
+      expect(put).toHaveBeenCalledWith({ ...REQUIRED_ONLY_PAYLOAD, name: 'Asha S' }),
     );
     await waitFor(() => expect(mockRouter.back).toHaveBeenCalledTimes(1));
     expect(mockRouter.replace).not.toHaveBeenCalled();

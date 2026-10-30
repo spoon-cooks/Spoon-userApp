@@ -13,10 +13,6 @@ import type { CookMenuSection, CookPoolState, ServedCook } from '@features/cookP
  */
 
 const DISH = require('../../../assets/figma/cookpool/sample-dish.webp') as ImageSourcePropType;
-const SANCHITA = require('../../../assets/figma/cook/sanchita-photo.webp') as ImageSourcePropType;
-const REKHA = require('../../../assets/figma/cook/rekha-photo.webp') as ImageSourcePropType;
-const JYOTI = require('../../../assets/figma/cook/jyoti-photo.webp') as ImageSourcePropType;
-const BARSHA = require('../../../assets/figma/cook/barsha-photo.webp') as ImageSourcePropType;
 
 function section(cook: string, id: string, title: string, dishes: readonly string[]) {
   return {
@@ -45,81 +41,77 @@ function lines(region: string, languages: string, visits: number, rating: string
   };
 }
 
-const SANCHITA_COOK: ServedCook = {
-  cookId: 'demo-pool-sanchita',
-  name: 'Cook Sanchita',
-  shortName: 'Sanchita',
-  photo: SANCHITA,
+const MEERA_COOK: ServedCook = {
+  cookId: 'demo-pool-meera',
+  name: 'Cook Meera',
+  shortName: 'Meera',
   ...lines('West Bengal', 'Hindi, Bengali', 45, '4.5'),
   menu: [
-    section('sanchita', 'veg', 'Curries/ sabzis- Veg', [
+    section('meera', 'veg', 'Curries/ sabzis- Veg', [
       'Dahi bhindi',
       'Aloo posto',
       'Shukto',
       'Chhanar dalna',
       'Begun bhaja',
     ]),
-    section('sanchita', 'non-veg', 'Curries/ sabzis- Non Veg', [
+    section('meera', 'non-veg', 'Curries/ sabzis- Non Veg', [
       'Macher jhol',
       'Chicken kosha',
       'Egg curry',
       'Chingri malai',
     ]),
-    section('sanchita', 'breakfast', 'Breakfast', ['Luchi', 'Poha', 'Aloo paratha', 'Upma']),
-    section('sanchita', 'one-pot', 'One pot recipes', ['Khichuri', 'Veg pulao', 'Chicken biryani']),
-    section('sanchita', 'snacks', 'Snacks', ['Ghugni', 'Veg chop', 'Samosa']),
-    section('sanchita', 'salads', 'Salads', ['Kachumber', 'Sprouts chaat']),
-    section('sanchita', 'drinks', 'Drinks', ['Masala chai', 'Aam panna', 'Lassi']),
+    section('meera', 'breakfast', 'Breakfast', ['Luchi', 'Poha', 'Aloo paratha', 'Upma']),
+    section('meera', 'one-pot', 'One pot recipes', ['Khichuri', 'Veg pulao', 'Chicken biryani']),
+    section('meera', 'snacks', 'Snacks', ['Ghugni', 'Veg chop', 'Samosa']),
+    section('meera', 'salads', 'Salads', ['Kachumber', 'Sprouts chaat']),
+    section('meera', 'drinks', 'Drinks', ['Masala chai', 'Aam panna', 'Lassi']),
   ],
 };
 
-const REKHA_COOK: ServedCook = {
-  cookId: 'demo-pool-rekha',
-  name: 'Cook Rekha',
-  shortName: 'Rekha',
-  photo: REKHA,
+const ASHA_COOK: ServedCook = {
+  cookId: 'demo-pool-asha',
+  name: 'Cook Asha',
+  shortName: 'Asha',
   ...lines('West Bengal', 'Hindi, Bengali', 12, '4.8'),
   menu: [
-    section('rekha', 'veg', 'Curries/ sabzis- Veg', [
+    section('asha', 'veg', 'Curries/ sabzis- Veg', [
       'Palak paneer',
       'Dal tadka',
       'Mix veg',
       'Rajma',
     ]),
-    section('rekha', 'breakfast', 'Breakfast', ['Aloo paratha', 'Besan chilla', 'Idli']),
-    section('rekha', 'one-pot', 'One pot recipes', ['Veg pulao', 'Dal khichdi']),
-    section('rekha', 'drinks', 'Drinks', ['Masala chai', 'Lassi']),
+    section('asha', 'breakfast', 'Breakfast', ['Aloo paratha', 'Besan chilla', 'Idli']),
+    section('asha', 'one-pot', 'One pot recipes', ['Veg pulao', 'Dal khichdi']),
+    section('asha', 'drinks', 'Drinks', ['Masala chai', 'Lassi']),
   ],
 };
 
-const JYOTI_COOK: ServedCook = {
-  cookId: 'demo-pool-jyoti',
-  name: 'Cook Jyoti',
-  shortName: 'Jyoti',
-  photo: JYOTI,
+const KAVITA_COOK: ServedCook = {
+  cookId: 'demo-pool-kavita',
+  name: 'Cook Kavita',
+  shortName: 'Kavita',
   ...lines('Odisha', 'Hindi, Odia', 8, '4.6'),
   menu: [
-    section('jyoti', 'veg', 'Curries/ sabzis- Veg', ['Dalma', 'Santula', 'Aloo bharta']),
-    section('jyoti', 'non-veg', 'Curries/ sabzis- Non Veg', ['Chicken curry', 'Fish fry']),
-    section('jyoti', 'snacks', 'Snacks', ['Pakoda', 'Bara']),
+    section('kavita', 'veg', 'Curries/ sabzis- Veg', ['Dalma', 'Santula', 'Aloo bharta']),
+    section('kavita', 'non-veg', 'Curries/ sabzis- Non Veg', ['Chicken curry', 'Fish fry']),
+    section('kavita', 'snacks', 'Snacks', ['Pakoda', 'Bara']),
   ],
 };
 
-const BARSHA_COOK: ServedCook = {
-  cookId: 'demo-pool-barsha',
-  name: 'Cook Barsha',
-  shortName: 'Barsha',
-  photo: BARSHA,
+const LATA_COOK: ServedCook = {
+  cookId: 'demo-pool-lata',
+  name: 'Cook Lata',
+  shortName: 'Lata',
   ...lines('West Bengal', 'Hindi, Bengali', 3, '4.2'),
   menu: [
-    section('barsha', 'veg', 'Curries/ sabzis- Veg', ['Aloo dum', 'Cholar dal', 'Labra']),
-    section('barsha', 'breakfast', 'Breakfast', ['Poha', 'Upma']),
+    section('lata', 'veg', 'Curries/ sabzis- Veg', ['Aloo dum', 'Cholar dal', 'Labra']),
+    section('lata', 'breakfast', 'Breakfast', ['Poha', 'Upma']),
   ],
 };
 
 /** `844:5842` — four cooks have served the household; its pool is empty; it needs two. */
 export const DEMO_COOK_POOL: CookPoolState = {
   minimumSize: 2,
-  servedCooks: [SANCHITA_COOK, REKHA_COOK, JYOTI_COOK, BARSHA_COOK],
+  servedCooks: [MEERA_COOK, ASHA_COOK, KAVITA_COOK, LATA_COOK],
   poolIds: [],
 };

@@ -4,10 +4,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { keyframedStyle, useTimeline } from '@ui/motion/keyframes';
 
+import type { FeaturedCookDto } from '../api/featuredCooksApi';
 import { ART } from '../assets';
-import { COOKS, TRUST_POINTS } from '../content';
+import { TRUST_POINTS } from '../content';
 import { C, F, SHADOW_CARD } from '../theme';
-import { COOKS_LOOP_MS, COOKS_REST_PROGRESS, cookCardTracks } from './cooksTimeline';
+import {
+  COOKS_CARD_COUNT,
+  COOKS_LOOP_MS,
+  COOKS_REST_PROGRESS,
+  cookCardTracks,
+} from './cooksTimeline';
 
 /** `1170:609` — 368 × 305 inside a 368 × 335 stack that leaves 30pt of air above it. */
 const CARD = { width: 368, height: 305 };
@@ -15,15 +21,22 @@ const STACK_AIR = 30;
 /** `inset-[calc(42.62%-0.15px)_-1px_-1px_-1px]` — the band's top, measured inside the border. */
 const BAND_TOP = 0.4262 * CARD.height - 0.15 - 1;
 
-type Cook = (typeof COOKS)[number];
-
 /**
- * `1134:604` "Cooks · Meet your cook", animated as `1290:1280`: the four cards rise into one
- * spot in turn, each new cook landing in front and pushing the earlier ones up and back into the
- * 30pt of air above the stack, then the stack fades and the loop starts again (`cooksTimeline`).
- * With Reduce Motion on, it holds all four stacked, Sucharita in front.
+ * `1134:604` "Cooks · Meet your cook", animated as `1290:1280`: the cards rise into one spot in
+ * turn, each new cook landing in front and pushing the earlier ones up and back into the 30pt of
+ * air above the stack, then the stack fades and the loop starts again (`cooksTimeline`). With
+ * Reduce Motion on, it holds them all stacked, the last in front.
+ *
+ * The cooks are the backend's (`GET /v1/cooks/featured`, DEC-114), in its order, read with the
+ * rest of Home's data. Until they load, or if there are none, the section is not drawn: the app
+ * shows no cook of its own.
  */
-export function CooksTrust() {
+export function CooksTrust({ cooks }: { readonly cooks: readonly FeaturedCookDto[] }) {
+  const shown = cooks.slice(0, COOKS_CARD_COUNT);
+  return shown.length === 0 ? null : <CooksStack cooks={shown} />;
+}
+
+function CooksStack({ cooks }: { readonly cooks: readonly FeaturedCookDto[] }) {
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(CARD.width, width - 32);
   const progress = useTimeline({
@@ -32,8 +45,8 @@ export function CooksTrust() {
     restAt: COOKS_REST_PROGRESS,
   });
   const motion = useMemo(
-    () => COOKS.map((_, index) => keyframedStyle(progress, cookCardTracks(index))),
-    [progress],
+    () => cooks.map((_, index) => keyframedStyle(progress, cookCardTracks(index, cooks.length))),
+    [progress, cooks],
   );
 
   return (
@@ -50,11 +63,11 @@ export function CooksTrust() {
       <View
         style={styles.stack}
         accessible
-        accessibilityLabel={`Spoon cooks: ${COOKS.map((c) => `${c.name}, ${c.region}, rated ${c.rating}`).join('; ')}. ${TRUST_POINTS.map((p) => p.title).join(', ')}.`}
+        accessibilityLabel={`Spoon cooks: ${cooks.map(spokenCook).join('; ')}. ${TRUST_POINTS.map((p) => p.title).join(', ')}.`}
       >
-        {COOKS.map((cook, index) => (
+        {cooks.map((cook, index) => (
           <Animated.View
-            key={cook.name}
+            key={cook.displayName}
             style={[styles.slot, { width: cardWidth }, motion[index]]}
             importantForAccessibility="no-hide-descendants"
           >
@@ -66,26 +79,38 @@ export function CooksTrust() {
   );
 }
 
-function CookCard({ cook }: { cook: Cook }) {
+function spokenCook(cook: FeaturedCookDto): string {
+  return [
+    cook.displayName,
+    cook.region,
+    cook.rating === null ? null : `rated ${cook.rating.toFixed(1)}`,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(', ');
+}
+
+function CookCard({ cook }: { readonly cook: FeaturedCookDto }) {
   return (
     <View style={[styles.card, SHADOW_CARD]}>
       <View style={styles.cardHeader}>
         <View style={styles.description}>
           <View style={styles.nameBlock}>
-            <Text style={styles.name}>{cook.name}</Text>
-            <Text style={styles.region}>{`Region: ${cook.region}`}</Text>
+            <Text style={styles.name}>{cook.displayName}</Text>
+            {cook.region === null ? null : (
+              <Text style={styles.region}>{`Region: ${cook.region}`}</Text>
+            )}
           </View>
-          <View style={styles.rating}>
-            <Text style={styles.ratingText}>{`Rating: ${cook.rating}`}</Text>
-            <Image source={ART.star} style={styles.star} />
-          </View>
+          {cook.rating === null ? null : (
+            <View style={styles.rating}>
+              <Text style={styles.ratingText}>{`Rating: ${cook.rating.toFixed(1)}`}</Text>
+              <Image source={ART.star} style={styles.star} />
+            </View>
+          )}
         </View>
         <View style={styles.photoFrame}>
-          <Image
-            source={ART.cooks[cook.photo] ?? ART.cooks[0]!}
-            style={styles.photo}
-            resizeMode="contain"
-          />
+          {cook.photoUrl === null ? null : (
+            <Image source={{ uri: cook.photoUrl }} style={styles.photo} resizeMode="contain" />
+          )}
         </View>
       </View>
 

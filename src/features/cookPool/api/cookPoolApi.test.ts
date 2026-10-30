@@ -39,8 +39,8 @@ const COOK_ID = '986ff249-ab67-5ee5-8eb0-5c24a8187f9a';
 
 const CARD = {
   cookId: COOK_ID,
-  profileCode: 'COOK_SANCHITA',
-  displayName: 'Cook Sanchita',
+  profileCode: 'COOK_MEERA',
+  displayName: 'Cook Meera',
   profileImageUrl: null,
   region: 'West Bengal',
   languages: ['Hindi', 'Bengali'],

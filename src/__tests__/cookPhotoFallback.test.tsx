@@ -16,14 +16,14 @@ import { HomeBookingBanner } from '@features/home';
  * the adapters and never reaches the failure path; only a load error swaps the source.
  */
 
-const HOSTED = 'https://cdn.spoonhelp.com/cooks/sanchita.png';
+const HOSTED = 'https://cdn.spoonhelp.com/cooks/meera.png';
 /*
  * Stand-ins for the bundled assets. `Image.resolveAssetSource` returns nothing under jest's asset
  * mock, so the real constants are undefined here — and what these tests are about is the SWAP,
  * not which file is on the other side of it.
  */
-const BUNDLED_CARD = 'bundled://sanchita-photo.jpg';
-const BUNDLED_CUTOUT = 'bundled://rekha-cutout.png';
+const BUNDLED_CARD = 'bundled://meera-photo.jpg';
+const BUNDLED_CUTOUT = 'bundled://asha-cutout.png';
 
 function uriOf(testID: string): string | undefined {
   return screen.getByTestId(testID).props.source?.uri;
@@ -32,8 +32,8 @@ function uriOf(testID: string): string | undefined {
 describe('the booking screen cook card', () => {
   const cook = {
     id: 'cook-1',
-    displayName: 'Cook Sanchita',
-    firstName: 'Sanchita',
+    displayName: 'Cook Meera',
+    firstName: 'Meera',
   };
 
   it('shows the hosted photo while it loads', () => {
@@ -57,7 +57,7 @@ describe('the booking screen cook card', () => {
     fireEvent(screen.getByTestId('cook-card-photo'), 'error');
 
     expect(screen.queryByTestId('cook-card-photo')).toBeNull();
-    expect(screen.getByText('CS')).toBeTruthy();
+    expect(screen.getByText('CM')).toBeTruthy();
   });
 });
 
@@ -68,7 +68,7 @@ describe('the Home carousel banner', () => {
     title: 'Upcoming booking',
     dateLabel: 'Tomorrow, Sep 21',
     timeLabel: '12:00 PM • 1 hr',
-    cookName: 'Cook Sanchita',
+    cookName: 'Cook Meera',
     badgeValue: 'Confirmed!',
     destination: { route: '/booking/[id]' as const, bookingId: 'bkg-1', figmaPage: '8a' },
   };

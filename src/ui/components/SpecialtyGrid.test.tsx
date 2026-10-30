@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react-native';
 import { Image } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { DEMO_COOK_REKHA } from '@/demo/fixtures/cooks';
+import { DEMO_COOK_ASHA } from '@/demo/fixtures/cooks';
 import type { DishViewModel } from '@ui/types/viewModels';
 
 import { DISH_GLYPHS } from './dishGlyphs';
@@ -21,9 +21,9 @@ function images(): readonly ReactTestInstance[] {
 
 describe('SpecialtyGrid — dish glyphs', () => {
   it('draws the bundled Figma mark for every dish the fixture keys', () => {
-    render(<SpecialtyGrid dishes={DEMO_COOK_REKHA.specialties ?? []} />);
+    render(<SpecialtyGrid dishes={DEMO_COOK_ASHA.specialties ?? []} />);
 
-    // `94:947` keys all nine of Rekha's chips, so all nine discs must be filled.
+    // `94:947` keys all nine of Asha's chips, so all nine discs must be filled.
     expect(images()).toHaveLength(9);
   });
 

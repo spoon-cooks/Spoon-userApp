@@ -6,7 +6,7 @@ describe('redact', () => {
       otp: '4821',
       accessToken: 'abc.def.ghi',
       phone: '+91 98765 43210',
-      cookName: 'Rekha',
+      cookName: 'Asha',
       bookingId: 'bk_123',
     });
 

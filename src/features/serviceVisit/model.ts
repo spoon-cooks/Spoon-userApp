@@ -90,46 +90,6 @@ export function reassignedOneTime(booking: BookingDetailDto): boolean {
   return booking.reassignment?.occurred === true && (booking.recurring ?? null) === null;
 }
 
-/** The pool cook card's figures the cook card's stat lines are read from. */
-export interface CookCardStats {
-  readonly visitsWithYou: number;
-  /** Every customer's ratings of the cook. `average` is 0 while `count` is 0. */
-  readonly rating: { readonly average: number; readonly count: number };
-  /** This customer's own ratings of the cook. */
-  readonly yourRating?: { readonly average: number; readonly count: number } | null | undefined;
-}
-
-/**
- * The cook card's two stat lines (`Cook profile card`, `1380:3210`).
- *
- *   been here before   "Visits with you: N" · "Your rating: 4.5" — this customer's own average
- *                      (dev note `2226:4211`), left out until they have rated her.
- *   first visit        "First visit with you" · "Rated 4.7 by Spoon users" — the overall
- *                      average (Figma `2353:17573`, dev note `2353:17578`), left out while
- *                      nobody has rated her.
- */
-export function cookStatLines(card: CookCardStats | null): {
-  readonly visits?: string;
-  readonly rating?: string;
-} {
-  if (card === null) return {};
-  if (card.visitsWithYou === 0) {
-    return {
-      visits: 'First visit with you',
-      ...(card.rating.count > 0
-        ? { rating: `Rated ${card.rating.average.toFixed(1)} by Spoon users` }
-        : {}),
-    };
-  }
-  const own = card.yourRating ?? null;
-  return {
-    visits: `Visits with you: ${String(card.visitsWithYou)}`,
-    ...(own === null || own.count === 0
-      ? {}
-      : { rating: `Your rating: ${own.average.toFixed(1)}` }),
-  };
-}
-
 /** "1 hr", "1.5 hrs", "45 min". */
 export function duration(minutes: number): string {
   if (minutes < 60) return `${String(minutes)} min`;
@@ -225,7 +185,7 @@ export function defaultExtendMinutes(choices: readonly ExtendChoice[]): number |
   return fits.length === 0 ? null : (fits[fits.length - 1]?.minutes ?? null);
 }
 
-/** "Sanchita is free till 10:30 AM" — the latest end any offered extension reaches. */
+/** "Meera is free till 10:30 AM" — the latest end any offered extension reaches. */
 export function freeTill(options: readonly ExtensionOptionDto[]): string | null {
   const latest = options.reduce<string | null>(
     (best, option) =>

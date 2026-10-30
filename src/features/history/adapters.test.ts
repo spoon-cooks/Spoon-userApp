@@ -158,7 +158,7 @@ describe('bookingCardFrom', () => {
       at({
         status: 'completed',
         ratingStars: 5,
-        cook: { displayName: 'Cook Rekha', ratingAverage: 4.2 },
+        cook: { displayName: 'Cook Asha', ratingAverage: 4.2 },
       }),
       IST,
     );
@@ -170,7 +170,7 @@ describe('bookingCardFrom', () => {
 
   it('omits rating entirely when ratingStars is absent, rather than falling back to the cook average', () => {
     const card = bookingCardFrom(
-      at({ status: 'completed', cook: { displayName: 'Cook Rekha', ratingAverage: 4.2 } }),
+      at({ status: 'completed', cook: { displayName: 'Cook Asha', ratingAverage: 4.2 } }),
       IST,
     );
 

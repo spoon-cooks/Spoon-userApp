@@ -28,7 +28,7 @@ function past(
     cookConfirmBy: `${overrides.date}T00:30:00.000Z`,
     cook: {
       cookId: 'c1',
-      displayName: 'Cook Sanchita',
+      displayName: 'Cook Meera',
       profileImageUrl: null,
       rating: { average: 4.5, count: 3 },
     },
@@ -133,8 +133,8 @@ describe('plansSummaryFrom', () => {
     const [first, second] = plan2.visits;
     expect(first!.historyCount).toBe('2 past visits');
     expect(first!.history.map((row) => [row.status, row.title, row.meta])).toEqual([
-      ['done', 'Today, 8 Oct · 9:00 AM', 'Completed · Cook Sanchita'],
-      ['done', 'Fri, 2 Oct · 9:00 AM', 'Completed · Cook Sanchita'],
+      ['done', 'Today, 8 Oct · 9:00 AM', 'Completed · Cook Meera'],
+      ['done', 'Fri, 2 Oct · 9:00 AM', 'Completed · Cook Meera'],
     ]);
     expect(second!.historyCount).toBe('1 past visit');
     expect(second!.history[0]).toMatchObject({ status: 'cancelled', meta: 'Cancelled by you' });

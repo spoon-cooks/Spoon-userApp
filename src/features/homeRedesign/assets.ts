@@ -3,8 +3,8 @@ import type { ImageSourcePropType } from 'react-native';
 /**
  * Static artwork for the redesigned Home, exported from Figma `cCQlzTeiObQkpVBzwI8mZi` and
  * committed under `assets/figma/home2/`. Vector layers were rasterised at 3× their rendered box
- * (this project has no SVG renderer). Cook photography is placeholder content until the backend
- * is connected.
+ * (this project has no SVG renderer). Cook photos are not bundled: they are the backend's
+ * (DEC-114).
  */
 const img = (source: unknown) => source as ImageSourcePropType;
 
@@ -58,12 +58,6 @@ export const ART = {
   bell: img(require('../../../assets/figma/home2/icon-bell.png')),
   whatsappGlyph: img(require('../../../assets/figma/home2/union.png')),
   whatsapp: img(require('../../../assets/figma/home2/icon-button.png')),
-  cooks: [
-    img(require('../../../assets/figma/home2/cook-1.png')),
-    img(require('../../../assets/figma/home2/cook-2.png')),
-    img(require('../../../assets/figma/home2/cook-3.png')),
-    img(require('../../../assets/figma/home2/cook-4.png')),
-  ],
 } as const;
 
 /**

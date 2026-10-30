@@ -82,8 +82,8 @@ describe('the cook the deployed backend sends', () => {
 describe('the four-cook card the backend now publishes', () => {
   const FOUR_COOK_CARD = {
     cookId: 'd680481b-4ffe-55b1-9edf-74b746a43bba',
-    profileCode: 'COOK_JYOTI',
-    displayName: 'Cook Jyoti',
+    profileCode: 'COOK_KAVITA',
+    displayName: 'Cook Kavita',
     profileImageUrl: null,
     region: 'Odisha',
     languages: ['Hindi', 'Odiya'],
@@ -103,7 +103,7 @@ describe('the four-cook card the backend now publishes', () => {
 
     // The two fields the whole wiring hangs off: bundled card content resolves by
     // `profileCode`, and the card mode renders whatever variant the SERVER decided.
-    expect(cook.profileCode).toBe('COOK_JYOTI');
+    expect(cook.profileCode).toBe('COOK_KAVITA');
     expect(cook.profileVariant).toBe('veg');
   });
 

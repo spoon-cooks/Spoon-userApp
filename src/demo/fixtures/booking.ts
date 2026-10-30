@@ -13,7 +13,7 @@ import type {
 import type { ScheduleViewModel } from '@features/scheduled';
 import { RATING_EXCEPTIONAL } from '@ui';
 
-import { DEMO_COOK_REKHA, DEMO_COOK_SANCHITA } from './cooks';
+import { DEMO_COOK_ASHA, DEMO_COOK_MEERA } from './cooks';
 
 /**
  * DEMO / TEST FIXTURES — NOT PRODUCTION DATA.
@@ -287,7 +287,7 @@ const HEADER = {
 export const DEMO_BOOKING_CONFIRMATION: BookingDetailViewModel = {
   ...HEADER,
   view: 'confirmation',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   statusTone: 'positive',
   summary: {
     bannerTitle: 'Booking confirmed!',
@@ -347,7 +347,7 @@ export const DEMO_BOOKING_CONFIRMATION: BookingDetailViewModel = {
  */
 export const DEMO_BOOKING_CONFIRM_REASSIGN: BookingDetailViewModel = {
   ...DEMO_BOOKING_CONFIRMATION,
-  cook: DEMO_COOK_SANCHITA,
+  cook: DEMO_COOK_MEERA,
   summary: {
     ...DEMO_BOOKING_CONFIRMATION.summary!,
     reassignNotice: {
@@ -359,7 +359,7 @@ export const DEMO_BOOKING_CONFIRM_REASSIGN: BookingDetailViewModel = {
 
 const TRACKING_ON_TIME = {
   // `40:5364` — the current file ends this on "in", because the ETA panel completes the sentence.
-  bannerTitle: 'Cook Rekha is arriving in',
+  bannerTitle: 'Cook Asha is arriving in',
   bannerMessage: 'The cook will reach your location on time!',
   tone: 'positive',
   etaLabel: '16 mins',
@@ -380,7 +380,7 @@ export const DEMO_BOOKING_EN_ROUTE: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'enRoute',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   tracking: TRACKING_ON_TIME,
 };
 
@@ -389,7 +389,7 @@ export const DEMO_BOOKING_EN_ROUTE_LATE: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'enRoute',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   tracking: {
     ...TRACKING_ON_TIME,
     bannerMessage: "We're sorry for the delay, the cook is running late",
@@ -414,10 +414,10 @@ export const DEMO_BOOKING_REASSIGNED: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'reassigned',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   reassigned: {
     ...TRACKING_ON_TIME,
-    bannerTitle: 'Cook Jyoti is arriving',
+    bannerTitle: 'Cook Kavita is arriving',
     etaLabel: '21 mins',
     notice: REASSIGNMENT_NOTICE,
   },
@@ -428,10 +428,10 @@ export const DEMO_BOOKING_REASSIGNED_LATE: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'reassigned',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   reassigned: {
     ...TRACKING_ON_TIME,
-    bannerTitle: 'Cook Jyoti is arriving',
+    bannerTitle: 'Cook Kavita is arriving',
     bannerMessage: "We're sorry for the delay, the cook is running late",
     tone: 'warning',
     etaLabel: '21 mins',
@@ -506,9 +506,9 @@ export const DEMO_BOOKING_ARRIVED: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'arrived',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   arrived: {
-    bannerTitle: 'Cook Rekha has arrived',
+    bannerTitle: 'Cook Asha has arrived',
     bannerMessage: 'The cook will be at your doorstep very soon!',
     tone: 'positive',
     // `99:1620` — once the cook has ARRIVED the panel stops counting down and shows a clock time.
@@ -543,7 +543,7 @@ export function demoInServiceBooking(
     ...HEADER,
     details: DEMO_BOOKING_CONFIRMATION.details!,
     view: 'inService',
-    cook: DEMO_COOK_REKHA,
+    cook: DEMO_COOK_ASHA,
     inService: {
       // `101:1887` / `101:1889` — the current file rewrote both. The message dropped from two
       // lines (h 32) to one (h 16), which is why the h1 block closed 35 → 19.
@@ -635,7 +635,7 @@ export const DEMO_BOOKING_COMPLETION: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'completion',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   completion: COMPLETION,
   tip: TIP_SHEET,
 };
@@ -654,7 +654,7 @@ export const DEMO_BOOKING_FEEDBACK_SUBMITTED: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'completion',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   completion: {
     ...COMPLETION,
     submitted: true,
@@ -669,7 +669,7 @@ export const DEMO_BOOKING_RATED_NUMERIC: BookingDetailViewModel = {
   ...HEADER,
   details: DEMO_BOOKING_CONFIRMATION.details!,
   view: 'completion',
-  cook: DEMO_COOK_REKHA,
+  cook: DEMO_COOK_ASHA,
   completion: { ...COMPLETION, submitted: true, submittedRating: 4.5 },
   tip: TIP_SHEET,
 };

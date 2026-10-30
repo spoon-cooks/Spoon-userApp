@@ -97,3 +97,31 @@ export function deckCooksFrom(candidates: CookPoolCandidatesDto['cooks']): reado
 export function cookProfileFrom(profile: PoolCookProfileDto): CookProfile {
   return profileFrom(profile.cook, profile.inPool, profile.presentation);
 }
+
+/** A backend line as one string: `label: value`, or the value alone. */
+function lineText(line: CookProfilePresentationDto['details'][number]): string {
+  return line.label === null ? line.value : `${line.label}: ${line.value}`;
+}
+
+/**
+ * The cook card's text lines on the visit screens (`Cook profile card`, `1380:3210`), from the
+ * profile's `presentation` (DEC-114): the trust marks as the eyebrow, the caption lines joined
+ * with " · ", then the two stat lines. Every word is the backend's; a line it did not send is
+ * left out, and a backend without `presentation` gives an empty eyebrow and nothing else.
+ */
+export function cookCardLines(presentation: CookProfilePresentationDto | undefined): {
+  readonly eyebrow: string;
+  readonly origin?: string;
+  readonly visits?: string;
+  readonly rating?: string;
+} {
+  if (presentation === undefined) return { eyebrow: '' };
+  const origin = presentation.details.map(lineText).join(' · ');
+  const [visits, rating] = presentation.stats;
+  return {
+    eyebrow: presentation.badges.join(' · ').toUpperCase(),
+    ...(origin === '' ? {} : { origin }),
+    ...(visits === undefined ? {} : { visits: lineText(visits) }),
+    ...(rating === undefined ? {} : { rating: lineText(rating) }),
+  };
+}

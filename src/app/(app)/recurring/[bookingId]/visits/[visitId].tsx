@@ -10,7 +10,7 @@ import { useBookingDetail } from '@features/booking';
 import { CancelVisitSheet, cancelReasonsFrom } from '@features/cancellation';
 import type { CancelQuote, CancelStep, CancelVisit } from '@features/cancellation';
 import { useCatalogue } from '@features/catalogue';
-import { cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
 import {
   PaymentDetailsSheet,
   VisitDetailsScreen,
@@ -84,6 +84,7 @@ export default function RecurringVisitRoute() {
         booking: booking.state.status === 'ready' ? booking.state.data : null,
         cookProfile,
         cookCard: cookProfile === null ? null : cookProfileFrom(cookProfile),
+        cookLines: cookCardLines(cookProfile?.presentation),
         quote: quote.state.status === 'ready' ? quote.state.data : null,
         todayId: todayInKolkata(),
         now: new Date(),

@@ -151,7 +151,7 @@ export function dayLabel(iso: string): string {
   return `${p.weekday ?? ''}, ${p.day ?? ''} ${p.month ?? ''}`;
 }
 
-/** "Wed, 14 Oct · 9:00 AM · Cook Sanchita" — the sheets' subtitle (`2055:20598`). */
+/** "Wed, 14 Oct · 9:00 AM · Cook Meera" — the sheets' subtitle (`2055:20598`). */
 export function visitSubtitle(visit: CancelVisit): string {
   return [
     dayLabel(visit.startsAt),

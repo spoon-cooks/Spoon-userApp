@@ -1,7 +1,6 @@
 import { formatPaise } from '@core/format';
 import { RATING_EXCEPTIONAL, RATING_VALUES } from '@ui';
 import type { CookViewModel, DetailRow, RatingSelection } from '@ui';
-import { cookCardContentFor } from '@ui/components/cookCardContent';
 
 import { currentSkewMs } from '@core/time';
 import { refundTrackerFrom } from '@features/refunds';
@@ -277,8 +276,8 @@ export function headerSubtitleFrom(dto: BookingDetailDto): string {
 /**
  * The cook's name as the drawn banner titles carry it.
  *
- * `40:5364` reads "Cook Rekha is arriving in", `201:100` "Cook Jyoti is arriving" and `3:1658`
- * "Cook Rekha has arrived" — three DIFFERENT sentences that share one leading `Cook <name>`. The
+ * `40:5364` reads "Cook Asha is arriving in", `201:100` "Cook Kavita is arriving" and `3:1658`
+ * "Cook Asha has arrived" — three DIFFERENT sentences that share one leading `Cook <name>`. The
  * name in each is sample data; the rest is the design.
  *
  * So the name is substituted and nothing else is: the sentence keeps its own wording, its own
@@ -294,25 +293,16 @@ function withCookName(title: string, cookName: string | null): string {
   return title.replace(/^Cook\s+\S+/u, `Cook ${cookFirstNameFrom(cookName.trim())}`);
 }
 
-/** `Cook Rekha` -> `Rekha`. The backend may or may not carry the honorific; both are handled. */
+/** `Cook Asha` -> `Asha`. The backend may or may not carry the honorific; both are handled. */
 function cookFirstNameFrom(name: string): string {
   return name.replace(/^Cook\s+/iu, '');
 }
 
 /**
- * The assigned-cook card, built ENTIRELY from the payload plus the bundled content the
- * payload's own `profileCode` resolves.
- *
- * Nothing here falls back to sample data. The card used to spread a designed fixture cook
- * underneath the payload, which meant a real cook rendered with Rekha's home state, dish chips,
- * trust badges and — when the backend sent no photo — Rekha's photograph. Every field below is
- * now either the server's value or honestly absent, and the card degrades exactly as it was
- * built to: initials instead of a photograph, attribute rows dropped, no specialty grid.
- *
- * The bundled content — the photographs and the two designed dish-chip lists with their
- * Figma-named glyphs — is resolved by the STABLE `profileCode` and by nothing else: not the
- * display name, not the phone, not array order. A cook without a published code gets no bundled
- * content, so sample imagery can never attach to the wrong person.
+ * The assigned-cook card, built ENTIRELY from the payload (DEC-114: the app bundles no cook's
+ * photograph or dishes). Every field below is the server's value or honestly absent, and the card
+ * degrades as it was built to: initials instead of a photograph, attribute rows dropped, no
+ * specialty grid. The redesigned visit screens draw the cook's dishes from her profile instead.
  *
  * Badges render only from the server's attested flags, fail-closed: absent or false is no
  * badge. The whole block is omitted when nothing is attested, which keeps the drawn no-badge
@@ -322,14 +312,7 @@ function cookViewModelFrom(
   cook: NonNullable<BookingDetailDto['cook']> & { readonly name: string },
   bookingId: string,
 ): CookViewModel {
-  const content = cookCardContentFor(cook.profileCode);
-  const photoUrl = cook.photoUrl ?? content?.photoUrl;
-  /*
-   * Only when the HOSTED photo won. If the bundled one is already the primary there is nothing
-   * behind it, and handing the card the same uri twice would make a failure retry itself.
-   */
-  const photoFallbackUrl =
-    cook.photoUrl === null || cook.photoUrl === undefined ? undefined : content?.photoUrl;
+  const photoUrl = cook.photoUrl;
   const languages = cook.languages ?? [];
   const cuisine = cook.cuisines?.[0];
   const anyBadge =
@@ -339,19 +322,12 @@ function cookViewModelFrom(
     displayName: cook.name,
     firstName: cookFirstNameFrom(cook.name),
     ...(photoUrl === undefined || photoUrl === null ? {} : { photoUrl }),
-    ...(photoFallbackUrl === undefined || photoFallbackUrl === null ? {} : { photoFallbackUrl }),
     ...(cook.gender === null || cook.gender === undefined ? {} : { gender: cook.gender }),
     ...(cuisine === undefined ? {} : { cuisine }),
     ...(cook.region === null || cook.region === undefined ? {} : { homeState: cook.region }),
     // The frames draw the language glyph with no label when there is nothing to say, which is
     // how an empty list renders — by dropping the row, not by inventing a value.
     ...(languages.length === 0 ? {} : { languages }),
-    ...(content === undefined
-      ? {}
-      : {
-          specialties: content.specialties,
-          pureVegSpecialties: content.pureVegSpecialties,
-        }),
     ...(anyBadge
       ? {
           badges: {
@@ -505,7 +481,7 @@ export function bookingDetailFrom(input: {
    *
    * `base` is a designed screen and some designed screens carry a sample cook. Spreading it
    * whole meant an unassigned or cancelled booking — where the server sends `cook: null` —
-   * silently inherited that sample: a real customer shown Rekha's card for a booking that has
+   * silently inherited that sample: a real customer shown Asha's card for a booking that has
    * no cook, and a reassigned booking briefly showing the PREVIOUS design sample. Dropping the
    * key before the spread makes "the server sent no cook" render as no cook, always.
    */

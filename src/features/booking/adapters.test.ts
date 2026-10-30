@@ -16,7 +16,7 @@ const BASE = {
   view: 'enRoute',
   tracking: {
     bannerTitle: 'On the way',
-    bannerMessage: 'Rekha is heading over',
+    bannerMessage: 'Asha is heading over',
     tone: 'positive',
     etaLabel: 'DESIGNED ETA',
     noteTitle: 'Note',
@@ -27,7 +27,7 @@ const BASE = {
   },
   arrived: {
     bannerTitle: 'Arrived',
-    bannerMessage: 'Rekha is at your gate',
+    bannerMessage: 'Asha is at your gate',
     tone: 'positive',
     etaLabel: 'DESIGNED ETA',
     noteTitle: 'Note',
@@ -203,7 +203,7 @@ describe('trackingDetailFrom', () => {
     expect(view.tracking?.etaLabel).toBe('16 mins');
     expect(view.tracking?.tone).toBe('warning');
     // The caller's late copy survives: nothing here overwrites it.
-    expect(view.tracking?.bannerMessage).toBe('Rekha is heading over');
+    expect(view.tracking?.bannerMessage).toBe('Asha is heading over');
   });
 
   it('keeps the LATE banner when the ETA elapses — only the panel degrades', () => {
@@ -224,7 +224,7 @@ describe('trackingDetailFrom', () => {
     });
 
     expect(view.tracking?.tone).toBe('warning');
-    expect(view.tracking?.bannerMessage).toBe('Rekha is heading over');
+    expect(view.tracking?.bannerMessage).toBe('Asha is heading over');
     // One minute past the ETA: the minutes past it, positive, as the Cook App shows.
     expect(view.tracking?.etaLabel).toBe('1 mins');
   });
