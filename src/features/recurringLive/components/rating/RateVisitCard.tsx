@@ -302,7 +302,9 @@ export function RateVisitCard({
         ) : null}
 
         {submitted ? (
-          // `2306:1135` — lime banner, 28pt `#CFFF04` well round an 18pt check.
+          // `2517:1030` Rate card / Submitted header — no fill of its own, so the card's mood
+          // gradient runs under it: a 36pt check well (yellow on Good, white on 5+ and Bad) and two
+          // lines. Supersedes the `2306:1135` lime pill.
           <View
             style={styles.banner}
             onLayout={(event) => {
@@ -311,19 +313,17 @@ export function RateVisitCard({
             }}
             testID={`${testID}-submitted`}
           >
-            <View style={styles.bannerWell}>
-              <Image source={RATING_ART.check} style={styles.chipCheck} />
+            <View style={[styles.bannerWell, tier === 'loved' ? styles.bannerWellGood : null]}>
+              <Image source={RATING_ART.check} style={styles.bannerCheck} />
             </View>
-            {/* One line as drawn (`2306:1139`); a narrow phone shrinks it a step. */}
-            <Text
-              variant="spoonCaptionStrong"
-              style={styles.bannerText}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-            >
-              Rating submitted · Thanks for the feedback!
-            </Text>
+            <View style={styles.bannerText}>
+              <Text variant="spoonBodyStrong" color="textPrimary">
+                Rating submitted
+              </Text>
+              <Text variant="spoonCaption" color="textSecondarySoft">
+                Thanks for the feedback!
+              </Text>
+            </View>
           </View>
         ) : null}
 
@@ -739,7 +739,8 @@ function SubmittedBody({
         </View>
       )}
       <SubmittedFeedback
-        title={`Your note to ${cookName}`}
+        // `2513:1798` Mood=Bad addresses a low rating's note to the Spoon team.
+        title={low ? 'Your note to the Spoon team' : `Your note to ${cookName}`}
         draft={feedback}
         testID={`${testID}-feedback`}
       />
@@ -803,27 +804,27 @@ const styles = StyleSheet.create({
     gap: lightTheme.space.md,
   },
   /** `2306:1135` — `#ECFF9B`, r14, pl10 / pr14 / py10, 10pt gap. */
+  /** `2517:1030` — a row, 12 between the well and the text; the card's padding frames it. */
   banner: {
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: lightTheme.space.s10,
-    paddingLeft: lightTheme.space.s10,
-    paddingRight: 14,
-    paddingVertical: lightTheme.space.s10,
-    borderRadius: 14,
-    backgroundColor: lightTheme.colors.surfaceRatingNudge,
+    gap: lightTheme.space.md,
   },
+  /** 36pt round; white on 5+ and Bad. */
   bannerWell: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: lightTheme.colors.surfaceRatingLime,
+    backgroundColor: lightTheme.colors.surface,
   },
-  /** `2306:1139` — Livvic SemiBold 13. */
-  bannerText: { flex: 1, fontSize: 13, lineHeight: 16 },
+  /** `#FFD600` on Good. */
+  bannerWellGood: { backgroundColor: lightTheme.colors.surfaceCta },
+  bannerCheck: { width: 20, height: 20 },
+  /** "Rating submitted" Body Strong 14/20 over "Thanks for the feedback!" Caption at 60 %, 2 apart. */
+  bannerText: { flex: 1, gap: 2 },
   /** `1501:6632` — the photo fills a 44pt `#FFF7CC` circle; no ring. */
   cookPhoto: {
     width: 44,

@@ -4,39 +4,43 @@ import { PaymentFailedBody } from './PaymentFailedBody';
 
 const actions = {
   onRetry: jest.fn(),
-  onCancel: jest.fn(),
+  onChangeMethod: jest.fn(),
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe('PaymentFailedBody', () => {
-  it('renders the retry amount from the price snapshot, never a computed figure', () => {
-    render(<PaymentFailedBody amountPaise={13545} retrying={false} cancelAllowed {...actions} />);
+describe('PaymentFailedBody (2718:916)', () => {
+  it('says what failed and that nothing was charged', () => {
+    render(<PaymentFailedBody retrying={false} {...actions} />);
 
-    expect(screen.getByText('Retry payment • ₹135.45')).toBeTruthy();
+    expect(screen.getByText('Payment failed')).toBeTruthy();
+    expect(
+      screen.getByText('We couldn’t process your payment. Don’t worry, you haven’t been charged.'),
+    ).toBeTruthy();
   });
 
-  it('calls onRetry when the retry CTA is pressed', () => {
-    render(<PaymentFailedBody amountPaise={13545} retrying={false} cancelAllowed {...actions} />);
+  it('retries on Retry Payment', () => {
+    render(<PaymentFailedBody retrying={false} {...actions} />);
 
     fireEvent.press(screen.getByTestId('payment-failed-retry'));
     expect(actions.onRetry).toHaveBeenCalledTimes(1);
+    expect(actions.onChangeMethod).not.toHaveBeenCalled();
   });
 
-  it('hides Cancel booking when the server has not authorised it', () => {
-    render(
-      <PaymentFailedBody amountPaise={13545} retrying={false} cancelAllowed={false} {...actions} />,
-    );
+  it('hands Change payment method to its own callback', () => {
+    render(<PaymentFailedBody retrying={false} {...actions} />);
 
+    fireEvent.press(screen.getByTestId('payment-failed-change-method'));
+    expect(actions.onChangeMethod).toHaveBeenCalledTimes(1);
+  });
+
+  it('takes no second Retry while a checkout is open, and offers no Cancel', () => {
+    render(<PaymentFailedBody retrying {...actions} />);
+
+    fireEvent.press(screen.getByTestId('payment-failed-retry'));
+    expect(actions.onRetry).not.toHaveBeenCalled();
     expect(screen.queryByTestId('payment-failed-cancel')).toBeNull();
-  });
-
-  it('calls onCancel when Cancel booking is pressed', () => {
-    render(<PaymentFailedBody amountPaise={13545} retrying={false} cancelAllowed {...actions} />);
-
-    fireEvent.press(screen.getByTestId('payment-failed-cancel'));
-    expect(actions.onCancel).toHaveBeenCalledTimes(1);
   });
 });

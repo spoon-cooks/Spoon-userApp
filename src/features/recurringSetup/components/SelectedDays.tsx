@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 
 import { Text } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
-import { innerShadows } from '@ui/tokens/primitives';
 
 import { EDIT_ICON } from '../art';
 import { selectedDayLabel } from '../data';
@@ -47,15 +46,8 @@ export function SelectedDays({ dayIds, onEdit, onPickDay, testID }: SelectedDays
             style={styles.edit}
             testID={testID === undefined ? undefined : `${testID}-edit`}
           >
-            {editing ? (
-              <View style={styles.editHighlight}>
-                <View style={styles.editClip}>
-                  <Image source={EDIT_ICON} style={[styles.editIcon, styles.editIconRaised]} />
-                </View>
-              </View>
-            ) : (
-              <Image source={EDIT_ICON} style={styles.editIcon} />
-            )}
+            {/* The plain pencil in edit mode too: no gold disc (owner, 2026-10-30). */}
+            <Image source={EDIT_ICON} style={styles.editIcon} />
           </Pressable>
         )}
       </View>
@@ -117,17 +109,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editIcon: { width: 24, height: 24 },
-  /** `497:2067` — a 24pt `#FFD600` disc with `Elevation/1`, the pencil 1 above centre. */
-  editHighlight: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: lightTheme.colors.surfaceBrand,
-    boxShadow: innerShadows.elevation1,
-  },
-  /** The disc clips the raised pencil (`overflow-clip`); the lift stays outside it. */
-  editClip: { width: 24, height: 24, borderRadius: 12, overflow: 'hidden' },
-  editIconRaised: { marginTop: -1 },
   grid: { gap: GAP },
   row: { flexDirection: 'row', gap: GAP },
   /** `340:7097` — p 4 around the weekday and the date. */

@@ -51,7 +51,13 @@ export function CookPendingCard({
         style={styles.cta}
         testID={`${testID}-view-pool`}
       >
-        <Text variant="spoonButton" color="textPrimary">
+        {/* One line, `simple` breaking: Android measured it a hair narrow and wrapped "Pool". */}
+        <Text
+          variant="spoonButton"
+          color="textPrimary"
+          numberOfLines={1}
+          textBreakStrategy="simple"
+        >
           {pending.cta}
         </Text>
       </Pressable>

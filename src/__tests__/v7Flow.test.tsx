@@ -294,28 +294,14 @@ describe('Payment Failed — retry against the same hold, or leave once the serv
     });
   }
 
-  it('shows the price snapshot and a retry CTA while the hold is still `created`', async () => {
+  it('offers Retry Payment and Change payment method while the hold is still `created` (2718:916)', async () => {
     renderPaymentFailed();
 
     expect(await screen.findByTestId('payment-failed-retry')).toBeTruthy();
-    expect(screen.getByText(/Retry payment • ₹135.45/)).toBeTruthy();
-    expect(mockRouter.replace).not.toHaveBeenCalled();
-  });
-
-  it('offers Cancel booking only when the server authorises it', async () => {
-    renderPaymentFailed({
-      allowedActions: {
-        canCancel: false,
-        canReschedule: false,
-        canExtend: false,
-        canRate: false,
-        canTip: false,
-        canCallCook: false,
-      },
-    });
-
-    await screen.findByTestId('payment-failed-retry');
+    expect(screen.getByTestId('payment-failed-change-method')).toBeTruthy();
+    // The frame offers no Cancel: the unpaid hold is released by the backend on its own.
     expect(screen.queryByTestId('payment-failed-cancel')).toBeNull();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 
   it('leaves for the real booking screen once the server settles the hold — paid after all', async () => {
@@ -338,83 +324,6 @@ describe('Payment Failed — retry against the same hold, or leave once the serv
 
     await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
     expect(mockRouter.dismissAll).toHaveBeenCalled();
-  });
-
-  /**
-   * Observed on device: cancelling from this screen showed `115:2703` ("Your booking has been
-   * cancelled") for a single frame and then jumped away.
-   *
-   * The cancellation invalidates the booking read, so the very next poll saw `cancelled`, the
-   * settled-and-leave effect fired, and it replaced the sheet's own receipt before the customer
-   * could read it. The sheet owns the screen until they answer its "book again?" prompt.
-   */
-  it('does not navigate out from under the cancel sheet when the cancellation settles', async () => {
-    mockSearchParams = { id: 'bk-1' };
-    // The booking goes `cancelled` the moment the POST lands — which is exactly what the real
-    // mutation causes, by invalidating the booking read it has just changed.
-    let status = 'created';
-    renderWithRuntime(<PaymentFailedRoute />, {
-      runtime: createTestRuntime({
-        api: createStubApi({
-          ...DEFAULT_API_STUBS,
-          ...CANCELLATION_STUBS,
-          'GET /v1/bookings/bk-1': () => ({ booking: bookingWith({ status }) }),
-          'POST /v1/bookings/bk-1/cancel': () => {
-            status = 'cancelled';
-            return {};
-          },
-        }),
-      }),
-    });
-
-    fireEvent.press(await screen.findByTestId('payment-failed-cancel'));
-    fireEvent.press(await screen.findByTestId('cancel-continue-policy'));
-    fireEvent.press(await screen.findByTestId('cancel-reason-URGENT_CHANGE'));
-    fireEvent.press(screen.getByTestId('cancel-continue-reason'));
-    fireEvent.press(await screen.findByTestId('cancel-confirm'));
-
-    // `115:2703` is the customer's receipt. It has to still be on screen once the refetch the
-    // cancellation triggered has come back saying `cancelled`.
-    expect(await screen.findByTestId('cancel-step-confirmed')).toBeTruthy();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
-
-    expect(screen.getByTestId('cancel-step-confirmed')).toBeTruthy();
-    expect(mockRouter.replace).not.toHaveBeenCalled();
-  });
-
-  /** Same "book again?" routing `[id].tsx` gives — see that file's identical test. */
-  it.each([
-    ['cancel-book-again-yes', '/scheduled'],
-    ['cancel-book-again-no', '/home'],
-  ])('routes %s to %s from the confirmed step', async (testId, destination) => {
-    mockSearchParams = { id: 'bk-1' };
-    let status = 'created';
-    renderWithRuntime(<PaymentFailedRoute />, {
-      runtime: createTestRuntime({
-        api: createStubApi({
-          ...DEFAULT_API_STUBS,
-          ...CANCELLATION_STUBS,
-          'GET /v1/bookings/bk-1': () => ({ booking: bookingWith({ status }) }),
-          'POST /v1/bookings/bk-1/cancel': () => {
-            status = 'cancelled';
-            return {};
-          },
-        }),
-      }),
-    });
-
-    fireEvent.press(await screen.findByTestId('payment-failed-cancel'));
-    fireEvent.press(await screen.findByTestId('cancel-continue-policy'));
-    fireEvent.press(await screen.findByTestId('cancel-reason-URGENT_CHANGE'));
-    fireEvent.press(screen.getByTestId('cancel-continue-reason'));
-    fireEvent.press(await screen.findByTestId('cancel-confirm'));
-    await screen.findByTestId('cancel-step-confirmed');
-
-    fireEvent.press(screen.getByTestId(testId));
-
-    expect(mockRouter.replace).toHaveBeenCalledWith(destination);
   });
 
   /**

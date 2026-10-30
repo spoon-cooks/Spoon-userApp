@@ -521,7 +521,8 @@ describe('booking host — a rated visit reopened', () => {
       }),
     });
 
-    expect(await screen.findByText('Rating submitted · Thanks for the feedback!')).toBeTruthy();
+    expect(await screen.findByText('Rating submitted')).toBeTruthy();
+    expect(screen.getByText('Thanks for the feedback!')).toBeTruthy();
     expect(screen.getByText('Loved it!')).toBeTruthy();
     // Only the picked chips, under the question as a statement; nothing to submit.
     expect(screen.getByText('What stood out')).toBeTruthy();

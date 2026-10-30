@@ -30,16 +30,16 @@ function ordinal(value: number): string {
   return `${value}${['th', 'st', 'nd', 'rd'][value % 10] ?? 'th'}`;
 }
 
-/** `1067:2179` — the booking's weeks, the plan's first and last dates marked apart. */
+/**
+ * `1067:2179` — the booking's weeks with the plan's dates circled as on Live booking (dev notes
+ * `2621:3563`…): by the date against today, Past, Today or Upcoming.
+ */
 function calendarOf(booking: RecurringBookingDto, plan: Plan, todayId: string): SummaryCalendar {
-  const days = [...plan.days].sort();
-  const first = days[0];
-  const last = days[days.length - 1];
+  const days = new Set(plan.days);
   const markOf = (id: string): SummaryDateMark | undefined => {
-    if (!days.includes(id)) return undefined;
-    if (id === first) return 'start';
-    if (id === last) return 'end';
-    return 'selected';
+    if (!days.has(id)) return undefined;
+    if (id < todayId) return 'past';
+    return id === todayId ? 'today' : 'upcoming';
   };
   return {
     title: `Plan ${plan.planNumber} selected dates`,

@@ -129,22 +129,6 @@ export const BANNER_AVATAR_RING =
 export const BANNER_AVATAR_GLYPH =
   require('../../../assets/figma/icons/customer.webp') as ImageSourcePropType;
 
-/** `74:27` — the 179pt splash logo (`73:1036`). */
-export const LOADING_SPLASH_LOGO =
-  require('../../../assets/figma/loading/splash-logo.webp') as ImageSourcePropType;
-
-/**
- * `433:2400` — the 72pt "In Progress" mark on `433:2290` (Page 21, confirmation loading).
- *
- * A lime ring whose solid arc trails off into detached dots, with a check at its centre. The dots
- * are a MOTION TRAIL: they are what a rotating arc leaves behind, and they are the only reason the
- * ring is drawn asymmetrically. `get_motion_context` returns no animated nodes for the frame — the
- * still cannot carry the motion — so the rotation is read off the mark's own construction and
- * recorded as a deviation on `ConfirmationLoading`.
- */
-export const LOADING_CONFIRMATION_PROGRESS =
-  require('../../../assets/figma/loading/confirmation-progress.webp') as ImageSourcePropType;
-
 /** `73:1035` — the 130pt logo on the loading interstitial (`71:747`). */
 export const LOADING_INTRO_LOGO =
   require('../../../assets/figma/loading/intro-logo.webp') as ImageSourcePropType;

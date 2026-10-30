@@ -1,99 +1,83 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Screen, Text, lightTheme } from '@ui';
-import { formatPaise } from '@core/format';
+import { useBottomGutter } from '@ui';
+import { PrimaryButton, SecondaryButton } from '@ui/v2/Buttons';
+import { C, T } from '@ui/v2/theme';
 
 /**
- * Payment Failed — the sibling of `ConfirmationLoading` (Page 21, `433:2290`): checkout came
- * back with nothing to confirm, so instead of the "in progress" wait this is what runs.
+ * Payment failed — Figma `2718:916` (page `2539:15531`): checkout came back with nothing to
+ * confirm, so instead of the confirmation wait (`2702:855`) this is what runs.
  *
- * Boundary, same rule as everywhere else in the flow: the amount is the price SNAPSHOT the
- * booking was created with, never recomputed here, and "Cancel booking" is offered only when
- * `allowedActions.canCancel` says so — a control this screen has no authority to invent.
+ * A white page: the cracked-card illustration, "Payment failed" and a line saying nothing was
+ * charged, top-aligned under the status bar; a dock at the foot holds "Retry Payment" (Primary)
+ * and "Change payment method" (Secondary). Both reopen checkout on the SAME booking — Razorpay's
+ * sheet is where a method is picked, so another method is simply another attempt.
  *
- * Plain white, no map or other art behind it — the mock draws no background here.
+ * The frame offers no "Cancel booking". An unpaid booking is released by the backend when its
+ * hold runs out, so leaving the screen abandons it.
  */
 
-/** The exported mark, `89.72 × 91.28` in Figma. */
-const PAYMENT_FAILED_MARK =
+/** `2718:928` — the 200 × 190 illustration, rasterised at 3×. */
+const PAYMENT_FAILED_ART =
   require('../../../../assets/figma/payment/payment-failed.webp') as ImageSourcePropType;
 
 export interface PaymentFailedBodyProps {
-  readonly amountPaise: number;
   readonly retrying: boolean;
   readonly onRetry: () => void;
-  readonly cancelAllowed: boolean;
-  readonly onCancel: () => void;
+  readonly onChangeMethod: () => void;
 }
 
-export function PaymentFailedBody({
-  amountPaise,
-  retrying,
-  onRetry,
-  cancelAllowed,
-  onCancel,
-}: PaymentFailedBodyProps) {
+export function PaymentFailedBody({ retrying, onRetry, onChangeMethod }: PaymentFailedBodyProps) {
+  const insets = useSafeAreaInsets();
+  const gutter = useBottomGutter(16);
+
   return (
-    <Screen
-      tone="plain"
-      testID="payment-failed-body"
-      {...(cancelAllowed
-        ? {
-            footer: (
-              <Button
-                label="Cancel booking"
-                onPress={onCancel}
-                variant="outlineSoft"
-                size="bar"
-                fullWidth
-                testID="payment-failed-cancel"
-              />
-            ),
-          }
-        : {})}
-    >
-      <View style={styles.block}>
+    <View style={styles.screen} testID="payment-failed-body">
+      {/* `2718:927` */}
+      {/* 40pt under Figma's 54pt status bar; a shorter inset (Android) still starts the art there. */}
+      <View style={[styles.content, { paddingTop: Math.max(insets.top, 54) + 40 }]}>
         <Image
-          source={PAYMENT_FAILED_MARK}
-          style={styles.mark}
-          resizeMode="contain"
+          source={PAYMENT_FAILED_ART}
+          style={styles.art}
           accessible
           accessibilityLabel="Payment failed"
           accessibilityIgnoresInvertColors
         />
+        <Text style={styles.title} accessibilityRole="header">
+          Payment failed
+        </Text>
+        <Text style={styles.body}>
+          We couldn’t process your payment. Don’t worry, you haven’t been charged.
+        </Text>
+      </View>
 
-        <View style={styles.copy}>
-          <Text variant="headingScreen" color="textPrimary" align="center">
-            Your payment failed
-          </Text>
-          <Text variant="headingBold" color="textPrimary" align="center">
-            Don’t worry, we’ll hold your slot while you try again
-          </Text>
-        </View>
-
-        <Button
-          label={`Retry payment • ${formatPaise(amountPaise)}`}
+      {/* `2718:962` */}
+      <View style={[styles.dock, { paddingBottom: gutter }]}>
+        <PrimaryButton
+          label="Retry Payment"
           onPress={onRetry}
-          variant="bright"
-          size="bar"
-          fullWidth
           loading={retrying}
           testID="payment-failed-retry"
         />
+        <SecondaryButton
+          label="Change payment method"
+          onPress={onChangeMethod}
+          testID="payment-failed-change-method"
+        />
       </View>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  block: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: lightTheme.space.xl,
-  },
-  /** `89.72 × 91.28` in Figma, scaled up from that for on-device legibility. */
-  mark: { width: 120, height: 123 },
-  copy: { alignSelf: 'stretch', gap: lightTheme.space.sm },
+  screen: { flex: 1, backgroundColor: C.base },
+  /** 40pt under the status bar, 24pt sides, 16pt apart. */
+  content: { flex: 1, alignItems: 'center', paddingHorizontal: 24, gap: 16 },
+  art: { width: 200, height: 190 },
+  title: { ...T.display, color: C.text, textAlign: 'center' },
+  body: { ...T.body, color: C.textSecondary, textAlign: 'center', alignSelf: 'stretch' },
+  /** White, 16pt in, 12pt between the buttons. */
+  dock: { paddingTop: 16, paddingHorizontal: 16, gap: 12, backgroundColor: C.base },
 });
