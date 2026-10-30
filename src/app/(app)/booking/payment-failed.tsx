@@ -7,7 +7,6 @@ import {
   useBookingConfirmation,
   usePaymentRetry,
 } from '@features/booking';
-import { useCancelFlow } from '@features/cancellation';
 import { ErrorBoundary, QueryBoundary } from '@ui';
 import { useDeterministicBack } from '@core/navigation';
 
@@ -15,7 +14,7 @@ import { useDeterministicBack } from '@core/navigation';
  * Payment Failed — the sibling Page 21 (`433:2290`, `confirming.tsx`) never needed until now:
  * checkout came back with nothing to confirm. The booking created by `useBookingSubmission` is
  * still on HOLD (task §9's V7 comment applies here too), so this screen's whole job is to say so
- * and offer the two honest next steps — try the SAME booking again, or give it up.
+ * and offer to try the SAME booking again.
  *
  * ## Why this polls at all
  *
@@ -26,11 +25,11 @@ import { useDeterministicBack } from '@core/navigation';
  * out of the way to `/booking/:id`, which renders whatever that turns out to be. Nothing here
  * asserts the payment failed; it only reports what checkout said and waits to be contradicted.
  *
- * ## Cancel
+ * ## No cancel here
  *
- * Wired exactly like `[id].tsx`: the reason-picking sheet, not a shortcut. There is no backend
- * endpoint for a bare "abandon this hold", and inventing a reason code the sheet's own catalogue
- * never published would be exactly the kind of client-side invention this app's boundary forbids.
+ * Figma `2718:916` offers Retry Payment and Change payment method, and nothing else. The booking
+ * is an unpaid hold the backend releases on its own when it runs out, so leaving abandons it; the
+ * poll below then reads `cancelled` like any other settled status if the customer is still here.
  */
 export default function PaymentFailedRoute() {
   const router = useRouter();
@@ -56,38 +55,8 @@ export default function PaymentFailedRoute() {
   /** Leaving must happen once — see `confirming.tsx`'s identical guard. */
   const left = useRef(false);
 
-  const cancelFlow = useCancelFlow(bookingId, {
-    onCancelled: (bookAgain) => {
-      if (left.current) return;
-      left.current = true;
-      /**
-       * "Yes" opens Schedule so the customer completes a new booking themselves; "No" is HOME,
-       * the same answer `[id].tsx` gives. Neither is `/booking/:id`, and for a second reason
-       * here beyond the general one: that route has no view for a customer-cancelled booking —
-       * `cancelled` falls through to the "This booking is being updated" fallback — so sending
-       * them there after they had just been told the booking was cancelled would contradict the
-       * receipt they had only now read.
-       */
-      if (bookAgain) {
-        router.replace('/scheduled');
-        return;
-      }
-      goHome();
-    },
-  });
-
   useEffect(() => {
     if (left.current) return;
-    /**
-     * The cancel sheet owns the screen while it is open, and must be allowed to finish.
-     *
-     * Confirming a cancellation invalidates the booking read, so the next poll sees `cancelled`
-     * and `settled` flips true — which used to navigate immediately, replacing `115:2703` ("Your
-     * booking has been cancelled") with another screen after a single frame. The customer saw
-     * their receipt blink and vanish. Nothing here needs to race the sheet: `onCancelled` above
-     * is what leaves, once they have answered its own prompt.
-     */
-    if (cancelFlow.isOpen) return;
     if (nothingToWaitFor || unreadable) {
       left.current = true;
       goHome();
@@ -97,38 +66,37 @@ export default function PaymentFailedRoute() {
 
     left.current = true;
     router.replace(`/booking/${bookingId}`);
-  }, [settled, unreadable, nothingToWaitFor, bookingId, goHome, router, cancelFlow.isOpen]);
+  }, [settled, unreadable, nothingToWaitFor, bookingId, goHome, router]);
+
+  const retry = () => {
+    // One checkout at a time: a second press while one is open would start another.
+    if (bookingId === null || retryPayment.retrying) return;
+    void retryPayment.retry().then((outcome) => {
+      // Guarded by `left`: the poll above can already have moved the customer on (the hold
+      // settled via an earlier attempt's webhook, say) while this retry was still in flight, and
+      // a late `verified` here must not yank them back onto the confirmation wait.
+      if (outcome === 'verified' && !left.current) {
+        left.current = true;
+        router.replace(`/booking/confirming?id=${bookingId}`);
+      }
+      // Every other outcome leaves the customer here — a dismissal is a choice, a fresh failure
+      // is what this screen already says, and `processing` is safe to retry again against the
+      // same order. Nothing here needs its own message.
+    });
+  };
 
   return (
     <ErrorBoundary scope="payment-failed">
       <QueryBoundary state={confirmation.state} onRetry={confirmation.refetch}>
-        {(booking) => (
+        {() => (
           <PaymentFailedBody
-            amountPaise={booking.price.totalAmountPaise}
             retrying={retryPayment.retrying}
-            onRetry={() => {
-              // One checkout at a time: a second press while one is open would start another.
-              if (bookingId === null || retryPayment.retrying) return;
-              void retryPayment.retry().then((outcome) => {
-                // Guarded by `left`: the poll above can already have moved the customer on (the
-                // hold settled via an earlier attempt's webhook, say) while this retry was still
-                // in flight, and a late `verified` here must not yank them back onto Page 21.
-                if (outcome === 'verified' && !left.current) {
-                  left.current = true;
-                  router.replace(`/booking/confirming?id=${bookingId}`);
-                }
-                // Every other outcome leaves the customer here — a dismissal is a choice, a
-                // fresh failure is what this screen already says, and `processing` is safe to
-                // retry again against the same order. Nothing here needs its own message.
-              });
-            }}
-            cancelAllowed={booking.allowedActions.canCancel}
-            onCancel={cancelFlow.open}
+            // Both reopen checkout on this booking: the method is picked in Razorpay's sheet.
+            onRetry={retry}
+            onChangeMethod={retry}
           />
         )}
       </QueryBoundary>
-
-      {cancelFlow.sheet}
     </ErrorBoundary>
   );
 }

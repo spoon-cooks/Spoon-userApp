@@ -4,14 +4,25 @@ import { ready } from '@core/data';
 import { DEMO_PROFILE } from '@/demo/fixtures/screens';
 import { ProfileView } from '@features/profile';
 
-import { IntroLoading, SplashLoading } from './LoadingScreens';
+import { ConfirmationLoading, IntroLoading, SplashLoading } from './LoadingScreens';
 
-describe('Designed loading states (73:1036, 71:747)', () => {
-  it('renders the splash with the brand logo, not a spinner', () => {
+describe('Designed loading states (2692:864, 71:747, 2702:855)', () => {
+  it('renders the splash as the toss, not a spinner', () => {
     render(<SplashLoading />);
 
     expect(screen.getByTestId('splash-loading')).toBeTruthy();
-    expect(screen.queryByLabelText('Loading')).toBeNull();
+    expect(screen.getByLabelText('Loading Spoon')).toBeTruthy();
+    // `2692:920` / `2692:921` are hidden in the file.
+    expect(screen.queryByText('Tossing it all together')).toBeNull();
+  });
+
+  it('renders payment confirmation with its copy and the do-not-close note', () => {
+    render(<ConfirmationLoading />);
+
+    expect(screen.getByTestId('confirmation-loading')).toBeTruthy();
+    expect(screen.getByText('Confirming your payment')).toBeTruthy();
+    expect(screen.getByText('Hang tight, this only takes a few seconds.')).toBeTruthy();
+    expect(screen.getByText('Please don’t press back or close the app')).toBeTruthy();
   });
 
   it('renders the interstitial headline and artwork', () => {
@@ -30,10 +41,8 @@ describe('Designed loading states (73:1036, 71:747)', () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());
 
-    it('runs no timer at all — `313:3159` is a static frame', () => {
+    it('keeps tossing in place however long the app takes', () => {
       render(<SplashLoading />);
-
-      expect(jest.getTimerCount()).toBe(0);
 
       act(() => {
         jest.advanceTimersByTime(5000);
