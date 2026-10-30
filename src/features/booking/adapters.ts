@@ -204,7 +204,8 @@ export function summaryFrom(input: {
    * Recovery wins where both apply. "This booking needs attention" is a problem the customer has
    * to act on; how the slot was arrived at is history beside it.
    */
-  const rescheduled = input.dto.rescheduleCount === 1;
+  // Any customer reschedule: a booking may be moved up to 10 times (DEC-112).
+  const rescheduled = (input.dto.rescheduleCount ?? 0) >= 1;
 
   /**
    * An unsettled hold is not a confirmation, and this screen is headed "Booking confirmed!".

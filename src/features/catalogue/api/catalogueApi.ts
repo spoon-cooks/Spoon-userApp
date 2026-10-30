@@ -11,8 +11,16 @@ export const CATALOGUE_PATH = '/v1/catalogue';
 
 export function createCatalogueApi(api: ApiClient) {
   return {
-    async get(signal?: AbortSignal): Promise<Catalogue> {
-      return api.request(CATALOGUE_PATH, {
+    /**
+     * With `addressId` the server narrows `operatingWindow` to that address's hub hours
+     * (R-SLOT-02/17) and applies this customer's own prices.
+     */
+    async get(signal?: AbortSignal, addressId?: string): Promise<Catalogue> {
+      const path =
+        addressId === undefined
+          ? CATALOGUE_PATH
+          : `${CATALOGUE_PATH}?${new URLSearchParams({ addressId }).toString()}`;
+      return api.request(path, {
         parse: (data) => catalogueSchema.parse(data),
         ...(signal === undefined ? {} : { signal }),
       });

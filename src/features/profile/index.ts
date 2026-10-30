@@ -42,6 +42,7 @@ export {
   useProfileDetailsData,
   useProfileDraft,
   useProfileGate,
+  useAutosaveProfileDetails,
   useSaveProfileDetails,
 } from './detailsData';
 export type { ProfileDetailsData, ProfileDraft, ProfileGate } from './detailsData';

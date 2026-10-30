@@ -7,7 +7,8 @@ import { createKeyFactory } from '@core/query';
  * read "Reschedule", and the bar carries no price.
  * Confirmed C-3 — there is NO Duration step in reschedule. Rescheduling moves *when*, never
  * *how long*.
- * Ruling R-3 — a booking may be rescheduled only once; afterwards the option is not shown.
+ * Ruling R-3 — a booking may be rescheduled up to the server's cap (10, DEC-112); afterwards the
+ * option is not shown.
  * Eligibility comes from the backend (see `./eligibility`).
  *
  * TODO(product B-4): whether rescheduling can ever charge is unanswered — the bar shows no price

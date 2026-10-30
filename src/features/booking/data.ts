@@ -333,15 +333,65 @@ function durationMinutesFrom(durationId: string | null): number | null {
 }
 
 /**
- * Instant unavailability reasons -> the two DESIGNED blocked states.
+ * Instant unavailability reasons -> the two DESIGNED blocked states (R-INST-13).
  *
- * The vocabulary is open (see the availability schema), so this maps the reason that has its own
- * artwork and lets everything else fall to the general "no instant slots" state — which is true
- * whatever the reason was. The client does not interpret a reason beyond choosing which designed
- * frame answers it, and never decides availability itself.
+ * The vocabulary is open (see the availability schema), so this maps the reasons that mean "the
+ * hub is closed now" to the out-of-shift artwork and lets everything else fall to the general "no
+ * instant slots" state, which is true whatever the reason was. The client never decides
+ * availability itself.
+ *
+ * Closed is the backend's `OUTSIDE_OPERATING_HOURS` (the job cannot fit inside the hub's hours),
+ * or `NO_PRESENT_COOK` while the clock is outside the hub's window: before opening no cook is on
+ * shift yet, so that is the reason the server gives. It used to test `OUTSIDE_OPERATING_WINDOW`,
+ * which Instant never sends, so the out-of-shift state never showed.
  */
-function blockedIconFor(reason: string | undefined): 'moon' | 'calendar' {
-  return reason === 'OUTSIDE_OPERATING_WINDOW' ? 'moon' : 'calendar';
+const CLOSED_REASONS = new Set(['OUTSIDE_OPERATING_HOURS', 'NO_PRESENT_COOK']);
+
+export interface HubWindow {
+  readonly timeZone: string;
+  readonly openLocalMinute: number;
+  readonly closeLocalMinute: number;
+}
+
+function localMinuteOf(nowMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(nowMs));
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
+  return hour * 60 + minute;
+}
+
+/** `360` -> "6 AM", `390` -> "6:30 AM", `720` -> "12 PM". */
+export function openingTimeLabel(localMinute: number): string {
+  const hour24 = Math.floor(localMinute / 60) % 24;
+  const minute = localMinute % 60;
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const suffix = hour24 < 12 ? 'AM' : 'PM';
+  return minute === 0
+    ? `${hour12} ${suffix}`
+    : `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+/**
+ * The out-of-shift message, or `null` when this refusal is not "closed now" or the hub's hours
+ * are not known yet. Never a made-up time: the opening minute is the hub's, from the catalogue
+ * read for this address.
+ */
+export function closedMessageFor(
+  reason: string | undefined,
+  window: HubWindow | null,
+  nowMs: number,
+): string | null {
+  if (reason === undefined || !CLOSED_REASONS.has(reason) || window === null) return null;
+  const nowMinute = localMinuteOf(nowMs, window.timeZone);
+  const insideWindow = nowMinute >= window.openLocalMinute && nowMinute < window.closeLocalMinute;
+  if (reason === 'NO_PRESENT_COOK' && insideWindow) return null;
+  const day = nowMinute < window.openLocalMinute ? 'today' : 'tomorrow';
+  return `Slots open at ${openingTimeLabel(window.openLocalMinute)} ${day}`;
 }
 
 /**
@@ -383,6 +433,17 @@ export function useInstantData(
 
   const availability = useInstantAvailability({ addressId, durationMinutes });
   const quote = useQuote({ addressId, slotType: 'instant', durationMinutes });
+  // The clock the out-of-shift message is read against; a later refusal refetches the sheet.
+  const [openedAtMs] = useState(() => Date.now());
+  // The hub's own hours, only when a refusal may mean "closed now" (R-INST-13).
+  const refusal =
+    availability.state.status === 'ready' && !availability.state.data.available
+      ? availability.state.data.reason
+      : undefined;
+  const hubCatalogue = useCatalogue({
+    enabled: addressId !== null && refusal !== undefined && CLOSED_REASONS.has(refusal),
+    ...(addressId === null ? {} : { addressId }),
+  });
 
   const state = useMemo(() => {
     /**
@@ -458,13 +519,21 @@ export function useInstantData(
     // `available: false` is the SERVER refusing, and it is the only thing that blocks the sheet.
     if (live === null || live.available) return ready(base);
 
-    const icon = blockedIconFor(live.reason);
+    const closedMessage = closedMessageFor(
+      live.reason,
+      hubCatalogue.state.status === 'ready' ? hubCatalogue.state.data.operatingWindow : null,
+      openedAtMs,
+    );
     const blocked =
-      icon === 'moon' ? DEMO_INSTANT_OUT_OF_SHIFT.unavailable : DEMO_INSTANT_NO_SLOTS.unavailable;
+      closedMessage === null
+        ? DEMO_INSTANT_NO_SLOTS.unavailable
+        : DEMO_INSTANT_OUT_OF_SHIFT.unavailable === undefined
+          ? undefined
+          : { ...DEMO_INSTANT_OUT_OF_SHIFT.unavailable, message: closedMessage };
     if (blocked === undefined) return ready(base);
 
-    return ready<InstantViewModel>({ ...base, unavailable: { ...blocked, icon } });
-  }, [catalogue.state, availability.state, quote.state]);
+    return ready<InstantViewModel>({ ...base, unavailable: blocked });
+  }, [catalogue.state, availability.state, quote.state, hubCatalogue.state, openedAtMs]);
 
   return {
     state,
