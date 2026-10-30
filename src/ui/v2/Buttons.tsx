@@ -4,6 +4,13 @@ import type { StyleProp, View, ViewStyle } from 'react-native';
 
 import { C, SHADOW_HAIRLINE, T } from './theme';
 
+/**
+ * A button label is one line. Android measures Livvic a hair narrower than it draws it, so a label
+ * sized to its text wrapped its last word onto a line the button hides ("Go to home" for "Go to
+ * home now") — `simple` breaking measures the line as it is drawn, as on the Account labels.
+ */
+const ONE_LINE = { numberOfLines: 1, textBreakStrategy: 'simple' } as const;
+
 /** The shared Button (`90:180`) — Primary, and Disabled while not yet available. */
 export function PrimaryButton({
   label,
@@ -46,7 +53,9 @@ export function PrimaryButton({
       {loading ? (
         <ActivityIndicator color={C.text} />
       ) : (
-        <Text style={[styles.buttonLabel, disabled && styles.buttonLabelDisabled]}>{label}</Text>
+        <Text style={[styles.buttonLabel, disabled && styles.buttonLabelDisabled]} {...ONE_LINE}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -87,7 +96,9 @@ export function OutlineButton({
       {loading ? (
         <ActivityIndicator color={C.text} />
       ) : (
-        <Text style={styles.buttonLabel}>{label}</Text>
+        <Text style={styles.buttonLabel} {...ONE_LINE}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -114,7 +125,9 @@ export function SecondaryButton({
       style={({ pressed }) => [styles.button, styles.secondary, pressed && styles.pressed, style]}
       testID={testID}
     >
-      <Text style={styles.buttonLabel}>{label}</Text>
+      <Text style={styles.buttonLabel} {...ONE_LINE}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

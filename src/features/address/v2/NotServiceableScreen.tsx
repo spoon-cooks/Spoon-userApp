@@ -68,6 +68,12 @@ export function NotServiceableScreen({
   }, [onTimeout, progress]);
 
   const [first, second] = place.liveAreas;
+  /**
+   * The scene is drawn at the frame's 370 × 188. A card narrower than that (a 360pt phone) scales
+   * the whole drawing down to fit rather than cutting its right side off ("You · Indiranag").
+   */
+  const [heroWidth, setHeroWidth] = useState(SCENE_WIDTH);
+  const sceneScale = Math.min(1, heroWidth / SCENE_WIDTH);
 
   return (
     <View style={styles.screen} testID={testID}>
@@ -92,8 +98,22 @@ export function NotServiceableScreen({
         </View>
 
         <View style={styles.body}>
-          <View style={[styles.hero, SHADOW_1]} pointerEvents="none">
-            <View style={styles.scene}>
+          <View
+            style={[styles.hero, { height: SCENE_HEIGHT * sceneScale }, SHADOW_1]}
+            pointerEvents="none"
+            onLayout={(event) => setHeroWidth(event.nativeEvent.layout.width)}
+          >
+            <View
+              style={[
+                styles.scene,
+                {
+                  // A transform scales about the centre: shift so the top-left stays put.
+                  left: -1 - (SCENE_WIDTH * (1 - sceneScale)) / 2,
+                  top: -1 - (SCENE_HEIGHT * (1 - sceneScale)) / 2,
+                  transform: [{ scale: sceneScale }],
+                },
+              ]}
+            >
               <Image source={ADDRESS_ART.nsMapArt} style={styles.mapArt} />
               {first === undefined ? null : (
                 <>
@@ -216,6 +236,10 @@ export function NotServiceableScreen({
   );
 }
 
+/** `2214:4260` — the hero drawing's size in the frame. */
+const SCENE_WIDTH = 370;
+const SCENE_HEIGHT = 188;
+
 /** "A", "A & B", "A, B & C" — the frame's "HSR Layout & Haralur". */
 export function joinAreas(areas: readonly string[]): string {
   if (areas.length <= 1) return areas[0] ?? '';
@@ -260,7 +284,6 @@ const styles = StyleSheet.create({
   },
   body: { paddingTop: 8, paddingHorizontal: 16, gap: 16 },
   hero: {
-    height: 188,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: C.border,
@@ -269,10 +292,8 @@ const styles = StyleSheet.create({
   },
   scene: {
     position: 'absolute',
-    left: -1,
-    top: -1,
-    width: 370,
-    height: 188,
+    width: SCENE_WIDTH,
+    height: SCENE_HEIGHT,
     backgroundColor: C.subtle,
   },
   mapArt: { position: 'absolute', left: 0, top: 0, width: 370, height: 188 },

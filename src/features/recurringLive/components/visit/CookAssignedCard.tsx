@@ -1,5 +1,9 @@
 import { useRef } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
+// Gesture-handler's ScrollView, not React Native's: this card scrolls inside the page and holds
+// sideways dish rows. With RN's, a sideways drag on a row left Android handing the next vertical
+// drag on the card to the page, which scrolled instead (S21, 2026-10-30), as DeckCard avoids.
+import { ScrollView } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Text } from '@ui';

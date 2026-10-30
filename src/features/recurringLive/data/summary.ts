@@ -8,7 +8,11 @@ import type { ImageSourcePropType } from 'react-native';
  */
 
 /** How a date is marked on the summary calendar (`1067:2171`). */
-export type SummaryDateMark = 'start' | 'end' | 'selected';
+/**
+ * Dev notes `2621:3563`…: the Live booking circles — before today Past, today Today, after today
+ * Upcoming. A date not in the plan carries no mark.
+ */
+export type SummaryDateMark = 'past' | 'today' | 'upcoming';
 
 export interface SummaryDateCell {
   readonly day: number;
@@ -94,7 +98,7 @@ export const SUMMARY_CALENDAR: SummaryCalendar = {
     {
       id: 'r2',
       month: 'Oct',
-      cells: [null, null, null, { day: 1 }, { day: 2, mark: 'start' }, { day: 3 }, { day: 4 }],
+      cells: [null, null, null, { day: 1 }, { day: 2, mark: 'past' }, { day: 3 }, { day: 4 }],
     },
     {
       id: 'r3',
@@ -102,7 +106,7 @@ export const SUMMARY_CALENDAR: SummaryCalendar = {
       cells: [
         { day: 5 },
         { day: 6 },
-        { day: 7, mark: 'selected' },
+        { day: 7, mark: 'today' },
         { day: 8 },
         { day: 9 },
         { day: 10 },
@@ -118,8 +122,8 @@ export const SUMMARY_CALENDAR: SummaryCalendar = {
         { day: 14 },
         { day: 15 },
         { day: 16 },
-        { day: 17, mark: 'selected' },
-        { day: 18, mark: 'end' },
+        { day: 17, mark: 'upcoming' },
+        { day: 18, mark: 'upcoming' },
       ],
     },
   ],

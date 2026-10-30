@@ -429,9 +429,16 @@ function Badge({ badge }: { badge: BadgeSpec }) {
       <View style={[styles.well, { backgroundColor: badge.well }]}>
         <Image source={badge.icon} style={styles.wellIcon} accessibilityIgnoresInvertColors />
       </View>
+      {/* Android measures Livvic a hair narrower than it draws it, so a pill sized to its copy
+          wrapped the last word onto a hidden line ("Trained for all"). One line, `simple`
+          breaking, as on the Account labels. */}
       <View>
-        <Text style={styles.badgeTitle}>{badge.title}</Text>
-        <Text style={styles.badgeSubtitle}>{badge.subtitle}</Text>
+        <Text style={styles.badgeTitle} numberOfLines={1} textBreakStrategy="simple">
+          {badge.title}
+        </Text>
+        <Text style={styles.badgeSubtitle} numberOfLines={1} textBreakStrategy="simple">
+          {badge.subtitle}
+        </Text>
       </View>
     </View>
   );

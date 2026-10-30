@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { DataState } from '@core/data';
-import { DurationCarousel } from '@features/homeRedesign';
+import { DurationCarousel, TaxDetailsDialog } from '@features/homeRedesign';
 import type { DurationOption } from '@features/homeRedesign';
-import { Button, NoteCard, QueryBoundary, Screen, ScreenHeader, Text } from '@ui';
+import { Button, NoteCard, QueryBoundary, Screen, ScreenHeader, Text, useBottomGutter } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
 import { SlotChip, TimeGrid, TimeOfDayTabs, TimeTab } from '@ui/v2/TimePicker';
 
@@ -54,6 +54,12 @@ export function ScheduleForLaterView({
   ...actions
 }: ScheduleForLaterViewProps) {
   const [focusedId, setFocusedId] = useState<string | null>(selection.durationId);
+  const [taxOpen, setTaxOpen] = useState(false);
+  /**
+   * The Screen pads its footer by this much below; the card takes that room back so its white runs
+   * to the bottom edge, as `2466:19093` does (42 under the link = 8 + the 34pt home indicator).
+   */
+  const gutter = useBottomGutter(lightTheme.space.lg);
 
   return (
     <QueryBoundary state={state} onRetry={onRetry}>
@@ -93,7 +99,12 @@ export function ScheduleForLaterView({
             }
             footer={
               /* `2466:19093` — white, 24 top corners, Elevation/2, 16 in, 4 between rows. */
-              <View style={styles.footer}>
+              <View
+                style={[
+                  styles.footer,
+                  { marginBottom: -gutter, paddingBottom: gutter + lightTheme.space.sm },
+                ]}
+              >
                 {complete && slot !== undefined && selection.dayId !== null ? (
                   <View style={styles.summary} testID="schedule-later-summary">
                     <View style={styles.when}>
@@ -125,6 +136,30 @@ export function ScheduleForLaterView({
                   disabledTone="soft"
                   labelColor="textPrimary"
                   testID="schedule-later-confirm"
+                />
+                {/* `2466:19025` / dev note `2466:19113`: with a slot picked, "Check payment details"
+                    sits under Confirm Booking and opens the tax details, as on Home. */}
+                {complete ? (
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => setTaxOpen(true)}
+                    hitSlop={8}
+                    testID="schedule-later-payment-details"
+                  >
+                    <Text
+                      variant="body"
+                      color="textPrimary"
+                      align="center"
+                      style={styles.underline}
+                    >
+                      Check payment details
+                    </Text>
+                  </Pressable>
+                ) : null}
+                <TaxDetailsDialog
+                  visible={taxOpen}
+                  onClose={() => setTaxOpen(false)}
+                  gstPercent={model.gstPercent}
                 />
                 {lostPick || actions.submitError !== null ? (
                   <Text
@@ -273,6 +308,8 @@ function DayChip({
 
 const styles = StyleSheet.create({
   carousel: { paddingTop: lightTheme.space.sm },
+  /** `2466:19025` "Check payment details" — Regular 12/16, underlined, centred. */
+  underline: { textDecorationLine: 'underline' },
   /** `2466:19029` — 16 in, 16 between the day block and the time block. */
   body: { padding: lightTheme.space.lg, gap: lightTheme.space.lg },
   /** `2466:19030` — the title, 12, the strip. */

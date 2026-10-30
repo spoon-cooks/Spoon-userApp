@@ -164,8 +164,8 @@ export function LoginOtpScreen({
   const complete = code.length === otp.digitCount;
 
   /*
-   * `1945:1692` "Verify & continue" — drawn only in the keyboard frames, disabled until all six
-   * digits are in. The 6th digit still submits on its own; the button is the explicit retry. A code
+   * `1945:1692` "Verify & continue" — Figma draws it only in the keyboard frames; the app shows it
+   * at all times (owner, 2026-10-30). Disabled until all six digits are in. The 6th digit still submits on its own; the button is the explicit retry. A code
    * the server already rejected is never sent again: tapping then replays the shake instead.
    */
   const onVerifyPress = () => {
@@ -273,11 +273,6 @@ export function LoginOtpScreen({
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
-            {/* Proposed, not drawn (dev note 2a): a small spinner under the cells while verifying.
-                With the keyboard up the spinner sits in Verify & continue instead. */}
-            {verifying && !keyboardOpen ? (
-              <ActivityIndicator color={C.text} testID={`${testID}-verifying`} />
-            ) : null}
           </View>
 
           <View style={styles.resend}>
@@ -317,30 +312,30 @@ export function LoginOtpScreen({
             )}
           </View>
 
-          {keyboardOpen ? (
-            <Pressable
-              onPress={onVerifyPress}
-              disabled={!complete || verifying}
-              accessibilityRole="button"
-              accessibilityLabel={otp.verifyLabel}
-              accessibilityState={{ disabled: !complete || verifying, busy: verifying }}
-              style={({ pressed }) => [
-                styles.cta,
-                SHADOW_BUTTON,
-                complete ? styles.ctaEnabled : styles.ctaDisabled,
-                pressed && complete && styles.pressed,
-              ]}
-              testID={`${testID}-verify`}
-            >
-              {verifying ? (
-                <ActivityIndicator color={C.text} testID={`${testID}-verifying`} />
-              ) : (
-                <Text style={[styles.ctaLabel, !complete && styles.ctaLabelDisabled]}>
-                  {otp.verifyLabel}
-                </Text>
-              )}
-            </Pressable>
-          ) : null}
+          {/* Always shown, keyboard up or down (owner, 2026-10-30); Figma draws it only in the
+              keyboard frames. The spinner while verifying sits in it. */}
+          <Pressable
+            onPress={onVerifyPress}
+            disabled={!complete || verifying}
+            accessibilityRole="button"
+            accessibilityLabel={otp.verifyLabel}
+            accessibilityState={{ disabled: !complete || verifying, busy: verifying }}
+            style={({ pressed }) => [
+              styles.cta,
+              SHADOW_BUTTON,
+              complete ? styles.ctaEnabled : styles.ctaDisabled,
+              pressed && complete && styles.pressed,
+            ]}
+            testID={`${testID}-verify`}
+          >
+            {verifying ? (
+              <ActivityIndicator color={C.text} testID={`${testID}-verifying`} />
+            ) : (
+              <Text style={[styles.ctaLabel, !complete && styles.ctaLabelDisabled]}>
+                {otp.verifyLabel}
+              </Text>
+            )}
+          </Pressable>
         </View>
       </LoginShell>
       <LoginToast notice={notice} keyboardHeight={keyboardHeight} />

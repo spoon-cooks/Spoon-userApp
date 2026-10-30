@@ -95,7 +95,8 @@ describe('Rate card (Figma 1603:50)', () => {
       <RateVisitCard live visit={VISIT} initialRating={4.5} onSubmit={jest.fn()} submitted />,
     );
 
-    expect(screen.getByText('Rating submitted · Thanks for the feedback!')).toBeTruthy();
+    expect(screen.getByText('Rating submitted')).toBeTruthy();
+    expect(screen.getByText('Thanks for the feedback!')).toBeTruthy();
     expect(screen.getByText('Asha will see your rating and note after the visit.')).toBeTruthy();
     expect(screen.getByText('What stood out')).toBeTruthy();
     expect(screen.getByTestId('rate-visit-card-chip-taste')).toBeTruthy();
@@ -109,12 +110,14 @@ describe('Rate card (Figma 1603:50)', () => {
     expect(screen.getByText('4.5')).toBeTruthy();
   });
 
-  it('reads the same once sent at any score — a low one too', () => {
+  it('reads back a low score to the Spoon team once sent (2513:1798 Mood=Bad)', () => {
     render(
       <RateVisitCard live visit={VISIT} initialRating={2} submitted initialChips={['slow']} />,
     );
     expect(screen.getByText('We’re so sorry')).toBeTruthy();
-    expect(screen.getByText('Asha will see your rating and note after the visit.')).toBeTruthy();
+    expect(
+      screen.getByText('Our team is looking into this and will get back to you.'),
+    ).toBeTruthy();
     expect(screen.getByText('What went wrong')).toBeTruthy();
     expect(screen.getByTestId('rate-visit-card-chip-slow')).toBeTruthy();
     // Nothing left to answer: no "a different cook" toggle once sent.
@@ -123,7 +126,8 @@ describe('Rate card (Figma 1603:50)', () => {
 
   it('draws no note block when nothing was added, and no chips label without chips', () => {
     render(<RateVisitCard live visit={VISIT} initialRating={4} submitted initialChips={[]} />);
-    expect(screen.getByText('Rating submitted · Thanks for the feedback!')).toBeTruthy();
+    expect(screen.getByText('Rating submitted')).toBeTruthy();
+    expect(screen.getByText('Thanks for the feedback!')).toBeTruthy();
     expect(screen.queryByText('What stood out')).toBeNull();
     expect(screen.queryByText('Your note to Asha')).toBeNull();
   });

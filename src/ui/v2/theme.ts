@@ -73,6 +73,7 @@ export const SHADOW_FIELD: ViewStyle = {
 /** Figma type styles used by the flow (Livvic). */
 export const T = {
   displayLarge: { fontFamily: F.bold, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
+  display: { fontFamily: F.bold, fontSize: 24, lineHeight: 32 },
   title: { fontFamily: F.bold, fontSize: 20, lineHeight: 28 },
   heading: { fontFamily: F.semibold, fontSize: 18, lineHeight: 26 },
   emphasis: { fontFamily: F.semibold, fontSize: 16, lineHeight: 24 },

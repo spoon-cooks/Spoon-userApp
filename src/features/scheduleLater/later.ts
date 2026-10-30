@@ -74,6 +74,8 @@ export interface LaterModel {
   readonly slotsPending: boolean;
   /** The server refused the address (or the day) as a whole: why, in its own code. */
   readonly rejection: string | null;
+  /** The GST rate, for "Check payment details" (from the catalogue, as on Home). */
+  readonly gstPercent: number;
 }
 
 const TIMES_OF_DAY: readonly TimeOfDayId[] = ['morning', 'afternoon', 'evening'];
@@ -119,6 +121,7 @@ export function laterModelFrom(input: {
   readonly now?: Date;
 }): LaterModel {
   const { catalogue, overview } = input;
+  const gstPercent = catalogue.taxRateBps / 100;
   const now = input.now ?? new Date();
   const timeZone = catalogue.operatingWindow.timeZone;
   const lengthOf = (minutes: number | null) =>
@@ -172,7 +175,7 @@ export function laterModelFrom(input: {
 
   const rejection = overview?.rejection ?? null;
   if (input.dayId === null || input.durationMinutes === null) {
-    return { durations, days, periods: [], slotsPending: false, rejection };
+    return { durations, days, periods: [], slotsPending: false, rejection, gstPercent };
   }
 
   // The chosen day's candidates: the overview's, else the single-day read's.
@@ -221,6 +224,7 @@ export function laterModelFrom(input: {
     periods,
     slotsPending,
     rejection: rejection ?? answer?.rejection ?? null,
+    gstPercent,
   };
 }
 

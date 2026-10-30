@@ -208,7 +208,10 @@ export function EndOtpCard({
     <View style={[styles.wrapUp, SHADOW_2]} testID={testID}>
       <View style={styles.wrapUpHeader}>
         <Image source={SERVICE_ART.exclamation} style={styles.icon24} />
-        <Text style={styles.title}>Wrap up the visit now</Text>
+        {/* One line, as `2165:12150` draws it: Android measured it a hair narrow and wrapped "now". */}
+        <Text style={styles.title} numberOfLines={1} textBreakStrategy="simple">
+          Wrap up the visit now
+        </Text>
       </View>
       <Text style={styles.captionPrimary}>
         Stretching the booking beyond paid time delays the cook’s schedule and affects her
@@ -340,7 +343,9 @@ export function CookingTimer({
   const digits = timerDigits(Math.max(0, minutesLeft));
   return (
     <View style={styles.timer} testID={testID}>
-      <Text style={styles.captionStrongSecondary}>
+      {/* One line, `simple` breaking: Android measures Livvic a hair narrower than it draws it,
+          and the last word wrapped onto a hidden line ("… · time"), as on the Account labels. */}
+      <Text style={styles.captionStrongSecondary} numberOfLines={1} textBreakStrategy="simple">
         {up ? 'Time’s up · cooking slot has ended' : 'Service in progress · time left'}
       </Text>
       <View style={styles.clock}>

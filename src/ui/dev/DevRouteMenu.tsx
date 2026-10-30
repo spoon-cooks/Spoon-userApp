@@ -125,7 +125,9 @@ export const DEV_ROUTES: readonly DevRoute[] = [
     note: 'FINAL · 115:2703',
   },
   { path: '/showcase', label: 'Component showcase', note: 'Design system' },
-  { path: '/splash', label: 'Login · Loading page', note: '73:1036' },
+  { path: '/splash', label: 'Loading · App launch toss', note: '2692:864' },
+  { path: '/splash?screen=confirming', label: 'Loading · Confirming payment', note: '2702:855' },
+  { path: '/splash?screen=failed', label: 'Loading · Payment failed', note: '2718:916' },
   {
     path: '/taste-profile',
     label: 'Taste profile · Family (preview)',

@@ -229,7 +229,17 @@ export function OptionTile({
       testID={testID}
     >
       <TileIcon icon={option.icon} />
-      <Text style={styles.bodyStrong}>{option.label}</Text>
+      {/* A third of a 360pt phone is narrower than Figma's 402pt frame: the label shrinks a step
+          rather than wrapping ("No / preference"), as the Account screen's tile labels do. */}
+      <Text
+        style={styles.bodyStrong}
+        numberOfLines={1}
+        textBreakStrategy="simple"
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+      >
+        {option.label}
+      </Text>
       {option.hint === undefined ? null : (
         <Text style={[styles.micro, styles.textSecondary]} numberOfLines={2}>
           {option.hint}

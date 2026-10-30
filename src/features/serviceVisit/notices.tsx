@@ -26,7 +26,13 @@ export function CookReassignedNote({ testID }: { testID: string }) {
         <View style={styles.reassignedWell}>
           <Image source={SERVICE_ART.cookChanged} style={styles.icon24} />
         </View>
-        <Text style={styles.emphasis} accessibilityRole="header">
+        {/* One line, `simple` breaking: Android measured it a hair narrow and hid "cook". */}
+        <Text
+          style={styles.emphasis}
+          accessibilityRole="header"
+          numberOfLines={1}
+          textBreakStrategy="simple"
+        >
           Sorry, we have assigned you another cook
         </Text>
       </View>

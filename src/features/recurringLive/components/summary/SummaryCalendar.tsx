@@ -1,8 +1,9 @@
 import { Image, Pressable, StyleSheet, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import { Text } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
-import type { ColorToken } from '@ui/tokens/semantic';
+import type { TypographyToken } from '@ui/tokens/semantic';
 
 import type { SummaryCalendar as SummaryCalendarData, SummaryDateMark } from '../../data/summary';
 import { SUMMARY_EDIT_GLYPH } from './assets';
@@ -23,10 +24,19 @@ export interface SummaryCalendarProps {
   readonly testID?: string;
 }
 
-const MARK_FILL: Record<SummaryDateMark, ColorToken> = {
-  start: 'surfaceCta',
-  end: 'surfaceCta',
-  selected: 'surfaceAccentBold',
+/** The Live booking circles (`VisitsCalendar`), as dev notes `2621:3563`… ask: Past filled pale,
+ * Today solid yellow, Upcoming a 1.5pt ring with no fill. */
+const MARK_STYLE: Record<SummaryDateMark, ViewStyle> = {
+  past: { backgroundColor: lightTheme.colors.surfaceAccent },
+  today: { backgroundColor: lightTheme.colors.surfaceCta },
+  upcoming: { borderWidth: 1.5, borderColor: lightTheme.colors.borderNotice },
+};
+
+/** Marked dates read SemiBold except past ones, as on Live booking. */
+const MARK_LABEL: Record<SummaryDateMark, TypographyToken> = {
+  past: 'spoonBody',
+  today: 'spoonBodyStrong',
+  upcoming: 'spoonBodyStrong',
 };
 
 export function SummaryCalendar({
@@ -72,16 +82,11 @@ export function SummaryCalendar({
                 {row.cells.map((cell, index) => (
                   <View key={`${row.id}-${index}`} style={styles.cell}>
                     {cell?.mark === undefined ? null : (
-                      <View
-                        style={[
-                          styles.mark,
-                          { backgroundColor: lightTheme.colors[MARK_FILL[cell.mark]] },
-                        ]}
-                      />
+                      <View style={[styles.mark, MARK_STYLE[cell.mark]]} />
                     )}
                     {cell === null ? null : (
                       <Text
-                        variant="spoonBody"
+                        variant={cell.mark === undefined ? 'spoonBody' : MARK_LABEL[cell.mark]}
                         color={cell.mark === undefined ? 'textSecondarySoft' : 'textPrimary'}
                       >
                         {cell.day}

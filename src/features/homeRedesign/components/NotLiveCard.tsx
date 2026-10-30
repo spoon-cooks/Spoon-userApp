@@ -55,7 +55,11 @@ export function NotLiveCard({
             <Image source={ART.locationFill} style={styles.youIcon} />
           </View>
           <View style={[styles.you, SHADOW_PILL]}>
-            <Text style={styles.youText}>{`You · ${pincode}`}</Text>
+            {/* One line, `simple` breaking: Android measured the pill a hair narrow and hid the
+                pincode on a second line ("You ·"). */}
+            <Text style={styles.youText} numberOfLines={1} textBreakStrategy="simple">
+              {`You · ${pincode}`}
+            </Text>
           </View>
           {/* `1307:6206` — rotated −6° and centred in its 133 × 49.4 bounding box. */}
           <View style={styles.stickerBox}>
