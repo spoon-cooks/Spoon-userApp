@@ -43,7 +43,7 @@ describe('Payment details sheet (2257:3939, dev note 2255:3939)', () => {
         },
         paymentMethod: { type: 'upi', label: 'UPI', detail: '••••@okhdfcbank' },
       }),
-      'Cook Sanchita',
+      'Cook Meera',
     );
     expect(sheet.subtitle).toBe('Wed, 14 Oct · 9:00 AM');
     expect(sheet.visitLine).toEqual({
@@ -56,7 +56,7 @@ describe('Payment details sheet (2257:3939, dev note 2255:3939)', () => {
       { label: 'Extension 2 · +10 mins', caption: 'Added during the visit', amount: '₹29.66' },
     ]);
     expect(sheet.taxLine.amount).toBe('₹61.63');
-    expect(sheet.tipLine).toEqual({ label: 'Tip for Sanchita', amount: '₹50' });
+    expect(sheet.tipLine).toEqual({ label: 'Tip for Meera', amount: '₹50' });
     expect(sheet.total).toBe('₹454');
     expect(sheet).toMatchObject({
       methodType: 'upi',
@@ -114,7 +114,7 @@ describe('Payment details for a Recurring visit’s booking (2165:14262)', () =>
           tipAmountPaise: 0,
         },
       }),
-      'Cook Sanchita',
+      'Cook Meera',
       {
         ...plan,
         visitLine: { ...plan.visitLine, caption: 'Recurring · Plan 1, Visit 1' },
@@ -165,7 +165,7 @@ describe('Visit details · Cancelled for a one-time booking (2165:11853, dev not
   } as RefundDto;
 
   it('says who cancelled and when, with no plan to continue', () => {
-    const model = cancelledVisitModelFrom(cancelled, refund, 'Cook Sanchita');
+    const model = cancelledVisitModelFrom(cancelled, refund, 'Cook Meera');
     expect(model.variant).toBe('cancelled');
     expect(model.banner).toEqual({ date: 'Wed, 14 Oct', slot: '9:00 AM – 10:00 AM · 1 hr' });
     expect(model.cancelled.byline).toBe('By you · Thu, 1 Oct, 6:40 PM');

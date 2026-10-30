@@ -436,7 +436,7 @@ export function HomeRedesignView({
             />
           </View>
 
-          <CooksTrust />
+          <CooksTrust cooks={model.featuredCooks ?? []} />
           <NotIncluded />
           {variant === 'inactive' ? <ShareCard onPressShare={share} /> : null}
           <PromiseFooter />

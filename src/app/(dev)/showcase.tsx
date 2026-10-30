@@ -136,13 +136,13 @@ export default function ShowcaseRoute() {
 
       <Section title="Status">
         <StatusBanner
-          title="Cook Rekha is arriving"
+          title="Cook Asha is arriving"
           message="The cook will reach your location on time!"
           icon="pin"
           highlight="16 mins"
         />
         <StatusBanner
-          title="Cook Rekha is arriving"
+          title="Cook Asha is arriving"
           message="We're sorry for the delay, the cook is running late"
           tone="warning"
           highlight="21 mins"

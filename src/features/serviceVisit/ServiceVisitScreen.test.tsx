@@ -48,9 +48,9 @@ const MODEL: ServiceVisitModel = {
   title: 'On-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
-  cook: { eyebrow: 'SPOON TRAINED · VERIFIED', name: 'Cook Sanchita', note: '' },
+  cook: { eyebrow: 'SPOON TRAINED · VERIFIED', name: 'Cook Meera', note: '' },
   menu: [],
-  cookFirstName: 'Sanchita',
+  cookFirstName: 'Meera',
   cookPhoto: null,
   prepChecked: [],
   arrival: { by: '8:57 AM', minutes: 24, onTime: true },
@@ -160,7 +160,7 @@ describe('Service flow screen (2165:11841)', () => {
   it('cooking: the countdown, Extend (+20 default, Popular) and the End OTP', () => {
     const props = renderPhase({ phase: 'cooking', bannerSlot: null });
     expect(screen.getByText('Ends at 9:58 AM')).toBeTruthy();
-    expect(screen.getByText('Sanchita is free till 10:30 AM')).toBeTruthy();
+    expect(screen.getByText('Meera is free till 10:30 AM')).toBeTruthy();
     expect(screen.getByText('Popular')).toBeTruthy();
     fireEvent.press(screen.getByTestId('service-visit-extend-cta'));
     expect(props.onExtend).toHaveBeenCalledWith(20);
@@ -189,7 +189,7 @@ describe('Service flow screen (2165:11841)', () => {
 
   it('completed: the tip card — CTA disabled until an amount is picked', () => {
     const props = renderPhase({ phase: 'completed' });
-    expect(screen.getByText('Make Sanchita’s day with a tip')).toBeTruthy();
+    expect(screen.getByText('Make Meera’s day with a tip')).toBeTruthy();
     expect(screen.getByText('Pick an amount to say thanks')).toBeTruthy();
     fireEvent.press(screen.getByTestId('service-visit-tip-50'));
     fireEvent.press(screen.getByTestId('service-visit-tip-pay'));
@@ -206,7 +206,7 @@ describe('Service flow screen (2165:11841)', () => {
 
   it('completed and tipped: the confirmation instead of the amounts', () => {
     renderPhase({ phase: 'completed', tipPaid: { amountPaise: 5000, when: 'Paid · Wed, 14 Oct' } });
-    expect(screen.getByText('₹50 tip sent to Sanchita')).toBeTruthy();
-    expect(screen.getByText('Thank you, you just made Sanchita’s day!')).toBeTruthy();
+    expect(screen.getByText('₹50 tip sent to Meera')).toBeTruthy();
+    expect(screen.getByText('Thank you, you just made Meera’s day!')).toBeTruthy();
   });
 });

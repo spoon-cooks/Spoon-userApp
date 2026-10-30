@@ -64,7 +64,7 @@ export const RATING_DIFFERENT_COOK = {
 } as const;
 
 /**
- * The tier copy for a cook by first name (the frames' Rekha in the preview). Bands per dev note
+ * The tier copy for a cook by first name (the frames' Asha in the preview). Bands per dev note
  * `2238:908`: below 4 is the Poor card, 4 – 5 the Rated card, 5+ its own.
  */
 export function ratingTierCopy(
@@ -108,7 +108,7 @@ export function ratingTierCopy(
   };
 }
 
-export const RATING_TIER_COPY = ratingTierCopy('Rekha');
+export const RATING_TIER_COPY = ratingTierCopy('Asha');
 
 export interface RatingChip {
   readonly key: string;
@@ -143,9 +143,9 @@ export const RATING_CHIPS_NEGATIVE_PICKED: readonly string[] = ['taste', 'slow']
 
 /** `1501:6631` — the card's header row. */
 export const RATING_VISIT_FIXTURE = {
-  title: 'Lunch with Cook Rekha',
+  title: 'Lunch with Cook Asha',
   meta: 'Sun, 12 Apr · 1:15 PM · 1 hr',
-  cookName: 'Rekha',
+  cookName: 'Asha',
 } as const;
 
 // --- Feedback block (`2093:6050`) ---------------------------------------------------------------

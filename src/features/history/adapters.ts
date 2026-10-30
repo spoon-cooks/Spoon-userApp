@@ -2,7 +2,6 @@ import { formatPaise } from '@core/format';
 import type { BookingSummaryCookDto, BookingSummaryDto } from '@features/booking';
 import { formatServiceDate, formatServiceTime, serviceDateIn } from '@features/scheduled';
 import type { BookingCardViewModel, StatusTone } from '@ui';
-import { cookCardContentFor } from '@ui/components/cookCardContent';
 
 import type { BookingListViewModel } from './types';
 
@@ -117,8 +116,7 @@ export function headlineFor(
 /**
  * The card's cook fields from the summary's remembered cook.
  *
- * The photograph resolves exactly as the live cook card resolves it: a hosted `profileImageUrl`
- * wins, else the bundled per-`profileCode` photograph, else no photo and the card draws its
+ * The photograph is the backend's `profileImageUrl` (DEC-114); without one the card draws its
  * initials disc. Carries no rating: the cook's own published average (`cook.ratingAverage`) is a
  * different fact from what a booking card should show here, and is never surfaced by this
  * function — see `bookingCardFrom`, which sources a booking's own rating from `ratingStars`.
@@ -127,7 +125,7 @@ export function cookFieldsFrom(
   cook: BookingSummaryCookDto | null | undefined,
 ): Pick<BookingCardViewModel, 'cookName' | 'cookPhotoUrl'> {
   if (cook === null || cook === undefined) return {};
-  const photoUrl = cook.profileImageUrl ?? cookCardContentFor(cook.profileCode)?.photoUrl;
+  const photoUrl = cook.profileImageUrl ?? undefined;
   return {
     cookName: cook.displayName,
     ...(photoUrl === undefined ? {} : { cookPhotoUrl: photoUrl }),

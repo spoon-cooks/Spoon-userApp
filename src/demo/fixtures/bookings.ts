@@ -1,7 +1,5 @@
 import type { BookingCardViewModel } from '@ui/types/viewModels';
 
-import { COOK_SAMPLE_PHOTO } from './cooks';
-
 /**
  * DEMO / TEST FIXTURES — NOT PRODUCTION DATA. See `./cooks.ts`.
  *
@@ -15,8 +13,7 @@ export const DEMO_BOOKING_COMPLETED: BookingCardViewModel = {
   subtitle: 'Scheduled • 4:00 PM',
   statusLabel: 'Completed',
   statusTone: 'positive',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
   rating: 4.5,
 };
@@ -27,8 +24,7 @@ export const DEMO_BOOKING_UNFULFILLED: BookingCardViewModel = {
   subtitle: 'Scheduled • 5:00 AM',
   statusLabel: 'Unfulfilled',
   statusTone: 'warning',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 
@@ -40,8 +36,7 @@ export const DEMO_BOOKING_CANCELLED: BookingCardViewModel = {
   subtitle: 'Instant',
   statusLabel: 'Cancelled',
   statusTone: 'neutral',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 
@@ -51,8 +46,7 @@ export const DEMO_BOOKING_CONFIRMED: BookingCardViewModel = {
   subtitle: 'Scheduled • 4:00 PM',
   statusLabel: 'Confirmed',
   statusTone: 'info',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 
@@ -62,8 +56,7 @@ export const DEMO_BOOKING_RESCHEDULED: BookingCardViewModel = {
   subtitle: 'Scheduled • 11:00 AM',
   statusLabel: 'Rescheduled',
   statusTone: 'info',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 
@@ -73,8 +66,7 @@ export const DEMO_REFUND_PROCESSING: BookingCardViewModel = {
   subtitle: 'Refund expected by 15th Apr',
   statusLabel: 'Processing',
   statusTone: 'warning',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 
@@ -84,8 +76,7 @@ export const DEMO_REFUND_COMPLETED: BookingCardViewModel = {
   subtitle: 'Refund completed on 15th Apr',
   statusLabel: 'Refunded',
   statusTone: 'positive',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_SAMPLE_PHOTO,
+  cookName: 'Cook Asha',
   amount: '₹188',
 };
 

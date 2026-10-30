@@ -1,16 +1,14 @@
-import { cookCardContentFor } from '@ui/components/cookCardContent';
-
 import { bookingDetailFrom, cookCardVariantFor } from './adapters';
 import { bookingDetailResponseSchema } from './api/schemas';
 import type { BookingDetailDto } from './api';
 import { DEMO_BOOKING_CONFIRMATION } from '@/demo/fixtures/booking';
 
 /**
- * The four-cook card wiring: a real booking's cook renders ONLY what the payload and the
- * payload's own `profileCode` resolve — never the design fixture underneath the screen copy.
+ * The assigned-cook card wiring: a real booking's cook renders ONLY what the payload carries —
+ * never the design fixture underneath the screen copy, and no bundled cook content (DEC-114).
  *
  * The failure this pins: `bookingDetailFrom` used to spread `base.cook` (a designed sample,
- * Rekha) under the payload's cook, so a real cook rendered with the sample's home state, dish
+ * Asha) under the payload's cook, so a real cook rendered with the sample's home state, dish
  * chips, all three badges and — when the backend sent no photo — the sample's photograph. And
  * when the server sent `cook: null`, the sample itself survived into the view model.
  */
@@ -63,10 +61,10 @@ const DETAIL_BODY = {
   },
 } as const;
 
-const JYOTI_CARD = {
+const KAVITA_CARD = {
   cookId: 'd680481b-4ffe-55b1-9edf-74b746a43bba',
-  profileCode: 'COOK_JYOTI',
-  displayName: 'Cook Jyoti',
+  profileCode: 'COOK_KAVITA',
+  displayName: 'Cook Kavita',
   profileImageUrl: null,
   region: 'Odisha',
   languages: ['Hindi', 'Odiya'],
@@ -89,13 +87,13 @@ describe('the assigned-cook card is payload-driven', () => {
   it('builds the whole card from the payload and its profileCode, not the fixture', () => {
     const model = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
-      dto: detailWithCook(JYOTI_CARD),
+      dto: detailWithCook(KAVITA_CARD),
     });
 
     expect(model.cook).toMatchObject({
-      id: JYOTI_CARD.cookId,
-      displayName: 'Cook Jyoti',
-      firstName: 'Jyoti',
+      id: KAVITA_CARD.cookId,
+      displayName: 'Cook Kavita',
+      firstName: 'Kavita',
       gender: 'Female',
       cuisine: 'North Indian',
       homeState: 'Odisha',
@@ -103,41 +101,24 @@ describe('the assigned-cook card is payload-driven', () => {
       badges: { spoonTrained: true, backgroundVerified: true, hygienic: true },
       profileVariant: 'veg',
     });
-    // The dish chips are the BUNDLED designed lists resolved by profileCode — Jyoti's own
-    // lists, not the fixture sample's.
-    const content = cookCardContentFor('COOK_JYOTI');
-    expect(model.cook?.specialties).toEqual(content?.specialties);
-    expect(model.cook?.pureVegSpecialties).toEqual(content?.pureVegSpecialties);
-    // No hosted photo, so the bundled card photograph resolves through the same code.
-    expect(model.cook?.photoUrl).toBe(content?.photoUrl);
+    // The app bundles no cook's dishes or photograph: without them in the payload, the card
+    // draws no specialty grid and its initials disc.
+    expect(model.cook?.specialties).toBeUndefined();
+    expect(model.cook?.pureVegSpecialties).toBeUndefined();
+    expect(model.cook?.photoUrl).toBeUndefined();
   });
 
-  /*
-   * `photoFallbackUrl` exists so a hosted photo that 404s degrades to the bundled tier it
-   * skipped, rather than to an empty panel. It is supplied ONLY when the hosted photo won:
-   * handing the card the same uri twice would make a failed load retry itself.
-   */
-  it('carries a failure fallback only when the server supplied the photo', () => {
+  it('draws the server photo, with no bundled fallback behind it', () => {
     const hosted = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
       dto: detailWithCook({
-        ...JYOTI_CARD,
-        profileImageUrl: 'https://cdn.spoonhelp.com/cooks/jyoti.png',
+        ...KAVITA_CARD,
+        profileImageUrl: 'https://cdn.spoonhelp.com/cooks/kavita.png',
       }),
     });
 
-    expect(hosted.cook?.photoUrl).toBe('https://cdn.spoonhelp.com/cooks/jyoti.png');
-    expect(hosted.cook?.photoFallbackUrl).toBe(cookCardContentFor('COOK_JYOTI')?.photoUrl);
-  });
-
-  it('carries no fallback when the bundled photograph is already the primary', () => {
-    const bundled = bookingDetailFrom({
-      base: DEMO_BOOKING_CONFIRMATION,
-      dto: detailWithCook(JYOTI_CARD),
-    });
-
-    expect(bundled.cook?.photoUrl).toBe(cookCardContentFor('COOK_JYOTI')?.photoUrl);
-    expect(bundled.cook?.photoFallbackUrl).toBeUndefined();
+    expect(hosted.cook?.photoUrl).toBe('https://cdn.spoonhelp.com/cooks/kavita.png');
+    expect(hosted.cook?.photoFallbackUrl).toBeUndefined();
   });
 
   it('renders an unknown cook honestly: no badges, no dishes, no borrowed photo', () => {
@@ -186,19 +167,19 @@ describe('the assigned-cook card is payload-driven', () => {
   });
 
   it('keeps stale card data from surviving a reassignment', () => {
-    // The same booking read twice: first with Jyoti, then reassigned to Rekha. The second
-    // model must carry Rekha's identity and content with nothing of Jyoti's left over.
+    // The same booking read twice: first with Kavita, then reassigned to Asha. The second
+    // model must carry Asha's identity and content with nothing of Kavita's left over.
     const before = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
-      dto: detailWithCook(JYOTI_CARD),
+      dto: detailWithCook(KAVITA_CARD),
     });
     const after = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
       dto: detailWithCook({
-        ...JYOTI_CARD,
+        ...KAVITA_CARD,
         cookId: '82064635-b4d0-5b75-b486-6eb04169713a',
-        profileCode: 'COOK_REKHA',
-        displayName: 'Cook Rekha',
+        profileCode: 'COOK_ASHA',
+        displayName: 'Cook Asha',
         region: 'West Bengal',
         languages: [],
       }),
@@ -206,12 +187,12 @@ describe('the assigned-cook card is payload-driven', () => {
 
     expect(before.cook?.id).not.toBe(after.cook?.id);
     expect(after.cook).toMatchObject({
-      displayName: 'Cook Rekha',
-      firstName: 'Rekha',
+      displayName: 'Cook Asha',
+      firstName: 'Asha',
       homeState: 'West Bengal',
     });
     expect(after.cook?.languages).toBeUndefined();
-    expect(after.cook?.specialties).toEqual(cookCardContentFor('COOK_REKHA')?.specialties);
+    expect(after.cook?.specialties).toBeUndefined();
   });
 });
 
@@ -226,11 +207,11 @@ describe('the veg/mixed variant is the server’s decision', () => {
   it('changes the variant, and only the variant, when the same cook is projected differently', () => {
     const veg = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
-      dto: detailWithCook(JYOTI_CARD),
+      dto: detailWithCook(KAVITA_CARD),
     });
     const mixed = bookingDetailFrom({
       base: DEMO_BOOKING_CONFIRMATION,
-      dto: detailWithCook({ ...JYOTI_CARD, profileVariant: 'mixed' }),
+      dto: detailWithCook({ ...KAVITA_CARD, profileVariant: 'mixed' }),
     });
 
     // Same identity, same content, different projection — the whole V0 rule.

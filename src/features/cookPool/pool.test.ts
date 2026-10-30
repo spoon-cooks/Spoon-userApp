@@ -2,15 +2,15 @@ import { DEMO_COOK_POOL } from '@/demo/fixtures/cookPool';
 
 import { addCook, cookProfile, deckCooks, emptyPlaces, poolSummary, removeCook } from './pool';
 
-const SANCHITA = 'demo-pool-sanchita';
-const REKHA = 'demo-pool-rekha';
+const MEERA = 'demo-pool-meera';
+const ASHA = 'demo-pool-asha';
 
 describe('Cook Pool state', () => {
   it('puts the newest cook first, once', () => {
-    const one = addCook(DEMO_COOK_POOL, SANCHITA);
-    const two = addCook(one, REKHA);
-    expect(two.poolIds).toEqual([REKHA, SANCHITA]);
-    expect(addCook(two, REKHA)).toBe(two);
+    const one = addCook(DEMO_COOK_POOL, MEERA);
+    const two = addCook(one, ASHA);
+    expect(two.poolIds).toEqual([ASHA, MEERA]);
+    expect(addCook(two, ASHA)).toBe(two);
   });
 
   it('only adds cooks who have served the household', () => {
@@ -18,17 +18,17 @@ describe('Cook Pool state', () => {
   });
 
   it('takes a cook out of the pool', () => {
-    const pooled = addCook(DEMO_COOK_POOL, SANCHITA);
-    const removed = removeCook(pooled, SANCHITA);
+    const pooled = addCook(DEMO_COOK_POOL, MEERA);
+    const removed = removeCook(pooled, MEERA);
     expect(removed.poolIds).toEqual([]);
-    expect(removeCook(removed, SANCHITA)).toBe(removed);
+    expect(removeCook(removed, MEERA)).toBe(removed);
   });
 
   it('deals only the cooks not in the pool, as the candidates route does', () => {
-    const pooled = addCook(DEMO_COOK_POOL, SANCHITA);
+    const pooled = addCook(DEMO_COOK_POOL, MEERA);
     const deck = deckCooks(pooled);
     expect(deck.map((cook) => cook.cookId)).toEqual(
-      DEMO_COOK_POOL.servedCooks.map((cook) => cook.cookId).filter((cookId) => cookId !== SANCHITA),
+      DEMO_COOK_POOL.servedCooks.map((cook) => cook.cookId).filter((cookId) => cookId !== MEERA),
     );
     expect(deck.every((cook) => !cook.inPool)).toBe(true);
   });
@@ -37,7 +37,7 @@ describe('Cook Pool state', () => {
     expect(deckCooks(DEMO_COOK_POOL).map((cook) => cook.cookId)).toEqual(
       DEMO_COOK_POOL.servedCooks.map((cook) => cook.cookId),
     );
-    const profile = cookProfile(DEMO_COOK_POOL, SANCHITA);
+    const profile = cookProfile(DEMO_COOK_POOL, MEERA);
     const source = DEMO_COOK_POOL.servedCooks[0];
     expect(profile?.menu.map((section) => section.title)).toEqual(
       source?.menu.map((section) => section.title),
@@ -46,16 +46,14 @@ describe('Cook Pool state', () => {
   });
 
   it('marks whether a profile is in the pool, and has none for a stranger', () => {
-    expect(cookProfile(DEMO_COOK_POOL, SANCHITA)?.inPool).toBe(false);
-    expect(cookProfile(addCook(DEMO_COOK_POOL, SANCHITA), SANCHITA)?.inPool).toBe(true);
+    expect(cookProfile(DEMO_COOK_POOL, MEERA)?.inPool).toBe(false);
+    expect(cookProfile(addCook(DEMO_COOK_POOL, MEERA), MEERA)?.inPool).toBe(true);
     expect(cookProfile(DEMO_COOK_POOL, 'someone-else')).toBeUndefined();
   });
 
   it('summarises the pool with each cook’s short name', () => {
-    const summary = poolSummary(addCook(DEMO_COOK_POOL, SANCHITA));
-    expect(summary.members).toEqual([
-      expect.objectContaining({ cookId: SANCHITA, name: 'Sanchita' }),
-    ]);
+    const summary = poolSummary(addCook(DEMO_COOK_POOL, MEERA));
+    expect(summary.members).toEqual([expect.objectContaining({ cookId: MEERA, name: 'Meera' })]);
     expect(summary.minimumSize).toBe(2);
   });
 

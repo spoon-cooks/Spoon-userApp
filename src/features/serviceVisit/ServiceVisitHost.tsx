@@ -4,7 +4,7 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
-import { cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
 import {
   PaymentDetailsSheet,
   RateVisitCard,
@@ -35,7 +35,6 @@ import type { BriefKey } from './components';
 import {
   arrivalOf,
   clock,
-  cookStatLines,
   day,
   duration,
   endsAt,
@@ -164,15 +163,10 @@ export function ServiceVisitHost({
   const start = booking.scheduledStart ?? booking.timing.actualStart;
   const length = duration(booking.durationMinutes);
   const end = endsAt(booking);
-  const origin = [
-    card?.region ?? null,
-    card !== null && card.languages.length > 0 ? `Speaks ${card.languages.join(', ')}` : null,
-  ]
-    .filter((part): part is string => part !== null)
-    .join(' · ');
-  // "Your rating" is this customer's own average (dev note `2226:4211`); a cook on her first visit
-  // here shows the overall average instead (dev note `2353:17578`). See `cookStatLines`.
-  const stats = cookStatLines(card);
+  // The trust marks, caption and stat lines are the backend's (DEC-114), first visit included.
+  const lines = cookCardLines(
+    profile.state.status === 'ready' ? profile.state.data.presentation : undefined,
+  );
   /*
    * `2353:17562` — a ONE-TIME visit whose cook ops/system swapped before the trip: the
    * "Sorry, we have assigned you another cook" note sits above the (new) cook's card until she
@@ -200,14 +194,8 @@ export function ServiceVisitHost({
             new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString(),
           )} · ${length}`,
     cook: {
-      // Dev note `2226:4211`: "Spoon trained · Verified" only for a cook who is both.
-      eyebrow:
-        card !== null && card.spoonTrained && card.backgroundVerified
-          ? 'SPOON TRAINED · VERIFIED'
-          : '',
       name: cookName === null ? 'Your cook' : `Cook ${firstName(cookName) ?? cookName}`,
-      ...(origin === '' ? {} : { origin }),
-      ...stats,
+      ...lines,
       note: '',
       ...(photoUrl === null ? {} : { photo: { uri: photoUrl } }),
     },

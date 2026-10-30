@@ -5,6 +5,7 @@ import type { BookingSummaryDto } from '@features/booking';
 import { priceForSlot, type Catalogue } from '@features/catalogue';
 import type { CookPoolListDto } from '@features/cookPool';
 import type { RecurringEligibilityDto } from '@features/recurringSetup';
+import type { FeaturedCookDto } from './api/featuredCooksApi';
 
 import type {
   ActiveBookingCard,
@@ -77,6 +78,8 @@ export function addressDetailOf(address: AddressDto): string | null {
 export type InstantReads = ReadonlyMap<number, InstantAvailabilityDto | undefined>;
 
 export interface HomeSources {
+  /** `GET /v1/cooks/featured`; empty while it loads or if it failed. */
+  readonly featuredCooks?: readonly FeaturedCookDto[];
   readonly address: AddressDto;
   readonly catalogue: Catalogue | undefined;
   readonly catalogueStatus: 'ready' | 'loading' | 'error';
@@ -166,6 +169,7 @@ export function homeModelFrom(sources: HomeSources): HomeModel {
 
   return {
     serviceability: live ? 'live' : 'not_live',
+    featuredCooks: sources.featuredCooks ?? [],
     address: {
       label: address.label,
       detail: addressDetailOf(address),
@@ -216,10 +220,12 @@ export const GUEST_ADDRESS: HomeModel['address'] = {
 export function guestHomeModelFrom(sources: {
   readonly catalogue: Catalogue | undefined;
   readonly catalogueStatus: 'ready' | 'loading' | 'error';
+  readonly featuredCooks?: readonly FeaturedCookDto[];
 }): HomeModel {
   const durations = durationsFrom(sources.catalogue, new Map());
   return {
     serviceability: 'live',
+    featuredCooks: sources.featuredCooks ?? [],
     address: GUEST_ADDRESS,
     user: { hasCompletedBooking: false },
     instant: { available: true, etaMins: null },

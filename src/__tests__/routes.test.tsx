@@ -378,15 +378,15 @@ describe('routes render', () => {
     expect(screen.getByText('2 done · 0 cancelled · 3 to go')).toBeTruthy();
     // No Up-next card (`1746:3304`): the progress line comes straight after the tabs.
     expect(screen.queryByText('1st Visit, 9:00 AM')).toBeNull();
-    // The fixture's Cook Sanchita / "3 done · 1 cancelled" never appear.
-    expect(screen.queryByText(/Sanchita/)).toBeNull();
+    // The fixture's Cook Meera / "3 done · 1 cancelled" never appear.
+    expect(screen.queryByText(/Meera/)).toBeNull();
 
     // Manage plans opens on the same booking — no "Coming soon", no fixture plans.
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     fireEvent.press(screen.getByTestId('recurring-live-screen-header-plans'));
     expect(await screen.findByTestId('recurring-plans-screen')).toBeTruthy();
     expect(alert).not.toHaveBeenCalledWith('Coming soon', expect.any(String));
-    expect(screen.queryByText(/Sanchita/)).toBeNull();
+    expect(screen.queryByText(/Meera/)).toBeNull();
     alert.mockRestore();
   });
 

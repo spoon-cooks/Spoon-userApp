@@ -17,6 +17,7 @@ import { useCookPoolList } from '@features/cookPool';
 import { useRecurringBookings, useRecurringEligibility } from '@features/recurringSetup';
 
 import { activeBookingCardsFrom, activeBookingIdsNeedingDetail } from './activeBookings';
+import { useFeaturedCooks } from './api/featuredCooksApi';
 import { guestHomeModelFrom, homeModelFrom, triedPlaceHomeModelFrom } from './adapters';
 import type { InstantReads, WaitlistServerState } from './adapters';
 import type { HomeModel } from './types';
@@ -66,6 +67,7 @@ export function useHomeRedesignData(options: {
   // are no beads and the chip counts the (empty) pool.
   const pool = useCookPoolList();
   const recurring = useRecurringEligibility();
+  const featured = useFeaturedCooks();
   // Active bookings: the list polls while Home is mounted; in-progress and completed cards also
   // read their detail (the service window and an extended duration), and the Recurring plans
   // say which bookings are visits and which visit is next.
@@ -168,9 +170,11 @@ export function useHomeRedesignData(options: {
         recurring: recurring.state.status === 'ready' ? recurring.state.data : undefined,
         activeBookings,
         later,
+        featuredCooks: featured.state.status === 'ready' ? featured.state.data : [],
       }),
     );
   }, [
+    featured.state,
     addresses.state,
     address,
     catalogue.state,
@@ -251,15 +255,17 @@ export function useHomeRedesignData(options: {
  */
 export function useGuestHomeRedesignData(): ScreenQuery<HomeModel> {
   const catalogue = useCatalogue();
+  const featured = useFeaturedCooks();
   const state = useMemo<DataState<HomeModel>>(
     () =>
       ready(
         guestHomeModelFrom({
           catalogue: catalogue.state.status === 'ready' ? catalogue.state.data : undefined,
           catalogueStatus: catalogue.state.status,
+          featuredCooks: featured.state.status === 'ready' ? featured.state.data : [],
         }),
       ),
-    [catalogue.state],
+    [catalogue.state, featured.state],
   );
   return { state, refetch: catalogue.refetch };
 }

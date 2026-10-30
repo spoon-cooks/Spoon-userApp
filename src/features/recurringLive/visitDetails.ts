@@ -55,6 +55,16 @@ export interface VisitDetailsSources {
   readonly cookProfile: PoolCookProfileDto | null;
   /** `cookProfileFrom(cookProfile)` — the profile as the app draws it, for the menu. */
   readonly cookCard: CookProfile | null;
+  /**
+   * `cookCardLines(cookProfile.presentation)` — the cook card's eyebrow, caption and stat lines
+   * as the backend wrote them (DEC-114). The route builds it, as it builds `cookCard`.
+   */
+  readonly cookLines?: {
+    readonly eyebrow: string;
+    readonly origin?: string;
+    readonly visits?: string;
+    readonly rating?: string;
+  };
   readonly quote: VisitCancellationQuoteDto | null;
   /** Asia/Kolkata `YYYY-MM-DD`. */
   readonly todayId: string;
@@ -164,13 +174,8 @@ export function visitDetailsFrom(sources: VisitDetailsSources): VisitDetailsMode
 
   // ─── Cook (assigned) ───────────────────────────────────────────────────────────────────────
   const card = cookProfile?.cook ?? null;
-  const origin = [
-    card?.region ?? null,
-    card !== null && card.languages.length > 0 ? `Speaks ${card.languages.join(', ')}` : null,
-  ]
-    .filter((part): part is string => part !== null)
-    .join(' · ');
-  const rating = visit.cook?.rating ?? card?.rating ?? null;
+  // The trust marks, caption and stat lines are the backend's (DEC-114).
+  const lines = sources.cookLines ?? { eyebrow: '' };
   const photoUrl = visit.cook?.profileImageUrl ?? card?.profileImageUrl ?? null;
   const menu: readonly VisitMenuSection[] = (cookCard?.menu ?? []).map((section) => ({
     id: section.id,
@@ -288,13 +293,8 @@ export function visitDetailsFrom(sources: VisitDetailsSources): VisitDetailsMode
       ...(variant === 'pending' ? countdownTo(visit.start, visit.date, todayId, sources.now) : {}),
     },
     cook: {
-      eyebrow: fixture.cook.eyebrow,
       name: cookName ?? card?.displayName ?? '',
-      ...(origin === '' ? {} : { origin }),
-      ...(card === null ? {} : { visits: `Visits with you: ${card.visitsWithYou}` }),
-      ...(rating === null || rating.count === 0
-        ? {}
-        : { rating: `Rating: ${rating.average.toFixed(1)}` }),
+      ...lines,
       note: fixture.cook.note,
       ...(photoUrl === null ? {} : { photo: { uri: photoUrl } }),
     },
@@ -404,7 +404,7 @@ export function visitDetailsFrom(sources: VisitDetailsSources): VisitDetailsMode
 /**
  * `Note · Help deep link` and the spec's Help rule: Help (and Share on the recipe row) go straight
  * to WhatsApp with Spoon, prefilled with the booking number, date and cook — "Hi Spoon, I need help
- * with booking 1f3c… · Wed, 14 Oct, 9:00 AM · Cook Sanchita." The number is the backend's
+ * with booking 1f3c… · Wed, 14 Oct, 9:00 AM · Cook Meera." The number is the backend's
  * (`support.whatsappUrl`, null when none is configured). A visit has a booking only once it is
  * charged at T−3h; before that "my visit" stands in, and a visit with no cook yet leaves the cook
  * out.
@@ -429,7 +429,7 @@ export function visitWhatsAppLink(
 const MEALS = { morning: 'Breakfast', afternoon: 'Lunch', evening: 'Dinner' } as const;
 
 /**
- * The rate card's header for a real visit (`1501:6631`: "Lunch with Cook Rekha" over
+ * The rate card's header for a real visit (`1501:6631`: "Lunch with Cook Asha" over
  * "Sun, 12 Apr · 1:15 PM · 1 hr"). Null with no cook — there is no one to rate.
  */
 export function rateVisitInfo(visit: VisitDetailDto): RateVisitInfo | null {

@@ -154,7 +154,7 @@ describe('Recurring Manage plans route', () => {
     expect(screen.getByText('Completed · Cook Meera')).toBeTruthy();
     // Nothing from the frames, and no add plan / add visit. The pencil opens Edit duration for
     // the visit on screen.
-    expect(screen.queryByText(/Sanchita|Plan 2/)).toBeNull();
+    expect(screen.queryByText(/Rani|Plan 2/)).toBeNull();
     fireEvent.press(screen.getByTestId('recurring-plans-screen-calendar-edit'));
     expect(mockPush).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -12,7 +12,7 @@ import { TrustBadges } from './TrustBadges';
 
 /**
  * The cook profile card — Figma section "Cook profiles" `289:8515`, read this pass off `289:7518`
- * (Rekha) and cross-checked on all eight frames. The same card is embedded in the Service flow:
+ * (Asha) and cross-checked on all eight frames. The same card is embedded in the Service flow:
  * Confirmation (`3:1041`), En route (`3:1381` / `292:469`), Arrived (`3:1658`) and
  * In service (`101:1812`).
  *
@@ -39,12 +39,12 @@ import { TrustBadges } from './TrustBadges';
  * render, log or leak one, and it does not know how a call is placed.
  *
  * Heading: always interpolated as "What {firstName} cooks best?" — the Figma file hardcodes
- * "rekha" on 6 of 8 cards (defect D-4).
+ * "asha" on 6 of 8 cards (defect D-4).
  *
- * FIGMA CONTENT QUIRK, recorded not reproduced: six of the eight cards — Rekha, Sanchita and
- * Barsha in both variants (`299:1811`, `299:2277`, `299:2070`, `299:1892`, `299:2096`, `299:2122`)
+ * FIGMA CONTENT QUIRK, recorded not reproduced: six of the eight cards — Asha, Meera and
+ * Lata in both variants (`299:1811`, `299:2277`, `299:2070`, `299:1892`, `299:2096`, `299:2122`)
  * — draw the language GLYPH with no label beside it, because those cards carry no language data.
- * Only Jyoti labels it ("Hindi, Odiya"). An orphan icon is not a state, so the attribute is
+ * Only Kavita labels it ("Hindi, Odiya"). An orphan icon is not a state, so the attribute is
  * omitted when the payload has no languages.
  */
 

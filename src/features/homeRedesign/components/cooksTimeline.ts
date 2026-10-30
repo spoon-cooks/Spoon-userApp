@@ -32,17 +32,20 @@ const EXIT_END = 93.75;
 const EXIT_LIFT = 16;
 const RESET = 94.375;
 
-/** `index` is the order the card enters in (0 first); the last to enter sits on top. */
-export function cookCardTracks(index: number): {
+/**
+ * `index` is the order the card enters in (0 first); the last to enter sits on top. `count` is how
+ * many cards the stack holds — the backend's list, at most four — so fewer cooks still stack.
+ */
+export function cookCardTracks(
+  index: number,
+  count: number = COOKS_CARD_COUNT,
+): {
   opacity: Track;
   translateY: Track;
   scale: Track;
 } {
   const entry = FIRST_ENTRY + ENTRY_GAP * index;
-  const later = Array.from(
-    { length: COOKS_CARD_COUNT - 1 - index },
-    (_, i) => entry + ENTRY_GAP * (i + 1),
-  );
+  const later = Array.from({ length: count - 1 - index }, (_, i) => entry + ENTRY_GAP * (i + 1));
   const restY = -PUSH_UP * later.length;
   const restScale = 1 - SHRINK * later.length;
 

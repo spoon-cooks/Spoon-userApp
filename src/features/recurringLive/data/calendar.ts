@@ -47,7 +47,7 @@ export interface DayVisit {
   readonly status: VisitStatus;
   /** "1st Visit · 5:30 AM · 1hr". */
   readonly title: string;
-  /** "Completed · Cook Sanchita". */
+  /** "Completed · Cook Rani". */
   readonly meta: string;
   /** Assigned visits only — the cook's face in the `Glyph/cook` ring; absent without a photo. */
   readonly photo?: ImageSourcePropType;
@@ -126,7 +126,7 @@ export const CALENDAR_FIXTURE: CalendarFixture = {
     label: 'UP NEXT · TODAY',
     // Today's 2nd visit in the pop-up (`1006:527`), so the preview tells one story.
     title: '2nd Visit, 8:00 PM',
-    meta: '2.5 hrs • Cook Sanchita',
+    meta: '2.5 hrs • Cook Rani',
     photo: UP_NEXT_COOK_PHOTO,
   },
   progressLabel: '3 done · 1 cancelled · 3 to go',
@@ -187,13 +187,13 @@ const PAST_VISITS: DayVisits = {
       id: 'v1',
       status: 'completed',
       title: '1st Visit · 5:30 AM · 1hr',
-      meta: 'Completed · Cook Sanchita',
+      meta: 'Completed · Cook Rani',
     },
     {
       id: 'v2',
       status: 'completed',
       title: '2nd Visit · 4:30 PM · 30 mins',
-      meta: 'Completed · Cook Sanchita',
+      meta: 'Completed · Cook Rani',
     },
     {
       id: 'v3',
@@ -212,7 +212,7 @@ const TODAY_VISITS: DayVisits = {
       id: 'v1',
       status: 'completed',
       title: '1st Visit · 3:30 PM · 1 hr',
-      meta: 'Completed · Cook Sanchita',
+      meta: 'Completed · Cook Rani',
     },
     {
       id: 'v2',
@@ -247,7 +247,7 @@ const UPCOMING_ASSIGNED_VISITS: DayVisits = {
       id: 'v1',
       status: 'assigned',
       title: '1st Visit · 9:00 AM · 1 hr',
-      meta: 'Upcoming · Cook Sanchita',
+      meta: 'Upcoming · Cook Rani',
       photo: UP_NEXT_COOK_PHOTO,
     },
   ],

@@ -1,6 +1,5 @@
 import type { HomeBannerVariant, HomeBannerViewModel, HomeViewModel } from '@features/home';
 
-import { COOK_CUTOUT_PHOTO } from './cooks';
 import {
   DEMO_DURATION_GUIDE,
   DEMO_DURATION_GUIDE_COLUMNS,
@@ -138,8 +137,7 @@ const ACTIVE_BOOKING_BASE = {
   bookingId: 'demo-booking-active',
   dateLabel: 'Tomorrow, Aug 5',
   timeLabel: '1:15 PM • 1 hr',
-  cookName: 'Cook Rekha',
-  cookPhotoUrl: COOK_CUTOUT_PHOTO,
+  cookName: 'Cook Asha',
 } as const;
 
 /** `337:4261` — booked, nothing in flight yet. */

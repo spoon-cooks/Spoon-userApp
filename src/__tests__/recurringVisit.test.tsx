@@ -143,7 +143,7 @@ describe('Recurring Visit details route', () => {
     expect(screen.getByText('9:00 AM – 10:00 AM · 1 hr')).toBeTruthy();
     expect(screen.getByText('Cook confirmed by Wed, 6 AM')).toBeTruthy();
     // No sample cook, dish, match score or booking reference.
-    expect(screen.queryByText(/Sanchita|Jyoti|Rekha|Dahi bhindi|% match|#SP/)).toBeNull();
+    expect(screen.queryByText(/Meera|Kavita|Asha|Dahi bhindi|% match|#SP/)).toBeNull();
     // No checklist before the visit has a booking to save it against.
     expect(screen.queryByText('Before the Cook arrives')).toBeNull();
   });

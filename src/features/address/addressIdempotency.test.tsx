@@ -78,7 +78,7 @@ describe('the create scope', () => {
   it('rotates the key when the receiver name or phone changes', () => {
     const store = createIdempotencyScope();
     const base = keyFor(BASE, store);
-    expect(base).not.toBe(keyFor({ ...BASE, receiverName: 'Rekha S' }, store));
+    expect(base).not.toBe(keyFor({ ...BASE, receiverName: 'Asha S' }, store));
     expect(base).not.toBe(keyFor({ ...BASE, receiverPhone: '+919000000001' }, store));
   });
 

@@ -3,7 +3,6 @@ import { minutesRemainingUntil } from './adapters';
 import { homeCookPhotoFor, selectHomeBookings } from './data';
 
 import type { BookingSummaryDto } from '@features/booking';
-import type * as CookCardContentModule from '@ui/components/cookCardContent';
 
 const booking = (input: Partial<BookingSummaryDto> & Pick<BookingSummaryDto, 'id' | 'status'>) =>
   ({
@@ -159,58 +158,25 @@ describe('minutesRemainingUntil', () => {
 });
 
 /**
- * Home and the booking screen must draw the same person. The reported failure: with no hosted
- * photo, Home resolved the shared Rekha cut-out for every cook, so a Sanchita booking showed
- * Rekha on Home and Sanchita on the confirmation one tap inside.
- *
- * `Image.resolveAssetSource` returns nothing under jest's asset mock, so every bundled uri would
- * be `undefined` and indistinguishable. The content table is stood in with one uri per cook plus
- * the shared cut-out, which is what this is about: WHICH field Home reads.
+ * Home draws the backend's photo for a booking's cook, or none: the app bundles no cook's
+ * photograph (DEC-114), so there is no per-cook fallback to pick between.
  */
-jest.mock('@ui/components/cookCardContent', () => {
-  const actual = jest.requireActual<typeof CookCardContentModule>('@ui/components/cookCardContent');
-  return {
-    ...actual,
-    cookCardContentFor: (code: string | null | undefined) => {
-      const content = actual.cookCardContentFor(code);
-      if (content === undefined || code === null || code === undefined) return content;
-      const name = code.replace('COOK_', '').toLowerCase();
-      return {
-        ...content,
-        photoUrl: `bundled://${name}-photo`,
-        cutoutPhotoUrl: 'bundled://rekha-cutout',
-      };
-    },
-  };
-});
-
 describe('homeCookPhotoFor', () => {
-  it.each([
-    ['COOK_JYOTI', 'bundled://jyoti-photo'],
-    ['COOK_REKHA', 'bundled://rekha-photo'],
-    ['COOK_SANCHITA', 'bundled://sanchita-photo'],
-    ['COOK_BARSHA', 'bundled://barsha-photo'],
-  ])('draws %s with her own bundled photo, the one the booking card uses', (profileCode, own) => {
-    expect(homeCookPhotoFor({ photoUrl: null, profileCode })).toEqual({
-      cookPhotoUrl: own,
-      cookPhotoFallbackUrl: null,
-    });
-  });
-
-  it("prefers a hosted photo and keeps the cook's own bundled photo as its failure fallback", () => {
-    const hosted = 'https://spoon-cook-photos.s3.ap-south-1.amazonaws.com/Sanchita.png';
-
-    expect(homeCookPhotoFor({ photoUrl: hosted, profileCode: 'COOK_SANCHITA' })).toEqual({
+  it('draws the hosted photo, with no bundled fallback', () => {
+    const hosted = 'https://cdn.spoonhelp.com/cooks/meera.png';
+    expect(homeCookPhotoFor({ photoUrl: hosted, profileCode: 'COOK_MEERA' })).toEqual({
       cookPhotoUrl: hosted,
-      cookPhotoFallbackUrl: 'bundled://sanchita-photo',
+      cookPhotoFallbackUrl: null,
     });
   });
 
-  it('draws no photo for a cook with neither a hosted photo nor a known profile', () => {
-    expect(homeCookPhotoFor({ photoUrl: null, profileCode: null })).toEqual({
-      cookPhotoUrl: null,
-      cookPhotoFallbackUrl: null,
-    });
+  it('draws no photo when the backend sends none, whatever the profile code', () => {
+    for (const profileCode of ['COOK_MEERA', null]) {
+      expect(homeCookPhotoFor({ photoUrl: null, profileCode })).toEqual({
+        cookPhotoUrl: null,
+        cookPhotoFallbackUrl: null,
+      });
+    }
     expect(homeCookPhotoFor(null)).toEqual({ cookPhotoUrl: null, cookPhotoFallbackUrl: null });
   });
 });

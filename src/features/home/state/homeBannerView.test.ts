@@ -5,8 +5,8 @@ import type { HomeBannerInput, HomeBannerVariant } from './homeBannerView';
 const BASE: HomeBannerInput = {
   bookingId: 'bk_1',
   status: 'assigned',
-  cookName: 'Rekha',
-  cookPhotoUrl: 'https://cdn.example/rekha.png',
+  cookName: 'Asha',
+  cookPhotoUrl: 'https://cdn.example/asha.png',
   dateLabel: 'Tomorrow, Aug 5',
   timeLabel: '1:15 PM • 1 hr',
 };

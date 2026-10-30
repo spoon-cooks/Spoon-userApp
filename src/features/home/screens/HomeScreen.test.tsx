@@ -79,7 +79,7 @@ describe('Home — active-booking variant (`381:511`, Home WITH a banner)', () =
     expect(card.getByText('Arriving')).toBeTruthy();
     expect(card.getByText('Tomorrow, Aug 5')).toBeTruthy();
     expect(card.getByText('1:15 PM • 1 hr')).toBeTruthy();
-    expect(card.getByText('Cook Rekha')).toBeTruthy();
+    expect(card.getByText('Cook Asha')).toBeTruthy();
     expect(card.getByText('Arriving in')).toBeTruthy();
     expect(card.getByText('12 mins')).toBeTruthy();
   });

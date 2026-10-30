@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useAddresses } from '@features/address';
 import { useCookPoolList } from '@features/cookPool';
 import { useMyBookingsV2 } from '@features/history';
-import { cookCardContentFor } from '@ui/components/cookCardContent';
 
 export interface PoolFace {
   readonly id: string;
@@ -76,7 +75,7 @@ export function useAccountSummary(): AccountSummary {
             bookings.past.state.status === 'loading')),
       poolFaces: (poolData?.cooks ?? []).slice(0, 3).map(({ cook }) => ({
         id: cook.cookId,
-        photo: cook.profileImageUrl ?? cookCardContentFor(cook.profileCode)?.photoUrl ?? null,
+        photo: cook.profileImageUrl,
         initials: initialsOf(cook.displayName),
       })),
     };

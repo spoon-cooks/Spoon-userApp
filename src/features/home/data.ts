@@ -17,7 +17,6 @@ import {
   minutesRemainingUntil,
   minutesUntil,
 } from './adapters';
-import { cookCardContentFor } from '@ui/components/cookCardContent';
 
 import { homeBannerFor } from './state/homeBannerView';
 import { DEMO_HOME_ACTIVE_BOOKING } from '@/demo/fixtures/home';
@@ -26,24 +25,14 @@ import type { HomeViewModel } from './types';
 import type { BookingSummaryDto } from '@features/booking';
 
 /**
- * The photo pair the Home banner draws for a booking's cook: a hosted photo wins, and the cook's
- * bundled photograph (by the SERVER's stable `profileCode`) is the primary when none is hosted and
- * the failure fallback when one is.
- *
- * The bundled tier is the SAME `photoUrl` the booking screen's `CookCard` resolves, so the two
- * surfaces draw the same person. Home used to read `cutoutPhotoUrl`, which is one shared picture
- * of Rekha for every cook: with no hosted photo, Home drew Rekha over a Sanchita booking while
- * the confirmation one tap inside drew Sanchita.
+ * The photo the Home banner draws for a booking's cook: the backend's, or none (DEC-114). The app
+ * bundles no cook's photograph, so there is no fallback tier.
  */
 export function homeCookPhotoFor(
   cook:
     { readonly photoUrl?: string | null; readonly profileCode?: string | null } | null | undefined,
 ): { readonly cookPhotoUrl: string | null; readonly cookPhotoFallbackUrl: string | null } {
-  const bundled = cookCardContentFor(cook?.profileCode)?.photoUrl ?? null;
-  const hosted = cook?.photoUrl ?? null;
-  return hosted === null
-    ? { cookPhotoUrl: bundled, cookPhotoFallbackUrl: null }
-    : { cookPhotoUrl: hosted, cookPhotoFallbackUrl: bundled };
+  return { cookPhotoUrl: cook?.photoUrl ?? null, cookPhotoFallbackUrl: null };
 }
 
 /**
@@ -210,8 +199,8 @@ export function useHomeData(): ScreenQuery<HomeViewModel> {
                   bookingId: summary.id,
                   status: detailData.status,
                   cookName: detailData.cook?.name ?? null,
-                  // A hosted photo wins, else the cook's bundled photograph; a cook with neither
-                  // renders the banner without a photo. See `homeCookPhotoFor`.
+                  // The backend's photo; a cook without one renders the banner without a photo.
+                  // See `homeCookPhotoFor`.
                   ...homeCookPhotoFor(detailData.cook),
                   dateLabel: formatDateLabel(detailData.scheduledStart, serverNow),
                   timeLabel: formatTimeLabel(detailData.scheduledStart, detailData.durationMinutes),

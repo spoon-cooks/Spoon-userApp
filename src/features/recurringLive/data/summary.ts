@@ -71,7 +71,7 @@ export interface PlansSummaryModel {
   readonly activePlanId: string;
 }
 
-const COMPLETED_BY_SANCHITA = 'Completed · Cook Sanchita';
+const COMPLETED_BY_RANI = 'Completed · Cook Rani';
 
 /** `1017:436` — the plan tabs. Plan 2 is the one open in every frame. */
 export const SUMMARY_PLANS: readonly SummaryPlan[] = [
@@ -136,8 +136,8 @@ const FIRST_VISIT: SummaryVisit = {
   ],
   historyCount: '2 past visits',
   history: [
-    { id: 'h1', status: 'done', title: 'Today, 7 Oct · 9:00 AM', meta: COMPLETED_BY_SANCHITA },
-    { id: 'h2', status: 'done', title: 'Fri, 2 Oct · 9:00 AM', meta: COMPLETED_BY_SANCHITA },
+    { id: 'h1', status: 'done', title: 'Today, 7 Oct · 9:00 AM', meta: COMPLETED_BY_RANI },
+    { id: 'h2', status: 'done', title: 'Fri, 2 Oct · 9:00 AM', meta: COMPLETED_BY_RANI },
   ],
 };
 

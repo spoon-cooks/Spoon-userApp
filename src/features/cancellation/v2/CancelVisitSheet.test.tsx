@@ -21,7 +21,7 @@ const START = '2026-10-14T03:30:00.000Z';
 const VISIT: CancelVisit = {
   startsAt: START,
   durationMinutes: 90,
-  cookName: 'Sanchita',
+  cookName: 'Meera',
   cookOnTheWay: false,
   etaMinutes: null,
   wasRescheduled: false,
@@ -74,7 +74,7 @@ describe('model', () => {
     expect(countdownLabel(START, new Date('2026-10-14T02:50:00.000Z'))).toBe('40 min');
     expect(durationLabel(90)).toBe('1.5 hrs');
     expect(durationLabel(60)).toBe('1 hr');
-    expect(visitSubtitle(VISIT)).toBe('Wed, 14 Oct · 9:00 AM · Cook Sanchita');
+    expect(visitSubtitle(VISIT)).toBe('Wed, 14 Oct · 9:00 AM · Cook Meera');
   });
 
   it('places the server percentage in the drawn window; the cook travelling overrides time', () => {
@@ -101,7 +101,7 @@ describe('C1 · Modify visit (2055:20524)', () => {
   it('shows the ticket and both options, and hides Reschedule when it is no longer offered', () => {
     const props = renderSheet('modify');
     expect(screen.getByText('Modify visit')).toBeTruthy();
-    expect(screen.getByText('Cook Sanchita')).toBeTruthy();
+    expect(screen.getByText('Cook Meera')).toBeTruthy();
     fireEvent.press(screen.getByTestId('cancel-visit-option-cancel'));
     expect(props.onStepChange).toHaveBeenCalledWith('policy');
   });
@@ -234,7 +234,7 @@ describe('C5 · Visit cancelled (2055:20787, 2055:20432)', () => {
     renderSheet('done', { quote: quote(100), visit: { ...VISIT, cookOnTheWay: true } });
     expect(screen.getByText('No refund due')).toBeTruthy();
     expect(
-      screen.getByText('Sanchita had already left for your home, so the full ₹299 went to her.'),
+      screen.getByText('Meera had already left for your home, so the full ₹299 went to her.'),
     ).toBeTruthy();
   });
 });

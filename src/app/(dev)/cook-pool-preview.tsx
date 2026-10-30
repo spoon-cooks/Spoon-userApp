@@ -21,7 +21,7 @@ export default function CookPoolPreviewRoute() {
   const [source] = useState(() =>
     createDemoCookPoolSource({
       ...DEMO_COOK_POOL,
-      poolIds: pool === '1' ? ['demo-pool-sanchita', 'demo-pool-rekha'] : [],
+      poolIds: pool === '1' ? ['demo-pool-meera', 'demo-pool-asha'] : [],
     }),
   );
 

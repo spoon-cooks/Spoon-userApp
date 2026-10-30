@@ -41,7 +41,7 @@ export interface PaymentDetailsSheetData {
   readonly extraLines?: readonly PaymentLine[] | undefined;
   /** `1434:1785` — the GST line. */
   readonly taxLine: PaymentLine;
-  /** `2257:4216` — "Tip for Sanchita", a Caption line under GST. Absent: no tip paid. */
+  /** `2257:4216` — "Tip for Rani", a Caption line under GST. Absent: no tip paid. */
   readonly tipLine?: PaymentLine | undefined;
   readonly totalLabel: string;
   readonly totalCaption: string;
@@ -62,7 +62,7 @@ export interface PaymentDetailsSheetData {
 
 export const MODIFY_BOOKING_SHEET: ModifyBookingSheetData = {
   title: 'Modify booking',
-  subtitle: 'Wed, 14 Oct · 9:00 AM · Cook Sanchita',
+  subtitle: 'Wed, 14 Oct · 9:00 AM · Cook Rani',
   windowTitle: 'Free changes till Wed, 14 Oct · 5:00 AM',
   steps: [
     { kind: 'now', title: 'Now', caption: 'Today' },

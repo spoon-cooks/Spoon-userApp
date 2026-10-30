@@ -18,7 +18,7 @@ import type {
  *                 week, split at month ends as `1286:6575` draws it; a date is past / today /
  *                 upcoming by the backend's own `days[].group`, and unmarked without visits
  *   pop-up        that date's visits, in start order: "1st Visit · 7:00 PM · 1 hr" over
- *                 "Completed · Cook Sanchita", "Cancelled by you", or the cook — and, while no
+ *                 "Completed · Cook Meera", "Cancelled by you", or the cook — and, while no
  *                 cook is named yet, the "Cook confirmed by …" card (no faces: the backend names
  *                 nobody before the T−3h debit, so none are invented)
  *   Up next       the backend's `upNext`; absent when nothing is left to run. Its photo is the

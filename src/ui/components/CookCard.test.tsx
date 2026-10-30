@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import {
-  DEMO_COOK_JYOTI,
+  DEMO_COOK_KAVITA,
   DEMO_COOK_MINIMAL,
   DEMO_COOK_PARTIAL_BADGES,
-  DEMO_COOK_REKHA,
+  DEMO_COOK_ASHA,
 } from '@/demo/fixtures/cooks';
 import { CookCard } from './CookCard';
 
@@ -20,51 +20,51 @@ function renderedText(node: unknown): string {
 
 describe('CookCard — standard', () => {
   it('renders a languages attribute when the payload carries one', () => {
-    // `289:7392` (Jyoti) is the card that DOES list languages; `289:8388` (Rekha) does not.
-    render(<CookCard cook={DEMO_COOK_JYOTI} />);
+    // `289:7392` (Kavita) is the card that DOES list languages; `289:8388` (Asha) does not.
+    render(<CookCard cook={DEMO_COOK_KAVITA} />);
     expect(screen.getByText('Hindi, Odiya')).toBeTruthy();
   });
 
   it('renders identity, attributes and the specialty grid', () => {
-    render(<CookCard cook={DEMO_COOK_REKHA} />);
+    render(<CookCard cook={DEMO_COOK_ASHA} />);
 
-    expect(screen.getByText('Cook Rekha')).toBeTruthy();
+    expect(screen.getByText('Cook Asha')).toBeTruthy();
     expect(screen.getByText('Female')).toBeTruthy();
     expect(screen.getByText('North Indian')).toBeTruthy();
     expect(screen.getByText('West Bengal')).toBeTruthy();
     expect(screen.getByText('Chicken biryani')).toBeTruthy();
   });
 
-  it('interpolates the cook name into the heading instead of hardcoding "rekha"', () => {
-    // The Figma file says "What rekha cooks best?" on 6 of 8 cards (defect D-4).
+  it('interpolates the cook name into the heading instead of hardcoding "asha"', () => {
+    // The Figma file says "What asha cooks best?" on 6 of 8 cards (defect D-4).
     render(<CookCard cook={DEMO_COOK_PARTIAL_BADGES} />);
 
-    expect(screen.getByText('What Sanchita cooks best?')).toBeTruthy();
-    expect(screen.queryByText('What rekha cooks best?')).toBeNull();
+    expect(screen.getByText('What Meera cooks best?')).toBeTruthy();
+    expect(screen.queryByText('What asha cooks best?')).toBeNull();
   });
 });
 
 describe('CookCard — pureVeg variant', () => {
   it('shows the pure-veg dish list instead of the standard one', () => {
-    render(<CookCard cook={DEMO_COOK_REKHA} variant="pureVeg" />);
+    render(<CookCard cook={DEMO_COOK_ASHA} variant="pureVeg" />);
 
-    expect(screen.getByText('Baigan palak aloo')).toBeTruthy();
+    expect(screen.getByText('Matar paneer')).toBeTruthy();
     // Chicken biryani is a standard-only dish.
     expect(screen.queryByText('Chicken biryani')).toBeNull();
   });
 
   it('changes nothing but the dish list — same cook, same identity, same badges', () => {
     // Confirmed C-6: pure veg is a dish filter on the same cook, not a second roster.
-    const standard = render(<CookCard cook={DEMO_COOK_REKHA} />);
-    const standardName = screen.getByText('Cook Rekha');
+    const standard = render(<CookCard cook={DEMO_COOK_ASHA} />);
+    const standardName = screen.getByText('Cook Asha');
     const standardBadges = screen.getByTestId('cook-card-badges');
     expect(standardName).toBeTruthy();
     expect(standardBadges).toBeTruthy();
     standard.unmount();
 
-    render(<CookCard cook={DEMO_COOK_REKHA} variant="pureVeg" />);
+    render(<CookCard cook={DEMO_COOK_ASHA} variant="pureVeg" />);
 
-    expect(screen.getByText('Cook Rekha')).toBeTruthy();
+    expect(screen.getByText('Cook Asha')).toBeTruthy();
     expect(screen.getByText('West Bengal')).toBeTruthy();
     expect(screen.getByTestId('cook-card-badges-spoonTrained')).toBeTruthy();
   });
@@ -73,7 +73,7 @@ describe('CookCard — pureVeg variant', () => {
     render(<CookCard cook={DEMO_COOK_PARTIAL_BADGES} variant="pureVeg" />);
 
     expect(screen.queryByTestId('cook-card-specialties')).toBeNull();
-    expect(screen.getByText('Cook Sanchita')).toBeTruthy();
+    expect(screen.getByText('Cook Meera')).toBeTruthy();
   });
 });
 
@@ -97,7 +97,7 @@ describe('CookCard — trust badges are conditional', () => {
     render(
       <CookCard
         cook={{
-          ...DEMO_COOK_REKHA,
+          ...DEMO_COOK_ASHA,
           badges: { spoonTrained: true, backgroundVerified: true, hygienic: false },
         }}
       />,
@@ -112,7 +112,7 @@ describe('CookCard — optional fields', () => {
   it('renders with only a name supplied', () => {
     render(<CookCard cook={DEMO_COOK_MINIMAL} />);
 
-    expect(screen.getByText('Cook Jyoti')).toBeTruthy();
+    expect(screen.getByText('Cook Kavita')).toBeTruthy();
     expect(screen.queryByTestId('cook-card-attributes')).toBeNull();
     expect(screen.queryByTestId('cook-card-specialties')).toBeNull();
   });
@@ -120,11 +120,11 @@ describe('CookCard — optional fields', () => {
   it('falls back to initials when no photo is supplied', () => {
     render(<CookCard cook={DEMO_COOK_MINIMAL} />);
 
-    expect(screen.getByText('CJ')).toBeTruthy();
+    expect(screen.getByText('CK')).toBeTruthy();
   });
 
   it('hides the specialty grid when suppressed', () => {
-    render(<CookCard cook={DEMO_COOK_REKHA} showSpecialties={false} />);
+    render(<CookCard cook={DEMO_COOK_ASHA} showSpecialties={false} />);
 
     expect(screen.queryByTestId('cook-card-specialties')).toBeNull();
   });
@@ -133,17 +133,17 @@ describe('CookCard — optional fields', () => {
 describe('CookCard — calling', () => {
   it('invokes the callback and labels the action with the cook name', () => {
     const onCallCook = jest.fn();
-    render(<CookCard cook={DEMO_COOK_REKHA} onCallCook={onCallCook} />);
+    render(<CookCard cook={DEMO_COOK_ASHA} onCallCook={onCallCook} />);
 
     const call = screen.getByTestId('cook-card-call');
-    expect(call.props.accessibilityLabel).toBe('Call Rekha');
+    expect(call.props.accessibilityLabel).toBe('Call Asha');
 
     fireEvent.press(call);
     expect(onCallCook).toHaveBeenCalledTimes(1);
   });
 
   it('hides the action when no callback is supplied', () => {
-    render(<CookCard cook={DEMO_COOK_REKHA} />);
+    render(<CookCard cook={DEMO_COOK_ASHA} />);
 
     expect(screen.queryByTestId('cook-card-call')).toBeNull();
   });
@@ -151,14 +151,14 @@ describe('CookCard — calling', () => {
   it('exposes no phone number anywhere in the rendered tree', () => {
     // The view model has no phone field at all: the component cannot leak one.
     const onCallCook = jest.fn();
-    render(<CookCard cook={DEMO_COOK_REKHA} onCallCook={onCallCook} />);
+    render(<CookCard cook={DEMO_COOK_ASHA} onCallCook={onCallCook} />);
 
     // Scan the rendered TEXT, not the style tree (which legitimately contains long numbers).
     const text = renderedText(screen.toJSON());
     expect(text).not.toMatch(/(?:\+91[\s-]?)?[6-9]\d{9}/);
     expect(text).not.toMatch(/tel:/);
     // And the view model has no phone field at all, so there is nothing to leak.
-    expect(Object.keys(DEMO_COOK_REKHA)).not.toContain('phone');
+    expect(Object.keys(DEMO_COOK_ASHA)).not.toContain('phone');
     expect(JSON.stringify(screen.toJSON())).not.toMatch(/"(phone|mobile|tel)"\s*:/i);
   });
 });

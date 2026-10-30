@@ -52,7 +52,7 @@ export const VISIT_FIXTURE = {
   /** `1463:7966` — the assigned cook. */
   cook: {
     eyebrow: 'SPOON TRAINED · VERIFIED',
-    name: 'Cook Sanchita',
+    name: 'Cook Rani',
     origin: 'West Bengal · Speaks Hindi, Bengali',
     visits: 'Visits with you: 45',
     rating: 'Your rating: 4.5',
@@ -100,7 +100,7 @@ export const VISIT_FIXTURE = {
     idleHint: 'Tap when done',
     doneHint: 'Done',
     why: 'Your slot begins the moment your cook checks in, having essentials ready means more time for cooking and more dishes on the table',
-    allSet: 'Kitchen’s ready! Sanchita can start cooking the moment she walks in.',
+    allSet: 'Kitchen’s ready! Rani can start cooking the moment she walks in.',
   },
 
   /** `1374:1409` — the visit charge. */

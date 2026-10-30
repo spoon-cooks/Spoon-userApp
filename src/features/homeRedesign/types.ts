@@ -1,5 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
+import type { FeaturedCookDto } from './api/featuredCooksApi';
+
 /**
  * The redesigned Home's payload — the shape the Figma dev notes describe. Every field is
  * server-owned; the client only renders it and derives presentation from it (`state/`).
@@ -101,6 +103,11 @@ export interface ActiveBookingCard {
 
 export interface HomeModel {
   readonly serviceability: Serviceability;
+  /**
+   * "Cooks you can trust" — `GET /v1/cooks/featured`, in the backend's order (DEC-114). Empty
+   * (or absent) while it loads or if it failed: the section is then not drawn.
+   */
+  readonly featuredCooks?: readonly FeaturedCookDto[];
   /** `1625:11065` — "Label ⌄" over "Building_name · Flat/House #" (`null`: no such parts). */
   readonly address: {
     readonly label: string;

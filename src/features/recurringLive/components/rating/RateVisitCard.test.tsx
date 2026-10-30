@@ -15,9 +15,9 @@ jest.mock('@core/native', () => ({
 }));
 
 const VISIT = {
-  title: 'Lunch with Cook Rekha',
+  title: 'Lunch with Cook Asha',
   meta: 'Sun, 12 Apr · 1:15 PM · 1 hr',
-  cookName: 'Rekha',
+  cookName: 'Asha',
   photoUri: null,
 };
 
@@ -29,7 +29,7 @@ describe('Rate card (Figma 1603:50)', () => {
   it('draws the Rated card with its feedback block and a plain Submit', () => {
     render(<RateVisitCard live visit={VISIT} initialRating={4.5} />);
     expect(screen.getByText('Loved it!')).toBeTruthy();
-    expect(screen.getByText('Tell Rekha what made it special')).toBeTruthy();
+    expect(screen.getByText('Tell Asha what made it special')).toBeTruthy();
     expect(screen.getByText('A 10-sec voice note means more to her than stars')).toBeTruthy();
     expect(screen.getByText('Submit')).toBeTruthy();
     // Below 4 only.
@@ -96,11 +96,11 @@ describe('Rate card (Figma 1603:50)', () => {
     );
 
     expect(screen.getByText('Rating submitted · Thanks for the feedback!')).toBeTruthy();
-    expect(screen.getByText('Rekha will see your rating and note after the visit.')).toBeTruthy();
+    expect(screen.getByText('Asha will see your rating and note after the visit.')).toBeTruthy();
     expect(screen.getByText('What stood out')).toBeTruthy();
     expect(screen.getByTestId('rate-visit-card-chip-taste')).toBeTruthy();
     expect(screen.queryByTestId('rate-visit-card-chip-onTime')).toBeNull();
-    expect(screen.getByText('Your note to Rekha')).toBeTruthy();
+    expect(screen.getByText('Your note to Asha')).toBeTruthy();
     expect(screen.getByText('Roti was soft.')).toBeTruthy();
     expect(screen.queryByTestId('rate-visit-card-submit')).toBeNull();
     expect(screen.queryByTestId('rate-visit-card-feedback-write')).toBeNull();
@@ -114,7 +114,7 @@ describe('Rate card (Figma 1603:50)', () => {
       <RateVisitCard live visit={VISIT} initialRating={2} submitted initialChips={['slow']} />,
     );
     expect(screen.getByText('We’re so sorry')).toBeTruthy();
-    expect(screen.getByText('Rekha will see your rating and note after the visit.')).toBeTruthy();
+    expect(screen.getByText('Asha will see your rating and note after the visit.')).toBeTruthy();
     expect(screen.getByText('What went wrong')).toBeTruthy();
     expect(screen.getByTestId('rate-visit-card-chip-slow')).toBeTruthy();
     // Nothing left to answer: no "a different cook" toggle once sent.
@@ -125,7 +125,7 @@ describe('Rate card (Figma 1603:50)', () => {
     render(<RateVisitCard live visit={VISIT} initialRating={4} submitted initialChips={[]} />);
     expect(screen.getByText('Rating submitted · Thanks for the feedback!')).toBeTruthy();
     expect(screen.queryByText('What stood out')).toBeNull();
-    expect(screen.queryByText('Your note to Rekha')).toBeNull();
+    expect(screen.queryByText('Your note to Asha')).toBeNull();
   });
 
   it('offers only Write on a build without the camera, microphone and picker', () => {

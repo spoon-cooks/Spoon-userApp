@@ -47,7 +47,7 @@ jest.mock('expo-router', () => ({
   },
 }));
 
-const SANCHITA = 'demo-pool-sanchita';
+const MEERA = 'demo-pool-meera';
 
 /** The dev preview's way in: the local store, seeded with these cooks already in the pool. */
 function renderDemo(ui: ReactElement, poolIds: readonly string[] = []) {
@@ -69,18 +69,18 @@ describe('Cook Pool landing (demo source)', () => {
 
   it('lists the pool in its order, then one Add, and opens a cook', () => {
     const handlers = landingHandlers();
-    renderDemo(<CookPoolScreen {...handlers} />, ['demo-pool-rekha', SANCHITA]);
-    const names = screen.getAllByText(/^(Rekha|Sanchita|Add)$/).map((node) => node.props.children);
-    expect(names).toEqual(['Rekha', 'Sanchita', 'Add']);
-    fireEvent.press(screen.getByTestId(`cook-pool-screen-pool-${SANCHITA}`));
-    expect(handlers.onOpenCook).toHaveBeenCalledWith(SANCHITA);
+    renderDemo(<CookPoolScreen {...handlers} />, ['demo-pool-asha', MEERA]);
+    const names = screen.getAllByText(/^(Asha|Meera|Add)$/).map((node) => node.props.children);
+    expect(names).toEqual(['Asha', 'Meera', 'Add']);
+    fireEvent.press(screen.getByTestId(`cook-pool-screen-pool-${MEERA}`));
+    expect(handlers.onOpenCook).toHaveBeenCalledWith(MEERA);
   });
 });
 
 describe('Cook profile (demo source)', () => {
   it('draws the lines and menu', () => {
-    renderDemo(<CookProfileScreen cookId={SANCHITA} onBack={jest.fn()} onRemoved={jest.fn()} />);
-    expect(screen.getByText('Cook Sanchita')).toBeTruthy();
+    renderDemo(<CookProfileScreen cookId={MEERA} onBack={jest.fn()} onRemoved={jest.fn()} />);
+    expect(screen.getByText('Cook Meera')).toBeTruthy();
     expect(screen.getByText('SPOON TRAINED · VERIFIED')).toBeTruthy();
     expect(screen.getByText('West Bengal · Speaks Hindi, Bengali')).toBeTruthy();
     expect(screen.getByText('Visits with you: 45')).toBeTruthy();
@@ -91,12 +91,12 @@ describe('Cook profile (demo source)', () => {
 
   it('removes a pooled cook only after Remove is confirmed', async () => {
     const onRemoved = jest.fn();
-    renderDemo(<CookProfileScreen cookId={SANCHITA} onBack={jest.fn()} onRemoved={onRemoved} />, [
-      SANCHITA,
+    renderDemo(<CookProfileScreen cookId={MEERA} onBack={jest.fn()} onRemoved={onRemoved} />, [
+      MEERA,
     ]);
 
     fireEvent.press(screen.getByTestId('cook-profile-screen-remove'));
-    expect(screen.getByText('Remove Cook Sanchita from your Cook Pool?')).toBeTruthy();
+    expect(screen.getByText('Remove Cook Meera from your Cook Pool?')).toBeTruthy();
     fireEvent.press(screen.getByTestId('cook-profile-screen-dialog-keep'));
     expect(onRemoved).not.toHaveBeenCalled();
 
@@ -107,8 +107,8 @@ describe('Cook profile (demo source)', () => {
   });
 
   it('closes the remove dialog when the profile loses focus', () => {
-    renderDemo(<CookProfileScreen cookId={SANCHITA} onBack={jest.fn()} onRemoved={jest.fn()} />, [
-      SANCHITA,
+    renderDemo(<CookProfileScreen cookId={MEERA} onBack={jest.fn()} onRemoved={jest.fn()} />, [
+      MEERA,
     ]);
     fireEvent.press(screen.getByTestId('cook-profile-screen-remove'));
     expect(screen.getByTestId('cook-profile-screen-dialog')).toBeTruthy();
@@ -118,18 +118,18 @@ describe('Cook profile (demo source)', () => {
   });
 
   it('hearts a dish, on the device only', () => {
-    renderDemo(<CookProfileScreen cookId={SANCHITA} onBack={jest.fn()} onRemoved={jest.fn()} />);
-    const heart = screen.getByTestId('dish-card-sanchita-dahi-bhindi-favourite');
+    renderDemo(<CookProfileScreen cookId={MEERA} onBack={jest.fn()} onRemoved={jest.fn()} />);
+    const heart = screen.getByTestId('dish-card-meera-dahi-bhindi-favourite');
     expect(heart.props.accessibilityState).toEqual(expect.objectContaining({ selected: false }));
     fireEvent.press(heart);
     expect(
-      screen.getByTestId('dish-card-sanchita-dahi-bhindi-favourite').props.accessibilityState,
+      screen.getByTestId('dish-card-meera-dahi-bhindi-favourite').props.accessibilityState,
     ).toEqual(expect.objectContaining({ selected: true }));
   });
 
   it('reports a cook the household has never had', () => {
     renderDemo(<CookProfileScreen cookId="nobody" onBack={jest.fn()} onRemoved={jest.fn()} />);
-    expect(screen.queryByText('Cook Sanchita')).toBeNull();
+    expect(screen.queryByText('Cook Meera')).toBeNull();
   });
 });
 
@@ -155,8 +155,8 @@ const PRESENTATION = {
 
 const CARD = {
   cookId: COOK_ID,
-  profileCode: 'COOK_SANCHITA',
-  displayName: 'Cook Sanchita',
+  profileCode: 'COOK_MEERA',
+  displayName: 'Cook Meera',
   profileImageUrl: null,
   region: 'West Bengal',
   languages: ['Hindi'],
@@ -204,7 +204,7 @@ describe('Cook Pool on the API (default source)', () => {
       'GET /v1/recurring/eligibility': NO_ELIGIBILITY,
     });
 
-    await waitFor(() => expect(screen.getByText('Sanchita')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Meera')).toBeTruthy());
     expect(screen.getAllByTestId('cook-pool-screen-pool-add')).toHaveLength(1);
   });
 
@@ -264,7 +264,7 @@ describe('Cook Pool on the API (default source)', () => {
     fireEvent(screen.getByTestId('cook-pool-deck-swipes'), 'layout', {
       nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 600 } },
     });
-    expect(screen.getAllByText('Cook Sanchita').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cook Meera').length).toBeGreaterThan(0);
 
     // `755:2333` — each dish on the card carries its heart, the profile's favourites: one cook
     // dealt is drawn on top and again behind it, and both hearts follow the one store.
@@ -281,7 +281,7 @@ describe('Cook Pool on the API (default source)', () => {
 
   it('adds the top cook with POST /v1/me/cooks, and skipping stores nothing', async () => {
     const posted: unknown[] = [];
-    const second = { ...CARD, cookId: 'cook-rekha', displayName: 'Cook Rekha' };
+    const second = { ...CARD, cookId: 'cook-asha', displayName: 'Cook Asha' };
     renderApi(<CookPoolDeckScreen onDone={jest.fn()} />, {
       'GET /v1/me/cooks/candidates': () => ({
         cooks: [

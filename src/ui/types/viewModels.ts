@@ -51,11 +51,11 @@ export interface CookBadgesViewModel {
 export interface CookViewModel {
   /** TODO(backend-contract): cook identifier. */
   readonly id: string;
-  /** Rendered verbatim, e.g. "Cook Rekha". TODO(backend-contract). */
+  /** Rendered verbatim, e.g. "Cook Asha". TODO(backend-contract). */
   readonly displayName: string;
   /**
    * Used for the "What {firstName} cooks best?" heading, which MUST be interpolated: 6 of the 8
-   * Figma cards read "What rekha cooks best?" regardless of the cook (defect D-4).
+   * Figma cards read "What asha cooks best?" regardless of the cook (defect D-4).
    */
   readonly firstName: string;
   /** TODO(backend-contract): photo URL and any sizing parameters. */
