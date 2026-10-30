@@ -32,6 +32,8 @@ export type {
   BookingDetailsViewModel,
 } from './components/BookingDetailsSheet';
 export { PaymentFailedBody } from './components/PaymentFailedBody';
+export { useServicePaymentScreens } from './components/ServicePaymentScreens';
+export type { ServicePaymentScreens } from './components/ServicePaymentScreens';
 export type { PaymentFailedBodyProps } from './components/PaymentFailedBody';
 export {
   destinationForPayment,

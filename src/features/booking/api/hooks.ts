@@ -535,9 +535,16 @@ export function useCreateExtension(launcher: CheckoutLauncher = unavailableCheck
   return useMutation<
     ExtensionQuoteDto,
     Error,
-    { bookingId: string; minutes: number; scope: string; description?: string }
+    {
+      bookingId: string;
+      minutes: number;
+      scope: string;
+      description?: string;
+      /** Checkout has returned and the backend is now verifying the payment. */
+      onVerifying?: () => void;
+    }
   >({
-    async mutationFn({ bookingId, minutes, scope, description }) {
+    async mutationFn({ bookingId, minutes, scope, description, onVerifying }) {
       const quote = await service.createExtension(bookingId, minutes, scope);
 
       // Not ready to pay for: the provider order is still being created upstream. Returned rather
@@ -563,6 +570,7 @@ export function useCreateExtension(launcher: CheckoutLauncher = unavailableCheck
 
       // The backend checks the signature. Until this resolves, nothing is paid and the extension
       // stays `payment_pending`.
+      onVerifying?.();
       await service.verifyExtensionPayment(bookingId, quote.extensionId, result);
       idempotency.release(scope);
 
@@ -739,9 +747,16 @@ export function useTipCook(launcher: CheckoutLauncher = unavailableCheckoutLaunc
   return useMutation<
     TipOrderDto,
     Error,
-    { bookingId: string; amountPaise: number; scope: string; description?: string }
+    {
+      bookingId: string;
+      amountPaise: number;
+      scope: string;
+      description?: string;
+      /** Checkout has returned and the backend is now verifying the payment. */
+      onVerifying?: () => void;
+    }
   >({
-    async mutationFn({ bookingId, amountPaise, scope, description }) {
+    async mutationFn({ bookingId, amountPaise, scope, description, onVerifying }) {
       const order = await service.tip(bookingId, amountPaise, scope);
 
       if (order.status === 'processing' || order.providerOrderId === null) return order;
@@ -756,6 +771,7 @@ export function useTipCook(launcher: CheckoutLauncher = unavailableCheckoutLaunc
         currency: order.currency,
         description: description ?? 'Tip for your cook',
       });
+      onVerifying?.();
 
       /**
        * Derived from the ATTEMPT's scope, not fixed per booking.

@@ -108,6 +108,8 @@ export type { ErrorStateProps } from './feedback/ErrorState';
 export { LaunchSplash } from './feedback/LaunchSplash';
 export { LoadingState } from './feedback/LoadingState';
 export type { LoadingStateProps, LoadingVariant } from './feedback/LoadingState';
+export { TossLoading } from './feedback/TossLoading';
+export type { TossLoadingProps } from './feedback/TossLoading';
 export { QueryBoundary } from './feedback/QueryBoundary';
 export type { QueryBoundaryProps } from './feedback/QueryBoundary';
 export { Skeleton } from './feedback/Skeleton';

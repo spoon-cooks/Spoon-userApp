@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react-native';
 import { ready } from '@core/data';
 import { DEMO_PROFILE } from '@/demo/fixtures/screens';
 import { ProfileView } from '@features/profile';
+import { LoadingState, QueryBoundary } from '@ui';
 
 import { ConfirmationLoading, IntroLoading, SplashLoading } from './LoadingScreens';
 
@@ -65,25 +66,39 @@ describe('Loading → ready switching', () => {
   };
 
   /**
-   * THE LOADING RULE (task §13 / §25).
-   *
-   * `71:747` is a BRANDED full-screen interstitial — logo, headline, hero photograph. Profile used
-   * to render it while `GET /v1/me` was in flight, which made every Home -> Profile tap look like
-   * a second app launch. The founder's rule is that the one global loading screen belongs to the
-   * app OPENING and to nothing else, so this boundary now falls through to the token layer's
-   * scoped state.
+   * THE LOADING RULE (owner, 30 Oct 2026): a screen whose first read is in flight shows the toss,
+   * the same screen the app opens on — through `LoadingState`, not by rendering the splash itself.
    */
-  it('shows no branded interstitial while a normal screen is loading', () => {
+  it('shows the toss while a screen loads, then the screen', () => {
     const { rerender } = render(<ProfileView state={{ status: 'loading' }} {...actions} />);
 
+    expect(screen.getByLabelText('Loading')).toBeTruthy();
     expect(screen.queryByTestId('intro-loading')).toBeNull();
-    expect(screen.queryByTestId('splash-loading')).toBeNull();
     expect(screen.queryByTestId('profile-identity')).toBeNull();
 
     rerender(<ProfileView state={ready(DEMO_PROFILE)} {...actions} />);
 
+    expect(screen.queryByLabelText('Loading')).toBeNull();
     expect(screen.getByTestId('profile-identity')).toBeTruthy();
     expect(screen.getByText('Aarav Mehta')).toBeTruthy();
+  });
+
+  it('draws the toss for LoadingState screen and QueryBoundary, a spinner inline', () => {
+    const screenWait = render(<LoadingState variant="screen" testID="wait" />);
+    expect(screen.getByTestId('wait').props.accessibilityLabel).toBe('Loading');
+    expect(screen.queryByText('Loading')).toBeNull();
+    screenWait.unmount();
+
+    const boundary = render(
+      <QueryBoundary state={{ status: 'loading' }}>{() => null}</QueryBoundary>,
+    );
+    expect(screen.getByLabelText('Loading')).toBeTruthy();
+    expect(screen.queryByText('Loading')).toBeNull();
+    boundary.unmount();
+
+    // Inside a screen the wait stays scoped, with its word.
+    render(<LoadingState testID="inline" />);
+    expect(screen.getByText('Loading')).toBeTruthy();
   });
 
   it('shows the error surface instead of the loading surface on failure', () => {
