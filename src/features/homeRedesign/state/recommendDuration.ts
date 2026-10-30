@@ -9,17 +9,29 @@ export interface DialInputs {
 }
 
 /**
- * The dial's recommended duration.
- *
- * TODO(product): PLACEHOLDER FORMULA. The dev notes say the dial result selects a tile but do not
- * give the rule. This one is tuned only so the frames' inputs land on the frames' answer: the
- * current Home frames (`1255:2973`, `1625:11215`) draw Complex, 2 dishes, 4 people → 1.5 hrs. 30 min
- * base, 15 min per simple dish or 20 per complex dish, and 7.5 min per person beyond two — rounded
- * UP to the next offered duration.
+ * The owner's dish-load table (31 Oct 2026), in minutes. Rows are dish counts — 1-2, 3 and 4-5
+ * (the owner put 2 dishes in the 1-2 row) — columns are 1-2, 3-4, 5-6 and 7-8 people. The
+ * steppers stop at 5 dishes and 8 people (`DISH_LIMITS`, `PEOPLE_LIMITS`), so every choice is in
+ * the table.
  */
+const TABLE: Record<DishComplexity, readonly (readonly number[])[]> = {
+  simple: [
+    [30, 45, 60, 90],
+    [60, 90, 90, 120],
+    [90, 120, 120, 150],
+  ],
+  complex: [
+    [45, 60, 90, 90],
+    [90, 90, 120, 120],
+    [120, 120, 150, 150],
+  ],
+};
+
+const dishRow = (dishes: number) => (dishes <= 2 ? 0 : dishes === 3 ? 1 : 2);
+const peopleColumn = (people: number) => Math.min(3, Math.max(0, Math.ceil(people / 2) - 1));
+
 export function recommendedMinutes({ complexity, dishes, people }: DialInputs): number {
-  const perDish = complexity === 'complex' ? 20 : 15;
-  return 30 + dishes * perDish + Math.max(0, people - 2) * 7.5;
+  return TABLE[complexity][dishRow(dishes)]![peopleColumn(people)]!;
 }
 
 /** The shortest offered duration that covers the recommendation, else the longest one. */
