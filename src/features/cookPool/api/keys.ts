@@ -11,4 +11,6 @@ export const cookPoolKeys = {
   pool: () => factory.collection('pool'),
   candidates: () => factory.collection('candidates'),
   profile: (cookId: string) => factory.detail(cookId),
+  /** The household's dish likes (DEC-115). Under `all()`, so a pool write refetches them too. */
+  dishLikes: () => factory.collection('dishLikes'),
 } as const;

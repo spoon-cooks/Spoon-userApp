@@ -5,24 +5,21 @@ import { Text } from '@ui/primitives/Text';
 import { lightTheme } from '@ui/theme/ThemeProvider';
 
 import { Skeleton } from './Skeleton';
+import { TossLoading } from './TossLoading';
 
 /**
  * Loading states.
  *
  * `spinner` — indeterminate work with no known shape (submitting, checking availability).
  * `card`    — placeholder for a list of cards (booking history, refunds, saved addresses).
- * `screen`  — a full surface while the first payload resolves.
+ * `screen`  — a full surface while the first payload resolves: the toss (`2692:864`,
+ *             `TossLoading`), the same screen the app opens on.
  *
- * The DESIGNED full-screen states (`73:1036` splash, `71:747` interstitial) live in
- * `@features/loading` — they carry brand photography and belong to a feature, not to the token
- * layer.
- *
- * LOADING RULE (task §13 / §25): those branded surfaces belong to the app OPENING and nowhere
- * else. `73:1036` is held by the boot gate at `src/app/index.tsx` while the session, the profile
- * gate and the address gate resolve; `71:747` is no longer rendered by any production screen.
- * Every other wait — Home -> Profile, Profile -> Addresses, an address transition, a form
- * submission — uses one of the SCOPED variants below, so a normal navigation never looks like a
- * second app launch.
+ * LOADING RULE (owner, 30 Oct 2026): every full-screen wait shows the toss — the app opening
+ * (`SplashLoading` at the boot gate) and any screen whose first read is in flight, which is what
+ * `QueryBoundary` draws by default. Waits inside a screen stay scoped: a CTA or inline spinner,
+ * or card skeletons for a list. This replaces the earlier rule that kept the branded screen to
+ * the app opening alone (task §13 / §25).
  *
  * Announced politely so a screen reader says something is happening rather than going silent.
  */
@@ -67,6 +64,10 @@ export function LoadingState({
     );
   }
 
+  if (variant === 'screen') {
+    return <TossLoading label={label} {...(testID === undefined ? {} : { testID })} />;
+  }
+
   return (
     <View
       testID={testID}
@@ -74,9 +75,9 @@ export function LoadingState({
       accessibilityRole="progressbar"
       accessibilityLabel={label}
       accessibilityState={{ busy: true }}
-      style={variant === 'screen' ? styles.screen : styles.inline}
+      style={styles.inline}
     >
-      <ActivityIndicator size={variant === 'screen' ? 'large' : 'small'} color={SPINNER_COLOR} />
+      <ActivityIndicator size="small" color={SPINNER_COLOR} />
       <Text variant="label" color="textSecondary">
         {label}
       </Text>
@@ -92,12 +93,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: lightTheme.space.sm,
     paddingVertical: lightTheme.space.md,
-  },
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: lightTheme.space.md,
   },
   list: { gap: lightTheme.space.md },
   cardBody: { gap: lightTheme.space.sm },

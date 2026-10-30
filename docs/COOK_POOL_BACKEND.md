@@ -76,16 +76,16 @@ deck loops: every cook, skipped or added, goes to the back and comes round again
 session. If product later wants skips remembered, that is a new
 `POST /v1/me/cooks/:cookId/skip` and its undo.
 
-### 5. Dish favourites (new)
+### 5. Dish likes — done (V0 DEC-115)
 
-The dish card's heart (`848:7809`) works on the device only. Needs:
+The dish card's heart (`848:7809`) is saved per household: a dish liked on one cook is liked on
+every cook who cooks it (owner, 30 Oct 2026). Keyed by the dish library code the profile's shelves
+send (`dishCode`).
 
-- `GET /v1/me/favourite-dishes` → `{ dishIds: string[] }` (or `favourite: boolean` on each dish
-  in §2)
-- `PUT /v1/me/favourite-dishes/:dishId` and `DELETE /v1/me/favourite-dishes/:dishId`, idempotent.
-- **Open question:** is a favourite per household (`dahi_bhindi` is a favourite whoever cooks it)
-  or per cook? The app keys favourites by the dish id the backend sends, so per-cook favourites
-  only need per-cook dish ids.
+- `GET /v1/me/dish-likes` → `{ dishCodes: string[] }`
+- `PUT /v1/me/dish-likes/:dishCode` and `DELETE /v1/me/dish-likes/:dishCode`, both idempotent.
+- The app fills the heart at once, puts it back if the request fails, and sends taps in order
+  (`useSetDishLike`). The dev preview keeps its hearts in memory (`favourites.ts`).
 
 ### 6. Pool minimum
 
@@ -97,7 +97,7 @@ eligibility for it. There is no maximum pool size in either the design or the ba
 ## Wiring it in the app
 
 Each hook in `src/features/cookPool/data.ts` becomes a `useApiQuery`, and each action
-(`addCook`, `removeCook`, `toggleFavouriteDish`) a mutation that invalidates the pool, candidates
+(`addCook`, `removeCook`) a mutation that invalidates the pool, candidates
 and profile reads. Then remove the file from `ALLOWED_PENDING` in
 `src/__tests__/productionDataPath.test.ts` and close `BE-COOKPOOL` in
 `docs/BACKEND_INTEGRATION_MAP.md`. The screens don't change.

@@ -13,12 +13,7 @@ import { CookMenu } from '../components/CookMenu';
 import { CookProfileHeader } from '../components/CookProfileHeader';
 import { RemoveCookDialog } from '../components/RemoveCookDialog';
 import { YellowBand } from '../components/YellowBand';
-import {
-  toggleFavouriteDish,
-  useCookPoolActions,
-  useCookProfile,
-  useFavouriteDishIds,
-} from '../data';
+import { useCookPoolActions, useCookProfile, useDishLikes } from '../data';
 
 /**
  * Cook Profile — Figma `cCQlzTeiObQkpVBzwI8mZi` (Spoon — User): `719:1568`, and the remove
@@ -27,7 +22,7 @@ import {
  * Opened from a cook's photo on the pool landing, from Home, and from the assigned cook in a
  * booking. The cook's header, then their menu: sections scroll down the page, each section's
  * dishes sideways, from 16 in on the left to the screen's edge on the right. A dish's heart
- * favourites it, on this device only (`favourites.ts`). For a cook in the pool, the bin asks
+ * likes it for the household (`useDishLikes`, DEC-115). For a cook in the pool, the bin asks
  * before taking them out; "Remove" sends the DELETE and leaves (`onRemoved`) once it has gone
  * through — a failure keeps the dialog open with the reason, to try again or keep — and "Keep"
  * stays. Leaving the profile while the dialog is up closes it.
@@ -50,7 +45,7 @@ export function CookProfileScreen({
   testID = 'cook-profile-screen',
 }: CookProfileScreenProps) {
   const { state, refetch } = useCookProfile(cookId);
-  const favourites = useFavouriteDishIds();
+  const dishLikes = useDishLikes();
   const actions = useCookPoolActions();
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -129,8 +124,8 @@ export function CookProfileScreen({
               <CookProfileHeader profile={profile} onLayout={onHeaderLayout} />
               <CookMenu
                 sections={profile.menu}
-                favourites={favourites}
-                onToggleFavourite={toggleFavouriteDish}
+                favourites={dishLikes.liked}
+                onToggleFavourite={dishLikes.toggle}
                 testID={`${testID}-menu`}
               />
             </ScrollView>

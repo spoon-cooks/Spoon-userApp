@@ -125,7 +125,7 @@ backend now serves the pool (`GET /v1/me/cooks`), Pool selection's deck — trie
 Cooks only (`GET /v1/me/cooks/candidates`), a Cook's profile with dishes by category
 (`GET /v1/me/cooks/:cookId`, tried or pooled Cooks only), add by `cookId` (refused
 `COOK_NOT_TRIED` for a Cook who never completed a booking for the household) and remove. Dish
-favourites were dropped by the V2 spec and stay a local, per-device preference. Dish photos still
+likes are saved per household (`/v1/me/dish-likes`, DEC-115). Dish photos still
 come from the bundled card content by `profileCode`. Not deployed: the branch is unmerged.
 
 **BE-RECURRING — Recurring V2 is wired against an unmerged, undeployed backend (2026-10-06).**

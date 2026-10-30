@@ -12,6 +12,7 @@ import {
   ratingSubmissionScope,
   useBookingDetail,
   useRateBooking,
+  useServicePaymentScreens,
   useTipCheckout,
 } from '@features/booking';
 import type { PaymentOutcome } from '@features/booking';
@@ -116,6 +117,24 @@ export default function BookingRoute() {
   }, []);
   const extend = useExtensionCheckout();
   /**
+   * An extension or a tip is paid mid-visit through Razorpay, like the booking itself, so it gets
+   * the booking payment's two screens: "Confirming your payment" while the backend verifies, and
+   * "Payment failed" when checkout says the payment failed — laid over this screen, which keeps
+   * its own state underneath.
+   */
+  const servicePayment = useServicePaymentScreens();
+  const extendBy = (minutes: number) =>
+    servicePayment.run((onVerifying) =>
+      extend.mutateAsync({
+        bookingId,
+        minutes,
+        // Scoped to the booking AND the size of the extension, so a retry after an ambiguous
+        // failure replays the same intent instead of extending twice.
+        scope: `booking.extend:${bookingId}:${minutes}`,
+        onVerifying,
+      }),
+    );
+  /**
    * The redesigned cancel flow (Figma C1–C5): "Modify visit" first, then policy, reason, review and
    * the cancelled sheet. C5's Done goes to My bookings and "Book a visit" to Schedule — neither
    * creates a booking on the customer's behalf.
@@ -214,20 +233,18 @@ export default function BookingRoute() {
           onShareRecipe={guard(() => {
             openHelp("Hi Spoon, I'd like to share a recipe or a special request for my booking.");
           })}
-          onExtend={(minutes) =>
-            extend.mutateAsync({
-              bookingId,
-              minutes,
-              scope: `booking.extend:${bookingId}:${minutes}`,
-            })
-          }
+          onExtend={extendBy}
           extending={extend.isPending}
           onTip={(amountPaise) =>
-            tip.mutateAsync({
-              bookingId,
-              amountPaise,
-              scope: `booking.tip.${bookingId}.${createIdempotencyKey()}`,
-            })
+            servicePayment.run((onVerifying) =>
+              tip.mutateAsync({
+                bookingId,
+                amountPaise,
+                // A fresh scope per attempt; see `onSelectTip` below.
+                scope: `booking.tip.${bookingId}.${createIdempotencyKey()}`,
+                onVerifying,
+              }),
+            )
           }
           tipping={tip.isPending}
           onRate={(request) =>
@@ -242,6 +259,7 @@ export default function BookingRoute() {
           onViewRefunds={guard(() => router.push('/refunds'))}
         />
         {cancelVisit.sheet}
+        {servicePayment.layer}
       </ErrorBoundary>
     );
   }
@@ -332,15 +350,7 @@ export default function BookingRoute() {
          * refetches and the In-service view re-renders from the answer. Nothing here adds minutes
          * to a clock.
          */
-        onExtendBooking={(minutes) =>
-          extend.mutateAsync({
-            bookingId,
-            minutes,
-            // Scoped to the booking AND the size of the extension, so a retry after an ambiguous
-            // failure replays the same intent instead of extending twice.
-            scope: `booking.extend:${bookingId}:${minutes}`,
-          })
-        }
+        onExtendBooking={extendBy}
         extending={extend.isPending}
         extendError={paymentErrorMessage(extend.error)}
         /**
@@ -394,11 +404,14 @@ export default function BookingRoute() {
            * on a dead row. The abandoned Razorpay session cannot be paid, so the risk it leaves
            * is a dead row, not a stranded payment.
            */
-          return tip.mutateAsync({
-            bookingId,
-            amountPaise,
-            scope: `booking.tip.${bookingId}.${createIdempotencyKey()}`,
-          });
+          return servicePayment.run((onVerifying) =>
+            tip.mutateAsync({
+              bookingId,
+              amountPaise,
+              scope: `booking.tip.${bookingId}.${createIdempotencyKey()}`,
+              onVerifying,
+            }),
+          );
         }}
         tipping={tip.isPending}
         tipError={paymentErrorMessage(tip.error)}
@@ -445,6 +458,7 @@ export default function BookingRoute() {
       />
 
       {cancelVisit.sheet}
+      {servicePayment.layer}
     </ErrorBoundary>
   );
 }

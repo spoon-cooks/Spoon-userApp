@@ -151,3 +151,13 @@ export const addCookToPoolSchema = z.object({
 });
 
 export type AddCookToPoolDto = z.infer<typeof addCookToPoolSchema>;
+
+/**
+ * `GET /v1/me/dish-likes` — DEC-115. The household's liked dishes, by the dish library code the
+ * profile's shelves send (`presentation.shelves[].dishes[].dishCode`), oldest first.
+ */
+export const dishLikesSchema = z.object({ dishCodes: z.array(z.string()) });
+export type DishLikesDto = z.infer<typeof dishLikesSchema>;
+
+/** `PUT /v1/me/dish-likes/:dishCode` — the dish is liked. */
+export const likeDishSchema = z.object({ dishCode: z.string(), liked: z.literal(true) });

@@ -139,4 +139,25 @@ describe('Cook Pool writes', () => {
     expect(calls[0]).toMatchObject({ path: `/v1/me/cooks/${COOK_ID}`, method: 'DELETE' });
     expect(calls[0]?.headers['Idempotency-Key']).toBeUndefined();
   });
+
+  it('reads the household dish likes (DEC-115)', async () => {
+    const { calls, pool } = recording({ dishCodes: ['V-016', 'N-CHK-001'] });
+
+    await expect(pool.dishLikes()).resolves.toEqual({ dishCodes: ['V-016', 'N-CHK-001'] });
+    expect(calls[0]).toMatchObject({ path: '/v1/me/dish-likes', method: 'GET' });
+  });
+
+  it('likes with a PUT and unlikes with a DELETE on the dish code, with no key', async () => {
+    const liking = recording({ dishCode: 'N-CHK-001', liked: true });
+    await liking.pool.likeDish('N-CHK-001');
+    expect(liking.calls[0]).toMatchObject({ path: '/v1/me/dish-likes/N-CHK-001', method: 'PUT' });
+    expect(liking.calls[0]?.headers['Idempotency-Key']).toBeUndefined();
+
+    const unliking = recording(undefined);
+    await unliking.pool.unlikeDish('N-CHK-001');
+    expect(unliking.calls[0]).toMatchObject({
+      path: '/v1/me/dish-likes/N-CHK-001',
+      method: 'DELETE',
+    });
+  });
 });

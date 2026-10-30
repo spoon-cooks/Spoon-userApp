@@ -11,6 +11,7 @@ import type {
   AddCookToPoolDto,
   CookPoolCandidatesDto,
   CookPoolListDto,
+  DishLikesDto,
   PoolCookProfileDto,
 } from './schemas';
 
@@ -95,5 +96,49 @@ export function useRemoveCookFromPool() {
   return useMutation<void, Error, { cookId: string }>({
     mutationFn: ({ cookId }) => pool.remove(cookId),
     onSettled: invalidate,
+  });
+}
+
+export function useDishLikesQuery(): ScreenQuery<DishLikesDto> {
+  const { api } = useRuntime();
+  const pool = createCookPoolApi(api);
+  return useApiQuery<DishLikesDto>({
+    queryKey: cookPoolKeys.dishLikes(),
+    queryFn: ({ signal }) => pool.dishLikes(signal),
+  });
+}
+
+/**
+ * Likes or unlikes a dish (DEC-115). Unlike the pool writes this one IS optimistic: a heart has to
+ * fill under the finger, and nothing else depends on it. The cache flips at once, goes back if the
+ * request fails, and is re-read once it settles.
+ *
+ * Every like shares one mutation scope, so taps reach the server in the order they were made: a
+ * quick like-unlike can never land as unlike-like.
+ */
+export function useSetDishLike() {
+  const { api } = useRuntime();
+  const pool = createCookPoolApi(api);
+  const queryClient = useQueryClient();
+  const key = cookPoolKeys.dishLikes();
+  return useMutation<void, Error, { dishCode: string; liked: boolean }, DishLikesDto | undefined>({
+    scope: { id: 'cookPool.dishLike' },
+    mutationFn: ({ dishCode, liked }) =>
+      liked ? pool.likeDish(dishCode) : pool.unlikeDish(dishCode),
+    async onMutate({ dishCode, liked }) {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<DishLikesDto>(key);
+      const others = (previous?.dishCodes ?? []).filter((code) => code !== dishCode);
+      queryClient.setQueryData<DishLikesDto>(key, {
+        dishCodes: liked ? [...others, dishCode] : others,
+      });
+      return previous;
+    },
+    onError(_error, _variables, previous) {
+      queryClient.setQueryData(key, previous);
+    },
+    onSettled() {
+      void queryClient.invalidateQueries({ queryKey: key });
+    },
   });
 }

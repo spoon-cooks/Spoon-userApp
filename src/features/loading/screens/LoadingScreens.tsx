@@ -1,20 +1,17 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Animated, Image, StyleSheet, Text as RNText, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 
-import { LOADING_INTRO_HERO, LOADING_INTRO_LOGO, Text, lightTheme } from '@ui';
+import { LOADING_INTRO_HERO, LOADING_INTRO_LOGO, Text, TossLoading, lightTheme } from '@ui';
 import { keyframedStyle, useTimeline } from '@ui/motion/keyframes';
 import { C, T } from '@ui/v2/theme';
 
-import { CAROUSEL_ART, TOSS_ART } from '../art';
+import { CAROUSEL_ART } from '../art';
 import {
   CAROUSEL_DISHES,
   CAROUSEL_DOTS,
   CAROUSEL_LOOP_MS,
   CAROUSEL_SHADOWS,
-  TOSS,
-  TOSS_LOOP_MS,
 } from '../motion/timelines';
 
 /**
@@ -48,105 +45,16 @@ function useMeasured() {
 /* ------------------------------------------------------------------------- splash */
 
 /**
- * `2692:864` "Loading / App launch — v4 · Tight toss": veggies tossed in a pan on a yellow wash.
- *
- * The frame is a 402 × 874 canvas with every layer absolutely placed, so it is drawn as exactly
- * that, scaled to the screen's width and centred on its height. The wash runs edge to edge.
- *
- * Its "Tossing it all together" title and subtitle (`2692:920`, `2692:921`) are HIDDEN in the
- * file, as are the glow, chilli, peas and sizzle dots, so none of them is drawn.
- *
- * MOTION: `get_motion_context` — nine layers on one 1.34s loop (`motion/timelines.ts`).
+ * The app opening — the toss (`2692:864`, `@ui`'s `TossLoading`), held by the boot gate while the
+ * session, the profile gate and the address gate resolve. The same screen every other full-screen
+ * wait shows (`LoadingState`'s `screen` variant).
  */
-const TOSS_FRAME_HEIGHT = 874;
-
-/** `2692:864` fill — `linear-gradient(0deg, …)`, symmetric about the middle. */
-const TOSS_WASH = {
-  colors: [C.border, C.tint, C.brand, C.tint, C.border] as const,
-  locations: [0, 0.24092, 0.43178, 0.64432, 1] as const,
-};
-
-/** Each veggie's 60pt box in the frame. The brinjal's is its 75.6pt rotated bound, re-centred. */
-const VEGGIES = [
-  { key: 'tomato', left: 163.06, top: 343.21 },
-  { key: 'brinjal', left: 197.74, top: 356.05 },
-  { key: 'cauliflower', left: 256.42, top: 422.14 },
-  { key: 'onion', left: 222.96, top: 408.46 },
-  { key: 'carrot', left: 195.57, top: 426.6 },
-  { key: 'paneer', left: 228.59, top: 344.84 },
-] as const;
-
 export interface SplashLoadingProps {
   readonly testID?: string;
 }
 
 export function SplashLoading({ testID = 'splash-loading' }: SplashLoadingProps) {
-  const [box, onLayout] = useMeasured();
-  const progress = useTimeline({ durationMs: TOSS_LOOP_MS, loop: true, restAt: 0 });
-  const scale = box.width / FRAME_WIDTH;
-
-  return (
-    <View
-      style={styles.toss}
-      onLayout={onLayout}
-      testID={testID}
-      accessible
-      accessibilityRole="progressbar"
-      accessibilityLabel="Loading Spoon"
-      accessibilityState={{ busy: true }}
-    >
-      <LinearGradient
-        colors={TOSS_WASH.colors}
-        locations={TOSS_WASH.locations}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
-        style={styles.fill}
-      />
-
-      {box.width > 0 ? (
-        <View
-          style={[
-            styles.tossFrame,
-            {
-              left: (box.width - FRAME_WIDTH) / 2,
-              top: (box.height - TOSS_FRAME_HEIGHT) / 2,
-              transform: [{ scale }],
-            },
-          ]}
-          pointerEvents="none"
-        >
-          {/* `2692:867` */}
-          <Animated.View style={[styles.panShadow, keyframedStyle(progress, TOSS.panShadow)]}>
-            <View style={styles.panShadowEllipse} />
-          </Animated.View>
-
-          <Animated.View style={[styles.pan, keyframedStyle(progress, TOSS.panBack)]}>
-            <Image source={TOSS_ART.panBack} style={styles.panBackArt} />
-          </Animated.View>
-
-          {VEGGIES.map((veggie) => (
-            <Animated.View
-              key={veggie.key}
-              style={[
-                styles.veggie,
-                { left: veggie.left, top: veggie.top },
-                keyframedStyle(progress, TOSS[veggie.key]),
-              ]}
-            >
-              <Image
-                source={TOSS_ART[veggie.key]}
-                style={veggie.key === 'brinjal' ? styles.brinjalArt : styles.veggieArt}
-              />
-            </Animated.View>
-          ))}
-
-          <Animated.View style={[styles.pan, keyframedStyle(progress, TOSS.panFront)]}>
-            <Image source={TOSS_ART.panFront} style={styles.panFrontArt} />
-          </Animated.View>
-        </View>
-      ) : null}
-    </View>
-  );
+  return <TossLoading label="Loading Spoon" testID={testID} />;
 }
 
 /* ------------------------------------------------------------------- interstitial */
@@ -307,30 +215,6 @@ export function ConfirmationLoading({
 }
 
 const styles = StyleSheet.create({
-  fill: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
-  toss: { flex: 1, overflow: 'hidden', backgroundColor: C.brand },
-  /** `2692:864` — the 402 × 874 canvas, scaled about its centre. */
-  tossFrame: { position: 'absolute', width: FRAME_WIDTH, height: TOSS_FRAME_HEIGHT },
-  /** `2692:867` — 250 × 26 at (111, 531), black at 12 %. */
-  panShadow: { position: 'absolute', left: 111, top: 531, width: 250, height: 26 },
-  /** An ellipse: a 250pt circle squashed to 26pt (a border radius alone draws a pill). */
-  panShadowEllipse: {
-    position: 'absolute',
-    left: 0,
-    top: -112,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(0,0,0,0.12)',
-    transform: [{ scaleY: 26 / 250 }],
-  },
-  /** `2692:868` / `2692:912` — 402 × 300 at (0, 330). */
-  pan: { position: 'absolute', left: 0, top: 330, width: FRAME_WIDTH, height: 300 },
-  panBackArt: { position: 'absolute', left: -8, top: 0, width: 410, height: 300 },
-  panFrontArt: { width: FRAME_WIDTH, height: 300 },
-  veggie: { position: 'absolute', width: 60, height: 60 },
-  veggieArt: { width: 60, height: 60 },
-  brinjalArt: { width: 66, height: 60 },
   /** `71:887` — a flat `#EAF086` ground. */
   intro: { flex: 1, alignItems: 'center', backgroundColor: lightTheme.colors.surfaceLoading },
   /** `73:1035` — 130 × 130, centred, 39.5pt down. */
