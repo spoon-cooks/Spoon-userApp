@@ -92,11 +92,6 @@ export interface ActiveBookingCard {
   readonly whenLabel: string;
   /** "2" over "HRS", "45" over "MINS" — the booked time, extensions included. */
   readonly duration: { readonly value: string; readonly unit: string };
-  /**
-   * In progress only: the service window the bottom-edge bar fills across (epoch ms, server
-   * instants). `null` while the booking's detail has not landed — the bar is then not drawn.
-   */
-  readonly service: { readonly startMs: number; readonly endMs: number } | null;
 }
 
 export interface HomeModel {

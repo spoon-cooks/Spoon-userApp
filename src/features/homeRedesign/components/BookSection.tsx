@@ -31,6 +31,13 @@ export interface BookSectionProps {
 }
 
 /**
+ * The heading the frame draws on one line. Android measures this face a hair narrower than it
+ * draws it, so the last word wrapped onto a line the heading's height hides ("Select duration
+ * to") — `simple` breaking measures the line as it is drawn, as on the Account screen's labels.
+ */
+const ONE_LINE = { numberOfLines: 1, textBreakStrategy: 'simple' } as const;
+
+/**
  * `1047:6923` "Book section" and its states — `1222:23630` selected (Now), `1222:24656` schedule
  * (Later), `1303:1333` instantNA.
  *
@@ -81,7 +88,9 @@ export function BookSection({
     <View style={styles.section}>
       <View style={styles.header}>
         <View style={styles.titles}>
-          <Text style={styles.title}>Select duration to book</Text>
+          <Text style={styles.title} {...ONE_LINE}>
+            Select duration to book
+          </Text>
           <View style={styles.eta}>
             <Image source={etaMins === null ? ART.flashOff : ART.flash} style={styles.flash} />
             {etaMins === null ? (

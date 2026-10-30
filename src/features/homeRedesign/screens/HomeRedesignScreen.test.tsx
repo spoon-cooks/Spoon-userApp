@@ -282,7 +282,12 @@ describe('Active bookings', () => {
     );
     expect(screen.getByText('3')).toBeTruthy();
     expect(screen.getByText('In progress')).toBeTruthy();
-    expect(screen.getAllByText('Upcoming')).toHaveLength(2);
+    // The two upcoming cards sit further along the track, hidden from screen readers until the
+    // carousel brings them on screen.
+    expect(screen.queryByText('Upcoming')).toBeNull();
+    expect(
+      screen.getAllByText('Upcoming', { includeHiddenElements: true }).length,
+    ).toBeGreaterThanOrEqual(2);
     fireEvent.press(screen.getByRole('link', { name: 'View all bookings' }));
     expect(onPressViewAllBookings).toHaveBeenCalled();
   });

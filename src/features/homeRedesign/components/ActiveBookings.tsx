@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import {
   Image,
   Pressable,
@@ -8,10 +8,9 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { currentSkewMs } from '@core/time';
+import { useLoopingCarousel } from '@features/home';
 import { gradientAxis } from '@ui/tokens/semantic';
 
 import { BANNER } from '../assets';
@@ -25,6 +24,10 @@ export interface ActiveBookingsProps {
   readonly onPressCard: (card: ActiveBookingCard) => void;
   /** "View all ›" → My bookings, Upcoming. */
   readonly onPressViewAll: () => void;
+  /** Home is the focused route; the carousel only advances while it is. Defaults to true. */
+  readonly focused?: boolean;
+  /** Overridden in tests so a 4 s timer never gates a test run. */
+  readonly autoAdvanceMs?: number;
 }
 
 /** `2243:1120` — 370pt cards on a 402pt frame: 16 either side, 8 between, so the next one peeks. */
@@ -32,10 +35,14 @@ const CARD_WIDTH = 370;
 const CARD_HEIGHT = 74;
 const INSET = 16;
 const GAP = 8;
+/**
+ * Header text the frame draws on one line. Android measures this face a hair narrower than it
+ * draws it, so the last word wrapped onto a line the header's height hides ("Active", "View") —
+ * `simple` breaking measures the line as it is drawn, as on the Account screen's labels.
+ */
+const ONE_LINE = { numberOfLines: 1, textBreakStrategy: 'simple' } as const;
 /** "dots match the card count (cap at 5)". */
 const MAX_DOTS = 5;
-/** The in-progress bar is "refreshed every minute". */
-const PROGRESS_TICK_MS = 60_000;
 
 /**
  * `2243:1120` / `2243:973` Home banner carousel — every active booking (`activeBookingCardsFrom`)
@@ -43,27 +50,50 @@ const PROGRESS_TICK_MS = 60_000;
  *
  * One booking: a single static card, no count, no "View all", no dots. Two or more: the count
  * badge and "View all ›" join the header, the track scrolls with snap and one dot per card shows
- * where it rests (capped at five). It always opens on the first card and never auto-advances.
+ * where it rests (capped at five).
+ *
+ * The track moves on its own on `useLoopingCarousel`, as the old Home carousels did (owner,
+ * 2026-10-30): 4 s per card, an endless loop, a swipe restarts the wait, and it holds still while
+ * Home is covered, the app is in the background or Reduce Motion is on.
  */
-export function ActiveBookings({ cards, onPressCard, onPressViewAll }: ActiveBookingsProps) {
+export function ActiveBookings({
+  cards,
+  onPressCard,
+  onPressViewAll,
+  focused = true,
+  autoAdvanceMs,
+}: ActiveBookingsProps) {
   const { width: screen } = useWindowDimensions();
   const cardWidth = Math.min(CARD_WIDTH, screen - INSET * 2);
-  const [index, setIndex] = useState(0);
+  const stride = cardWidth + GAP;
+
+  // Signature, not the array: `cards` is a fresh array every render, and the hook only needs a
+  // new `keys` when the set or order of bookings really changed.
+  const signature = cards.map((card) => card.key).join('\0');
+  const keys = useMemo(() => (signature === '' ? [] : signature.split('\0')), [signature]);
+
+  const scrollRef = useRef<ScrollView>(null);
+  const carousel = useLoopingCarousel({
+    itemCount: cards.length,
+    stride,
+    scrollRef,
+    ...(autoAdvanceMs === undefined ? {} : { autoAdvanceMs }),
+    focused,
+    // Home stays mounted under Booking details, so a reorder must keep the card the user left on.
+    keys,
+  });
 
   if (cards.length === 0) return null;
   const many = cards.length > 1;
   const dots = Math.min(cards.length, MAX_DOTS);
 
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const at = Math.round(e.nativeEvent.contentOffset.x / (cardWidth + GAP));
-    setIndex(Math.max(0, Math.min(cards.length - 1, at)));
-  };
-
   return (
     <View style={styles.section} testID="home-active-bookings">
       <View style={styles.header}>
         <View style={styles.title}>
-          <Text style={styles.titleText}>Active bookings</Text>
+          <Text style={styles.titleText} {...ONE_LINE}>
+            Active bookings
+          </Text>
           {many ? (
             <View style={styles.count}>
               <Text style={styles.countText}>{cards.length}</Text>
@@ -78,7 +108,9 @@ export function ActiveBookings({ cards, onPressCard, onPressViewAll }: ActiveBoo
             hitSlop={8}
             style={styles.viewAll}
           >
-            <Text style={styles.viewAllText}>View all</Text>
+            <Text style={styles.viewAllText} {...ONE_LINE}>
+              View all
+            </Text>
             <Image source={BANNER.chevronRight} style={styles.viewAllIcon} />
           </Pressable>
         ) : null}
@@ -86,25 +118,35 @@ export function ActiveBookings({ cards, onPressCard, onPressViewAll }: ActiveBoo
 
       {many ? (
         <ScrollView
+          ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          snapToInterval={cardWidth + GAP}
+          snapToInterval={stride}
           snapToAlignment="start"
           decelerationRate="fast"
           disableIntervalMomentum
-          onScroll={onScroll}
+          {...carousel.scrollViewProps}
           scrollEventThrottle={16}
           style={styles.track}
           contentContainerStyle={styles.trackContent}
         >
-          {cards.map((card) => (
-            <BannerCard
-              key={card.key}
-              card={card}
-              width={cardWidth}
-              onPress={() => onPressCard(card)}
-            />
-          ))}
+          {carousel.track.map((logical, trackPosition) => {
+            const card = cards[logical];
+            if (card === undefined) return null;
+            // A clone is the same booking twice; only the real card on screen is announced.
+            const hidden =
+              !carousel.isRealTrackPosition(trackPosition) || logical !== carousel.index;
+            return (
+              <View
+                // Clones repeat a booking, so position is what makes the key unique.
+                key={`${card.key}-${trackPosition}`}
+                accessibilityElementsHidden={hidden}
+                importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
+              >
+                <BannerCard card={card} width={cardWidth} onPress={() => onPressCard(card)} />
+              </View>
+            );
+          })}
         </ScrollView>
       ) : (
         <View style={[styles.trackContent, styles.single]}>
@@ -123,7 +165,10 @@ export function ActiveBookings({ cards, onPressCard, onPressViewAll }: ActiveBoo
           {Array.from({ length: dots }, (_, i) => (
             <View
               key={i}
-              style={[styles.dot, i === Math.min(index, dots - 1) ? styles.dotActive : null]}
+              style={[
+                styles.dot,
+                i === Math.min(carousel.index, dots - 1) ? styles.dotActive : null,
+              ]}
             />
           ))}
         </View>
@@ -138,9 +183,6 @@ const STATE_LABEL: Record<ActiveBookingCard['state'], string> = {
   completed: 'Completed',
 };
 
-/** Server time now — the bar's window is server instants, so a drifted handset clock is corrected. */
-const serverNow = () => Date.now() - currentSkewMs();
-
 /** `2240:5822` Home banner — one booking: type tag, state pill, date · time, duration, Go. */
 function BannerCard({
   card,
@@ -154,19 +196,6 @@ function BannerCard({
   const fill = BANNER_FILL[card.timeOfDay];
   const axis = gradientAxis(fill.angleDeg, width, CARD_HEIGHT);
   const ink = fill.dark ? C.base : C.text;
-  const service = card.service;
-
-  const [now, setNow] = useState(serverNow);
-  const live = service !== null;
-  useEffect(() => {
-    if (!live) return;
-    const timer = setInterval(() => setNow(serverNow()), PROGRESS_TICK_MS);
-    return () => clearInterval(timer);
-  }, [live]);
-  const progress =
-    service === null
-      ? null
-      : Math.max(0, Math.min(1, (now - service.startMs) / (service.endMs - service.startMs)));
 
   const type = card.type === 'recurring' ? 'RECURRING' : 'ONE-TIME';
   const minutes = `${card.duration.value} ${card.duration.unit.toLowerCase()}`;
@@ -227,18 +256,6 @@ function BannerCard({
       <View style={styles.go}>
         <Image source={BANNER.chevronRight} style={styles.goIcon} />
       </View>
-
-      {progress === null ? null : (
-        <>
-          <View style={styles.progressTrack} />
-          <View
-            style={[
-              styles.progressFill,
-              { width: width * progress, backgroundColor: fill.dark ? C.brand : C.text },
-            ]}
-          />
-        </>
-      )}
     </Pressable>
   );
 }
@@ -332,14 +349,4 @@ const styles = StyleSheet.create({
   /** Go — a white 28pt disc round the 20pt chevron. */
   go: { padding: 4, borderRadius: 9999, backgroundColor: C.base },
   goIcon: { width: 20, height: 20 },
-  /** In progress — a 4pt white track along the bottom edge, filled elapsed / booked. */
-  progressTrack: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 4,
-    backgroundColor: C.base,
-  },
-  progressFill: { position: 'absolute', left: 0, bottom: 0, height: 4 },
 });

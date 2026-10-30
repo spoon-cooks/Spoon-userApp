@@ -109,6 +109,11 @@ export interface HomeRedesignViewProps extends HomeRedesignActions {
    * while the bank confirms a mandate (Autopay note 2317:13605). No Home frame draws one.
    */
   readonly banner?: ReactNode;
+  /**
+   * Home is the focused route. It stays mounted under a pushed screen, so this is what stops the
+   * Active bookings carousel advancing for a screen nobody is looking at. Defaults to true.
+   */
+  readonly focused?: boolean;
 }
 
 /**
@@ -128,6 +133,7 @@ export function HomeRedesignView({
   bookingBusy = false,
   notice = null,
   banner = null,
+  focused = true,
   ...actions
 }: HomeRedesignViewProps) {
   const { top, bottom } = useSafeAreaInsets();
@@ -351,6 +357,7 @@ export function HomeRedesignView({
             cards={model.activeBookings ?? []}
             onPressCard={actions.onPressActiveBooking ?? comingSoon}
             onPressViewAll={actions.onPressViewAllBookings ?? comingSoon}
+            focused={focused}
           />
 
           {variant === 'inactive' && model.waitlist !== null ? (

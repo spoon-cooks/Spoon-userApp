@@ -167,9 +167,6 @@ export const DEMO_HOME_PRICING_ERROR: HomeModel = {
   pricingStatus: 'error',
 };
 
-/** `2243:1120`'s in-progress card: 131 of 370pt filled — 35 % of a two-hour visit. */
-const SERVICE_START = Date.now() - Math.round(0.354 * 120) * 60_000;
-
 /** `2243:973` — one booking: a single static card, no count, no "View all", no dots. */
 export const DEMO_HOME_ACTIVE_ONE: HomeModel = {
   ...DEMO_HOME_RETURNING,
@@ -182,7 +179,6 @@ export const DEMO_HOME_ACTIVE_ONE: HomeModel = {
       timeOfDay: 'morning',
       whenLabel: 'Wed, 14 Oct · 9:00 AM',
       duration: { value: '2', unit: 'HRS' },
-      service: null,
     },
   ],
 };
@@ -199,7 +195,6 @@ export const DEMO_HOME_ACTIVE: HomeModel = {
       timeOfDay: 'morning',
       whenLabel: 'Today · 9:00 AM',
       duration: { value: '2', unit: 'HRS' },
-      service: { startMs: SERVICE_START, endMs: SERVICE_START + 120 * 60_000 },
     },
     {
       key: 'booking:b-2',
@@ -209,7 +204,6 @@ export const DEMO_HOME_ACTIVE: HomeModel = {
       timeOfDay: 'afternoon',
       whenLabel: 'Wed, 14 Oct · 1:00 PM',
       duration: { value: '2', unit: 'HRS' },
-      service: null,
     },
     {
       key: 'booking:b-7',
@@ -219,7 +213,6 @@ export const DEMO_HOME_ACTIVE: HomeModel = {
       timeOfDay: 'evening',
       whenLabel: 'Wed, 14 Oct · 7:00 PM',
       duration: { value: '2', unit: 'HRS' },
-      service: null,
     },
   ],
 };
@@ -236,7 +229,6 @@ export const DEMO_HOME_ACTIVE_STATES: HomeModel = {
       timeOfDay: 'evening',
       whenLabel: 'Today · 7:00 PM',
       duration: { value: '2', unit: 'HRS' },
-      service: { startMs: SERVICE_START, endMs: SERVICE_START + 120 * 60_000 },
     },
     {
       key: 'booking:b-4',
@@ -246,7 +238,6 @@ export const DEMO_HOME_ACTIVE_STATES: HomeModel = {
       timeOfDay: 'morning',
       whenLabel: 'Mon, 12 Oct · 9:00 AM',
       duration: { value: '45', unit: 'MINS' },
-      service: null,
     },
     {
       key: 'booking:b-5',
@@ -256,7 +247,6 @@ export const DEMO_HOME_ACTIVE_STATES: HomeModel = {
       timeOfDay: 'afternoon',
       whenLabel: 'Mon, 12 Oct · 1:00 PM',
       duration: { value: '1.5', unit: 'HRS' },
-      service: null,
     },
     {
       key: 'booking:b-6',
@@ -266,7 +256,6 @@ export const DEMO_HOME_ACTIVE_STATES: HomeModel = {
       timeOfDay: 'evening',
       whenLabel: 'Mon, 12 Oct · 7:00 PM',
       duration: { value: '1', unit: 'HR' },
-      service: null,
     },
   ],
 };

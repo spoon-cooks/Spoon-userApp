@@ -67,7 +67,7 @@ export function useHomeRedesignData(options: {
   const pool = useCookPoolList();
   const recurring = useRecurringEligibility();
   // Active bookings: the list polls while Home is mounted; in-progress and completed cards also
-  // read their detail (the service window and an extended duration), and the Recurring plans
+  // read their detail (an extended duration), and the Recurring plans
   // say which bookings are visits and which visit is next.
   const active = useActiveBookings();
   const detailIds = useMemo(
