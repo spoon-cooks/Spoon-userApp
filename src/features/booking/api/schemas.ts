@@ -452,6 +452,11 @@ export const bookingDetailSchema = z.object({
   referenceUrl: z.string().nullable(),
   mealBrief: z.unknown().nullable(),
   cook: bookingCookSchema.nullable(),
+  /**
+   * The cook is due up to 15 minutes before (`early`) or 10 after (`late`) the booked start
+   * (Business Rules Spec §8). Absent from an older API, which reads as on time.
+   */
+  cookArrival: z.enum(['early', 'late']).nullish(),
   timing: bookingTimingSchema,
   reassignment: bookingReassignmentSchema.nullish(),
   recovery: bookingRecoverySchema.nullish(),

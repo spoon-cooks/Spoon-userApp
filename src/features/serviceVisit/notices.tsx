@@ -7,6 +7,8 @@ import { SERVICE_ART } from './art';
 
 /** The `--disabled` fill the reassigned note's icon well uses (`2353:17569`). */
 const WELL_DISABLED = 'rgba(0,0,0,0.25)';
+/** `--color/status/positive-subtle` (`2878:7737`). */
+const ARRIVING_EARLY_WELL = '#ECFF9B';
 
 /* ------------------------------------------------------------------- Cook reassigned (one-time) */
 
@@ -34,6 +36,60 @@ export function CookReassignedNote({ testID }: { testID: string }) {
         We had to reassign your booking to another cook due to operational reasons with the
         previously assigned cook
       </Text>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------ Cook due early or late (assigned) */
+
+/**
+ * `Cook reassigned` frames `2878:7735` and `2878:7964` in "Visit details / upcoming · Cook in
+ * -15 mins" (`2878:7730`) and "· Cook in +10 mins" (`2878:7959`). The customer keeps the time they
+ * booked; the cook may be held to a time up to 15 minutes before it or 10 after (Business Rules
+ * Spec §8), and the booking says which (`cookArrival`).
+ *
+ * Same object as the reassigned note: on the page ground, a 40pt well with a 24pt glyph over the
+ * Emphasis line, 8 apart, then the Caption in secondary ink. The two frames differ in two places:
+ *
+ *   early  well `--color/status/positive-subtle` `#ECFF9B`; the caption sits OUTSIDE the top
+ *          group, 12 below it (`2878:7735` gap 12);
+ *   late   well `--color/brand/primary-tint` `#FFE666`; the caption is INSIDE the top group, 8
+ *          below the title (`2878:7965` gap 8, the outer frame has none).
+ *
+ * The copy is the frames' own, word for word.
+ */
+export function CookArrivalNote({
+  arrival,
+  testID,
+}: {
+  arrival: 'early' | 'late';
+  testID: string;
+}) {
+  const early = arrival === 'early';
+  const caption = (
+    <Text style={styles.captionSecondary}>
+      {early
+        ? 'Thanks for accommodating, your assigned cook would really benefit from starting just a little early :)'
+        : 'Thanks for accommodating, your assigned cook would just wrapping up a nearby job :)'}
+    </Text>
+  );
+  return (
+    <View style={early ? styles.reassigned : null} testID={testID}>
+      <View style={styles.reassignedTop}>
+        <View style={[styles.arrivalWell, early ? styles.wellEarly : styles.wellLate]}>
+          <Image
+            source={early ? SERVICE_ART.arrivingEarly : SERVICE_ART.arrivingLate}
+            style={styles.icon24}
+          />
+        </View>
+        <Text style={styles.emphasis} accessibilityRole="header">
+          {early
+            ? 'Your cook might arrive up to 15 minutes early'
+            : 'Your cook might arrive up to 10 minutes late'}
+        </Text>
+        {early ? null : caption}
+      </View>
+      {early ? caption : null}
     </View>
   );
 }
@@ -152,6 +208,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: WELL_DISABLED,
   },
+
+  arrivalWell: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** `2878:7737` — `--color/status/positive-subtle`. */
+  wellEarly: { backgroundColor: ARRIVING_EARLY_WELL },
+  /** `2878:7966` — `--color/brand/primary-tint`. */
+  wellLate: { backgroundColor: C.tint },
 
   apology: {
     gap: 14,

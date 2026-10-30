@@ -33,7 +33,7 @@ import {
   TipCard,
 } from './components';
 import type { BriefKey } from './components';
-import { CookReassignedNote } from './notices';
+import { CookArrivalNote, CookReassignedNote } from './notices';
 import { MOST_TIPPED_PAISE } from './model';
 import type { ExtendChoice, ServicePhase } from './model';
 
@@ -41,8 +41,8 @@ import type { ExtendChoice, ServicePhase } from './model';
  * Visit details through the service — Figma "Service flow" (`2165:11841`). One screen whose
  * blocks change with the phase (see `model.ts`); everything shown comes from `model`.
  *
- *   assigned   banner (date, slot) · [cook reassigned note] · cook card · recipe share ·
- *              before-arrival checklist
+ *   assigned   banner (date, slot) · [cook reassigned note | cook early/late note] · cook card ·
+ *              recipe share · before-arrival checklist
  *   onTheWay   banner (time, length) · arrival tile · cook card with Call · checklist · recipe
  *   arrived    banner · Start OTP · "Brief your cook" · cook card with Call · recipe
  *   cooking    hero wave · banner · countdown · Extend · clean-up scope · End OTP
@@ -59,6 +59,11 @@ export interface ServiceVisitModel {
    * "Sorry, we have assigned you another cook" note sits above the cook card.
    */
   readonly reassigned?: boolean | undefined;
+  /**
+   * While `assigned`: the cook is due up to 15 minutes early or 10 late against the booked start
+   * (`2878:7730` / `2878:7959`). The note sits where the reassigned one does.
+   */
+  readonly cookArrival?: 'early' | 'late' | null | undefined;
   readonly title: string;
   /** Assigned/completed: "Wed, 14 Oct"; live: "9:00 AM · 1 hr". */
   readonly bannerTitle: string;
@@ -229,6 +234,8 @@ export function ServiceVisitScreen({
           <>
             {model.reassigned === true ? (
               <CookReassignedNote testID={`${testID}-reassigned`} />
+            ) : model.cookArrival === 'early' || model.cookArrival === 'late' ? (
+              <CookArrivalNote arrival={model.cookArrival} testID={`${testID}-arrival-note`} />
             ) : null}
             {cookCard(false)}
             {recipe}
