@@ -219,6 +219,16 @@ export const DEV_ROUTES: readonly DevRoute[] = [
     note: 'IN PROGRESS · redesign preview — Figma cCQlzTeiObQkpVBzwI8mZi page 1385:3275',
   },
   {
+    path: '/booking-flow?view=arrival-early',
+    label: 'Booking flow · cook in -15 mins',
+    note: '2878:7730',
+  },
+  {
+    path: '/booking-flow?view=arrival-late',
+    label: 'Booking flow · cook in +10 mins',
+    note: '2878:7959',
+  },
+  {
     path: '/booking-flow?view=onTheWay',
     label: 'Booking flow · onTheWay',
     note: 'IN PROGRESS · redesign preview — Figma cCQlzTeiObQkpVBzwI8mZi page 1385:3275',

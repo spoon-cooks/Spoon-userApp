@@ -43,6 +43,7 @@ import { RouteScaffold } from '@ui';
  *          bookings | bookings-past | bookings-empty                              (Accounts)
  *          cancelled-visit | payment-sheet                    (Visit details, cancelled / payment)
  *          reassigned                       (`2353:17562` cook reassigned, a first visit with her)
+ *          arrival-early | arrival-late     (`2878:7730` / `2878:7959` cook due -15 / +10 min)
  *          cancelled-by-spoon               (`2342:4195` cancelled by Spoon, refund just started)
  */
 /** The demo cook's photo as a file URI, for the rate card's ring. */
@@ -485,6 +486,7 @@ function BookingFlowPreview({ view, recurring }: { view: string; recurring: bool
   const phase = (view in SERVICE ? view : 'assigned') as ServicePhase;
   // `2353:17562` — the new cook, on her first visit here: the overall rating, not "Your rating".
   const reassigned = view === 'reassigned';
+  const cookArrival = view === 'arrival-early' ? 'early' : view === 'arrival-late' ? 'late' : null;
   return (
     <>
       <ServiceVisitScreen
@@ -494,6 +496,17 @@ function BookingFlowPreview({ view, recurring }: { view: string; recurring: bool
           ...SERVICE[phase],
           phase,
           ...(recurring ? { title: 'Recurring visit' } : {}),
+          // `2878:7730` / `2878:7959` draw Cook Sanchita on her first visit, like the reassigned one.
+          ...(cookArrival === null
+            ? {}
+            : {
+                cookArrival,
+                cook: {
+                  ...MODEL.cook,
+                  name: 'Cook Sanchita',
+                  visits: 'First visit with you',
+                },
+              }),
           ...(reassigned
             ? {
                 reassigned: true,

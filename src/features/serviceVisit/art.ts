@@ -32,6 +32,10 @@ export const SERVICE_ART = {
   favoriteFill: img(require('../../../assets/figma/service-v2/favorite-fill.png')),
   /** `2349:846` Icon/Cook changed — the reassigned note's 24pt glyph (`2353:17570`). */
   cookChanged: img(require('../../../assets/figma/service-v2/cook-changed.png')),
+  /** `2879:846` Icon/Arriving early — the early note's 24pt glyph (`2878:7738`). */
+  arrivingEarly: img(require('../../../assets/figma/service-v2/arriving-early.png')),
+  /** `2879:848` Icon/Arriving late — the late note's 24pt glyph (`2878:7967`). */
+  arrivingLate: img(require('../../../assets/figma/service-v2/arriving-late.png')),
   /** `2342:4344` — the apology card's 260pt warm glow (radial `#FFED99` 90% → clear). */
   apologyGlow: img(require('../../../assets/figma/service-v2/apology-glow.png')),
   skyHalo3: img(require('../../../assets/figma/cancel-v2/banner-halo-3.png')),

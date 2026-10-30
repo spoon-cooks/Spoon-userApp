@@ -178,6 +178,8 @@ export function ServiceVisitHost({
   const model: ServiceVisitModel = {
     phase,
     reassigned,
+    // `2878:7730` / `2878:7959`: the cook is due early or late against the booked time (§8).
+    cookArrival: booking.cookArrival ?? null,
     title:
       // Figma names every one-time visit, Instant or scheduled, "On-time visit".
       link !== null ? 'Recurring visit' : 'On-time visit',
