@@ -2,6 +2,15 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { RecurringDaysScreen } from './screens/RecurringDaysScreen';
 
+/** The screen hands Android's back button to the stack, which needs a navigator; none is mounted. */
+jest.mock('expo-router', () => ({
+  __esModule: true,
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('react').useEffect(effect, [effect]);
+  },
+}));
+
 /**
  * Step 1 "Pick your days" (`340:6661`, `334:6406`, `340:6550`): the window, the tiles and "+", the
  * CTA's two states, held days and the 14-day cap. The window is pinned to the frames' date, so it

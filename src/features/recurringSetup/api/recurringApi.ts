@@ -221,8 +221,9 @@ export function createRecurringApi(api: ApiClient) {
 
     /**
      * 201, `pending_mandate`. Saving holds one pool Cook per visit, and the booking is cancelled
-     * if Autopay is not approved within the policy's window (30 minutes), so a save is only worth
-     * making on the way into the Autopay step. 409 `VISIT_UNAVAILABLE` → re-quote to find which
+     * unless the customer is sent to approve within the policy's hold (6 minutes) and approves
+     * within its approval window (8 minutes from then; V0 DEC-119), so a save is only worth making
+     * on the way into the Autopay step: "Book Now". 409 `VISIT_UNAVAILABLE` → re-quote to find which
      * dates need another time.
      */
     async create(input: RecurringDraftInput, scope: string): Promise<RecurringBookingDto> {

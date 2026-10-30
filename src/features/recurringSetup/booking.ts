@@ -145,7 +145,7 @@ export function useApproveRecurringMandate(launcher: CheckoutLauncher = razorpay
  * or the sweep already cancelled it (`BOOKING_CANCELLED`). Its Cooks are released, so the draft has
  * to be saved again rather than reopening checkout for a booking that will not take it.
  */
-function isLapsedBooking(error: unknown): boolean {
+export function isLapsedBooking(error: unknown): boolean {
   if (!isAppError(error) || error.code !== 'INVALID_BOOKING_STATE') return false;
   const reason = error.details?.['reason'];
   return reason === 'MANDATE_WINDOW_CLOSED' || reason === 'BOOKING_CANCELLED';

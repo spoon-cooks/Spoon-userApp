@@ -219,4 +219,19 @@ describe('countdownLabel', () => {
     expect(countdownLabel(T0 + 5_500, T0)).toBe('0:06');
     expect(countdownLabel(T0, T0 + 1_000)).toBe('0:00');
   });
+
+  it('shows why when the save on "Book Now" fails, before any app is picked', () => {
+    expect(run([{ type: 'SAVE_FAILED', notice: 'slotTaken' }])).toEqual({
+      kind: 'choose',
+      notice: 'slotTaken',
+    });
+    expect(
+      run([
+        { type: 'PICK', app: PHONEPE },
+        { type: 'SAVE_FAILED', notice: 'error' },
+      ]),
+    ).toEqual({ kind: 'choose', notice: 'error' });
+    // Once an app is open, a late save failure does not pull the sheet back.
+    expect(run([{ type: 'SAVE_FAILED', notice: 'error' }], waiting())).toEqual(waiting());
+  });
 });

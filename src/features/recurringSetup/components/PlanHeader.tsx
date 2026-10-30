@@ -151,6 +151,8 @@ const ADD_WIDTH = 32;
 const ADD_SLOP = { left: 6, right: 6 };
 /** Below this a tile's "Plan N" no longer fits, so the row scrolls instead of shrinking it. */
 const MIN_TILE_WIDTH = 120;
+/** The selected tile's `Elevation/1` blur, kept inside the row's clip. */
+const SHADOW_ROOM = 3;
 
 const styles = StyleSheet.create({
   /** `1366:2936` — a 12pt-gapped row 56 tall, the content box's full width. */
@@ -160,8 +162,14 @@ const styles = StyleSheet.create({
     gap: lightTheme.space.md,
     height: TILE_HEIGHT,
   },
-  tiles: { flexGrow: 1, flexShrink: 1, overflow: 'visible' },
-  tilesContent: { flexGrow: 1, gap: lightTheme.space.md },
+  /**
+   * The row clips: with three or more plans it scrolls, and tiles drawn past its edge would sit
+   * under the "+" (device test, 30 Oct 2026). It is widened by the shadow's blur on every side and
+   * padded back by the same, so the clip edge leaves the selected tile's lift whole while the
+   * tiles stay exactly where the frame puts them.
+   */
+  tiles: { flexGrow: 1, flexShrink: 1, overflow: 'hidden', margin: -SHADOW_ROOM },
+  tilesContent: { flexGrow: 1, gap: lightTheme.space.md, padding: SHADOW_ROOM },
   /** `1366:2937` — p 8, 4 between label and caption, a 16pt radius. */
   tile: {
     flexGrow: 1,

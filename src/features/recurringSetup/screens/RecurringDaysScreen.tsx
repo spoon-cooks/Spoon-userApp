@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { useAndroidBackHandler } from '@core/navigation';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { Screen, ScreenHeader, Text } from '@ui';
@@ -107,6 +109,11 @@ export function RecurringDaysScreen({
   initialCapError = false,
   testID = 'recurring-days-screen',
 }: RecurringDaysScreenProps) {
+  // Android back does what the back arrow does, instead of leaving the whole flow.
+  useAndroidBackHandler(() => {
+    onBack();
+    return true;
+  });
   const planning = useRecurringPlanning();
   const { minDays, maxDays, unavailableDayIds, windowStartId } = planning;
   const todayKey = today?.getTime();

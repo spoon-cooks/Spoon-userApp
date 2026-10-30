@@ -14,6 +14,15 @@ import {
 import { RecurringEditDateScreen } from './screens/RecurringEditDateScreen';
 import type { RecurringVisitChoice } from './types';
 
+/** The screen hands Android's back button to the stack, which needs a navigator; none is mounted. */
+jest.mock('expo-router', () => ({
+  __esModule: true,
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('react').useEffect(effect, [effect]);
+  },
+}));
+
 /** The start times come from the backend; with no answer yet, every start in the band is offered. */
 jest.mock('./api', () => ({
   useRecurringStartTimes: () => ({ state: { status: 'loading' } }),

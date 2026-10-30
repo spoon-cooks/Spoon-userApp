@@ -57,6 +57,8 @@ export type AutopayEvent =
     }
   | { readonly type: 'OPEN_FAILED' }
   | { readonly type: 'START_FAILED'; readonly notice: Exclude<AutopayNotice, null> }
+  /** The save on "Book Now" (sheet open) failed before any app was picked. */
+  | { readonly type: 'SAVE_FAILED'; readonly notice: Exclude<AutopayNotice, null> }
   | { readonly type: 'STATUS'; readonly status: MandateStatusViewDto; readonly now: number }
   | { readonly type: 'TICK'; readonly now: number }
   | { readonly type: 'CANCEL' }
@@ -106,6 +108,10 @@ export function autopayReducer(state: AutopayState, event: AutopayEvent): Autopa
       return state.kind === 'creating' ? { kind: 'left', app: state.app } : state;
     case 'START_FAILED':
       return state.kind === 'creating' ? { kind: 'choose', notice: event.notice } : state;
+    case 'SAVE_FAILED':
+      return state.kind === 'choose' || state.kind === 'creating'
+        ? { kind: 'choose', notice: event.notice }
+        : state;
     case 'STATUS':
       return applyStatus(state, event.status, event.now);
     case 'TICK':

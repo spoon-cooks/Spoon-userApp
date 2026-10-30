@@ -7,6 +7,15 @@ import { createStubApi, createTestRuntime, renderWithRuntime } from '@/test/rend
 import type { RecurringPlanDraft } from '../types';
 import { RecurringAutopayScreen } from './RecurringAutopayScreen';
 
+/** The screen hands Android's back button to the stack, which needs a navigator; none is mounted. */
+jest.mock('expo-router', () => ({
+  __esModule: true,
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('react').useEffect(effect, [effect]);
+  },
+}));
+
 /**
  * Step 8, UPI Autopay (DEC-086): what the screen states comes from the quote and eligibility, and
  * "Approve" saves once, opens Razorpay's recurring checkout and verifies — or says why not.
