@@ -255,24 +255,15 @@ describe('LoginOtpScreen — 1934:1080 / 1934:1358 / 1934:1648', () => {
     expect(screen.queryByTestId('login-otp-screen-timer')).toBeNull();
   });
 
-  it('draws Verify & continue with the keyboard up: disabled until 6 digits, never resends a rejected code', () => {
-    const handlers: Record<string, (event: unknown) => void> = {};
-    jest
-      .spyOn(Keyboard, 'addListener')
-      .mockImplementation((event: string, handler: (payload: never) => void) => {
-        handlers[event] = handler as (payload: unknown) => void;
-        return { remove: jest.fn() } as never;
-      });
+  it('always draws Verify & continue: disabled until 6 digits, auto-submits, never resends a rejected code', () => {
     const onVerify = jest.fn();
     const { rerender } = render(<LoginOtpScreen {...base} onVerify={onVerify} />);
-    expect(screen.queryByTestId('login-otp-screen-verify')).toBeNull();
-
-    const show = handlers['keyboardWillShow'] ?? handlers['keyboardDidShow'];
-    act(() => show?.({ endCoordinates: { height: 336 }, duration: 250 }));
     const verifyDisabled = () =>
       screen.getByTestId('login-otp-screen-verify').props.accessibilityState.disabled as boolean;
+    // Shown with the keyboard down too (owner, 2026-10-30).
     expect(verifyDisabled()).toBe(true);
 
+    // The 6th digit submits on its own: no tap needed.
     fireEvent.changeText(input(), '482719');
     expect(onVerify).toHaveBeenCalledTimes(1);
     rerender(
@@ -281,8 +272,6 @@ describe('LoginOtpScreen — 1934:1080 / 1934:1358 / 1934:1648', () => {
     expect(verifyDisabled()).toBe(false);
     fireEvent.press(screen.getByTestId('login-otp-screen-verify'));
     expect(onVerify).toHaveBeenCalledTimes(1);
-
-    jest.restoreAllMocks();
   });
 
   it('keeps the input editable (keyboard up) but ignores keys while verifying', () => {

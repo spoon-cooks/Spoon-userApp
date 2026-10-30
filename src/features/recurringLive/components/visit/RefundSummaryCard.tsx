@@ -43,7 +43,15 @@ export function RefundSummaryCard({
           <Image source={VISIT_MONEY_24} style={styles.glyph24} />
         </View>
         <View style={styles.headerText}>
-          <Text variant="spoonHeading" color="textPrimary">
+          {/* One line beside the badge, as Figma draws it; `simple` so Android does not wrap it. */}
+          <Text
+            variant="spoonHeading"
+            color="textPrimary"
+            numberOfLines={1}
+            textBreakStrategy="simple"
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
+          >
             {refund.title}
           </Text>
           {refund.booking === undefined ? null : (

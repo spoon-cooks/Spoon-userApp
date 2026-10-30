@@ -53,7 +53,7 @@ export interface RatingTierCopy {
    */
   readonly differentCook: boolean;
   readonly submit: string;
-  /** Under the headline once the rating is submitted (`2306:942`). */
+  /** Under the headline once the rating is submitted (`2513:1798`, one line per mood). */
   readonly submittedBody: string;
 }
 
@@ -86,8 +86,8 @@ export function ratingTierCopy(
     feedbackBody: 'A photo or quick note helps us fix it better and fast',
     differentCook: true,
     submit: 'Submit',
-    // `2306:942` — one Submitted card for every score, low ones included.
-    submittedBody: `${cookName} will see your rating and note after the visit.`,
+    // `2513:1798` Mood=Bad — the Spoon team, not the cook, follows a low rating up.
+    submittedBody: 'Our team is looking into this and will get back to you.',
   };
   return {
     loved: {
@@ -101,6 +101,8 @@ export function ratingTierCopy(
       body: `We’ll make sure ${cookName} hears this. What made it amazing?`,
       chipsLabel: 'What made it amazing?',
       ...good,
+      // `2513:1798` Mood=5+.
+      submittedBody: `Your 5+ is on its way to ${cookName}. She’ll hear it after the visit.`,
     },
     belowPar: poor,
     disappointing: poor,

@@ -5,6 +5,7 @@
  * empty by design; `@features/home` (the old Home) is no longer routed.
  */
 export { HomeRedesignView } from './screens/HomeRedesignScreen';
+export { TaxDetailsDialog } from './components/TaxDetailsDialog';
 /** Home's duration carousel, shared with Schedule for Later (`2466:19028`). */
 export { DurationCarousel } from '@ui/v2/DurationCarousel';
 export type {

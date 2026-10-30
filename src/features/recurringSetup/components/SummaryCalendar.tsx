@@ -11,7 +11,6 @@ import {
 
 import { Text } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
-import { innerShadows } from '@ui/tokens/primitives';
 
 import { EDIT_ICON } from '../art';
 import {
@@ -103,10 +102,9 @@ export function SummaryCalendar({
           style={styles.edit}
           testID={testID === undefined ? undefined : `${testID}-edit`}
         >
-          {/* `1079:3219` / `1051:2730` — a 24pt clip with the pencil 1 above centre; gold in edit. */}
-          <View style={[styles.editClip, editing ? styles.editHighlight : null]}>
-            <Image source={EDIT_ICON} style={styles.editIcon} />
-          </View>
+          {/* `1079:3219` — the plain pencil, in edit mode too: no gold disc behind it (owner,
+              2026-10-30, overriding `1051:2730`). */}
+          <Image source={EDIT_ICON} style={styles.editIcon} />
         </Pressable>
       )}
       <View style={styles.calendar}>
@@ -320,14 +318,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  /** `1079:3219` — a 24pt round clip; the pencil is drawn 1 above its top. */
-  editClip: { width: 24, height: 24, borderRadius: 12, overflow: 'hidden' },
-  /** `1051:2730` — `color/brand/primary` with a `0 0 3 rgba(0,0,0,0.08)` lift. */
-  editHighlight: {
-    backgroundColor: lightTheme.colors.surfaceBrand,
-    boxShadow: innerShadows.elevation1,
-  },
-  editIcon: { width: 24, height: 24, marginTop: -1 },
+  editIcon: { width: 24, height: 24 },
   /** `1079:3220` — the weekday row (40), then the dates; the months stand at the right. */
   calendar: { position: 'relative' },
   /** The seven columns end 41.875 short of the right edge, where the months begin. */

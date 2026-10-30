@@ -105,19 +105,33 @@ describe('plansSummaryFrom', () => {
     expect(model.activePlanId).toBe('plan-1');
   });
 
-  it('marks the plan’s dates on the booking’s calendar, first and last apart', () => {
+  it('circles the plan’s dates Past, Today or Upcoming against today', () => {
     expect(plan2.calendar.title).toBe('Plan 2 selected dates');
     const cells = plan2.calendar.rows.flatMap((row) => row.cells).filter((cell) => cell !== null);
     const marked = cells
       .filter((cell) => cell!.mark !== undefined)
       .map((cell) => [cell!.day, cell!.mark]);
     expect(marked).toEqual([
-      [2, 'start'],
-      [7, 'selected'],
-      [17, 'selected'],
-      [18, 'end'],
+      [2, 'past'],
+      [7, 'past'],
+      [17, 'upcoming'],
+      [18, 'upcoming'],
     ]);
     expect(plan2.calendar.rows[0]!.month).toBe('Sept');
+  });
+
+  it('circles a plan date that is today as Today', () => {
+    const onTheDay = plansSummaryFrom(BOOKING, '2026-10-07').plans.find((p) => p.id === 'plan-2')!;
+    const marks = onTheDay.calendar.rows
+      .flatMap((row) => row.cells)
+      .filter((cell) => cell?.mark !== undefined)
+      .map((cell) => [cell!.day, cell!.mark]);
+    expect(marks).toEqual([
+      [2, 'past'],
+      [7, 'today'],
+      [17, 'upcoming'],
+      [18, 'upcoming'],
+    ]);
   });
 
   it('draws each visit’s time of day, length and start time', () => {
