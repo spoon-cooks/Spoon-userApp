@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useAndroidBackHandler } from '@core/navigation';
+
 import { getUserMessage, isAppError } from '@core/errors';
 import { CheckoutNoPaymentMethodsError, NO_UPI_APP_MESSAGE } from '@features/payment';
 import type { CheckoutLauncher } from '@features/payment';
@@ -77,6 +79,11 @@ export function RecurringAutopayScreen({
   launcher,
   testID = 'recurring-autopay-screen',
 }: RecurringAutopayScreenProps) {
+  // Android back does what the back arrow does, instead of leaving the whole flow.
+  useAndroidBackHandler(() => {
+    onBack();
+    return true;
+  });
   const draft = useMemo(() => draftFromPlans(addressId, plans), [addressId, plans]);
   const quote = useRecurringQuote(draft);
   const eligibility = useRecurringEligibility();

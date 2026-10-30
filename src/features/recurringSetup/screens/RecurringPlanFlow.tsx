@@ -19,7 +19,11 @@ import { RecurringVisitDaysScreen } from './RecurringVisitDaysScreen';
  *
  *  - Days → Schedule: every plan without a visit is scheduled in plan order ("P1 → P2 → … Pn").
  *  - Schedule → Summary once no plan is left unscheduled.
- *  - Summary "+" plan: back to the calendar with a blank plan added and active.
+ *  - Summary "+" plan: back to the calendar with a blank plan added and active. Back from there
+ *    returns to that Summary tab and drops the blank plan; reached any other way the calendar is
+ *    the flow's first step, and back leaves the flow (it used to go forward to the first plan
+ *    without a visit — the blank one — or bounce back to the Summary that had just sent it here).
+ *  - Android back on every step does what its back arrow does, rather than leaving the flow.
  *  - Summary "+" visit (`332:6093` …): pick which of the plan's days it runs on, then Schedule
  *    it ("Add this visit"), then back to the Summary on the new visit.
  *  - Summary pencil → a date (`494:1039`): Edit date for that one date (`494:605` …). Saving
@@ -57,6 +61,8 @@ export type RecurringPlanFlowStage =
       readonly activeId?: string | undefined;
       /** The dev preview's way to open with the "Max 14 days reached" error already showing. */
       readonly capError?: boolean | undefined;
+      /** Opened by the Summary's "+": back returns to this Summary tab. */
+      readonly returnTo?: { readonly planIndex: number; readonly visitIndex: number } | undefined;
     }
   | {
       readonly kind: 'schedule';
@@ -155,11 +161,15 @@ function RecurringPlanFlowScreens({ onExit, onComplete, today, seed }: Recurring
       : null,
   );
 
-  const goToDays = (next: readonly RecurringPlanDraft[], activeId?: string) => {
+  const goToDays = (
+    next: readonly RecurringPlanDraft[],
+    activeId?: string,
+    returnTo?: { readonly planIndex: number; readonly visitIndex: number },
+  ) => {
     setUndo(null);
     setPlans(next);
     setDaysVisit((count) => count + 1);
-    setStage({ kind: 'days', activeId });
+    setStage({ kind: 'days', activeId, returnTo });
   };
 
   /** The first plan with no visit, scheduled next; otherwise the Summary on `focusIndex`. */
@@ -177,10 +187,20 @@ function RecurringPlanFlowScreens({ onExit, onComplete, today, seed }: Recurring
   };
 
   if (stage.kind === 'days') {
+    const { returnTo } = stage;
+    const back = () => {
+      if (returnTo === undefined) {
+        onExit();
+        return;
+      }
+      // The blank plan "+" added never got a day: drop it and go back to where "+" was pressed.
+      setPlans(plans.filter((plan) => plan.dayIds.length > 0 || plan.visits.length > 0));
+      setStage({ kind: 'summary', ...returnTo });
+    };
     return (
       <RecurringDaysScreen
         key={`days-${daysVisit}`}
-        onBack={plans.some((plan) => plan.visits.length > 0) ? () => advance(plans, 0) : onExit}
+        onBack={back}
         {...(today === undefined ? {} : { today })}
         initialPlans={plans.map((plan) => ({ id: plan.id, dayIds: plan.dayIds }))}
         {...(stage.activeId === undefined ? {} : { initialActiveId: stage.activeId })}
@@ -366,7 +386,10 @@ function RecurringPlanFlowScreens({ onExit, onComplete, today, seed }: Recurring
       onSelect={(planIndex, visitIndex) => setStage({ kind: 'summary', planIndex, visitIndex })}
       onAddPlan={() => {
         const id = nextPlanId(plans);
-        goToDays([...plans, { id, dayIds: [], visits: [] }], id);
+        goToDays([...plans, { id, dayIds: [], visits: [] }], id, {
+          planIndex: stage.planIndex,
+          visitIndex: stage.visitIndex,
+        });
       }}
       onAddVisit={(planIndex) => {
         const plan = plans[planIndex];

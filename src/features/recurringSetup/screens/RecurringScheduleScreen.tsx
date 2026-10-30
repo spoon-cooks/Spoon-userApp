@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { useAndroidBackHandler } from '@core/navigation';
+
 import { Screen, ScreenHeader } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
 
@@ -78,6 +80,11 @@ export function RecurringScheduleScreen({
   addingVisit,
   testID = 'recurring-schedule-screen',
 }: RecurringScheduleScreenProps) {
+  // Android back does what the back arrow does, instead of leaving the whole flow.
+  useAndroidBackHandler(() => {
+    onBack();
+    return true;
+  });
   const [choice, setChoice] = useState<RecurringVisitChoice | null>(() => completeChoice(initial));
   /** `288:516` — spacing tightens from 24 to 16 once the Start time grid is on screen. */
   const [startShown, setStartShown] = useState(false);

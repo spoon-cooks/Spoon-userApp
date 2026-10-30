@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useAndroidBackHandler } from '@core/navigation';
+
 import { Screen, ScreenHeader, Text } from '@ui';
 import { lightTheme } from '@ui/theme/ThemeProvider';
 
@@ -44,6 +46,11 @@ export function RecurringVisitDaysScreen({
   onContinue,
   testID = 'recurring-visit-days-screen',
 }: RecurringVisitDaysScreenProps) {
+  // Android back does what the back arrow does, instead of leaving the whole flow.
+  useAndroidBackHandler(() => {
+    onBack();
+    return true;
+  });
   const [selected, setSelected] = useState<ReadonlySet<string>>(() => new Set(initialDayIds ?? []));
   const visitLabel = `${ordinal(bookedVisits.length + 1)} visit`;
 

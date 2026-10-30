@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
+import { useAndroidBackHandler } from '@core/navigation';
+
 import { Screen, ScreenHeader } from '@ui';
 
 import { TRASH_ICON } from '../art';
@@ -67,6 +69,11 @@ export function RecurringEditDateScreen({
   initialConfirmingDelete = false,
   testID = 'recurring-edit-date-screen',
 }: RecurringEditDateScreenProps) {
+  // Android back does what the back arrow does, instead of leaving the whole flow.
+  useAndroidBackHandler(() => {
+    onBack();
+    return true;
+  });
   const [field, setField] = useState<EditDateField>(initialField);
   const [draft, setDraft] = useState<EditDateDraft>({ ...draftOf(visit), ...initialDraft });
   const [confirmingDelete, setConfirmingDelete] = useState(initialConfirmingDelete);

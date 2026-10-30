@@ -81,7 +81,7 @@ export default function RecurringSetupRoute() {
     if (sheet === null || addressId === null) return null;
     const draft = draftFromPlans(addressId, sheet.plans);
     return saved?.key === JSON.stringify(draft)
-      ? { kind: 'booking', booking: saved.booking }
+      ? { kind: 'booking', booking: saved.booking, draft }
       : { kind: 'draft', draft };
   }, [sheet, addressId, saved]);
 

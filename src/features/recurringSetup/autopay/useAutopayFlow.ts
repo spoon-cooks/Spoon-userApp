@@ -14,7 +14,7 @@ import {
   useStartRecurringMandate,
 } from '../api';
 import type { RecurringBookingDto, RecurringDraftInput } from '../api';
-import { useApproveRecurringMandate } from '../booking';
+import { isLapsedBooking, useApproveRecurringMandate } from '../booking';
 import { INITIAL_AUTOPAY_STATE, autopayReducer, isPolling } from './machine';
 import type { AutopayState } from './machine';
 import { listInstalledUpiApps, openUpiApp, sortUpiApps } from './upiApps';
@@ -28,8 +28,10 @@ import { useServerUpiIntent } from './useAutopayIntentEnabled';
  *
  * Two ways in:
  *   draft    from the Summary's "Book Now". The booking is saved (one pool Cook held per visit,
- *            `pending_mandate`) on the first app tap, with the same draft-scoped idempotency as
- *            `useBookRecurring`, so a retry can never hold Cooks twice.
+ *            `pending_mandate`) as the sheet opens, with the same draft-scoped idempotency as
+ *            `useBookRecurring`, so a retry can never hold Cooks twice. From that save the Cooks
+ *            are held 6 minutes for an app to be picked; opening the app or Checkout starts the
+ *            8-minute approval window (V0 DEC-119).
  *   booking  a booking already saved: waiting for its first approval, or live with a lapsed
  *            mandate (the re-approve path).
  *
@@ -42,7 +44,12 @@ import { useServerUpiIntent } from './useAutopayIntentEnabled';
  */
 export type AutopaySource =
   | { readonly kind: 'draft'; readonly draft: RecurringDraftInput }
-  | { readonly kind: 'booking'; readonly booking: RecurringBookingDto };
+  | {
+      readonly kind: 'booking';
+      readonly booking: RecurringBookingDto;
+      /** The plans it was saved from, so a booking that lapsed can be saved again. */
+      readonly draft?: RecurringDraftInput | undefined;
+    };
 
 export interface AutopayFlow {
   readonly state: AutopayState;
@@ -103,6 +110,11 @@ export function useAutopayFlow({
     source.kind === 'booking' ? source.booking : null,
   );
   const saved = useRef<{ key: string; booking: RecurringBookingDto } | null>(null);
+  /** The save in flight, so the save on open and an app tap share one request. */
+  const saving = useRef<{ key: string; promise: Promise<RecurringBookingDto> } | null>(null);
+  /** Saves after a lapse take a new idempotency scope: the old one would replay the lapsed booking. */
+  const resaves = useRef(0);
+  const lapsed = useRef(false);
 
   const queryClient = useQueryClient();
   const create = useCreateRecurringBooking();
@@ -136,18 +148,61 @@ export function useAutopayFlow({
     };
   }, [open, userId, applyApps]);
 
+  const { mutateAsync: createBooking } = create;
   const ensureBooking = useCallback(async (): Promise<RecurringBookingDto> => {
-    if (source.kind === 'booking') return source.booking;
-    const key = JSON.stringify(source.draft);
+    const draft = source.draft;
+    if (source.kind === 'booking' && (!lapsed.current || draft === undefined)) {
+      return source.booking;
+    }
+    if (draft === undefined) throw new Error('A draft source always carries its draft');
+    const key = JSON.stringify(draft);
     if (saved.current?.key === key) return saved.current.booking;
-    const created = await create.mutateAsync({
-      input: source.draft,
-      scope: `recurring.booking.create:${key}`,
+    if (saving.current?.key === key) return saving.current.promise;
+    const attempt = resaves.current === 0 ? '' : `#${String(resaves.current)}`;
+    const promise = createBooking({
+      input: draft,
+      scope: `recurring.booking.create:${key}${attempt}`,
     });
-    saved.current = { key, booking: created };
-    onBookingSaved?.(created);
-    return created;
-  }, [source, create, onBookingSaved]);
+    saving.current = { key, promise };
+    try {
+      const created = await promise;
+      saved.current = { key, booking: created };
+      lapsed.current = false;
+      onBookingSaved?.(created);
+      return created;
+    } finally {
+      if (saving.current?.promise === promise) saving.current = null;
+    }
+  }, [source, createBooking, onBookingSaved]);
+
+  /**
+   * The saved booking lapsed: not sent to approve within the hold, or not approved in time. Its
+   * Cooks are released, so the draft is saved again under a new scope (`useBookRecurring` does
+   * the same). False when there is no draft to save again from.
+   */
+  const dropLapsed = useCallback((): boolean => {
+    if (source.draft === undefined) return false;
+    saved.current = null;
+    lapsed.current = true;
+    resaves.current += 1;
+    return true;
+  }, [source]);
+
+  // "Book Now" opened the sheet: save now, so the Cooks are held while an app is picked.
+  const ensureRef = useRef(ensureBooking);
+  useEffect(() => {
+    ensureRef.current = ensureBooking;
+  }, [ensureBooking]);
+  const draftToSave = open && source.kind === 'draft' ? JSON.stringify(source.draft) : null;
+  useEffect(() => {
+    if (draftToSave === null) return;
+    ensureRef.current().then(setBooking, (error: unknown) =>
+      dispatch({
+        type: 'SAVE_FAILED',
+        notice: isAppError(error) && error.code === 'SLOT_UNAVAILABLE' ? 'slotTaken' : 'error',
+      }),
+    );
+  }, [draftToSave]);
 
   const viaCheckout = useCallback(
     async (target: RecurringBookingDto) => {
@@ -163,68 +218,100 @@ export function useAutopayFlow({
           confirmed: outcome.mandate.status === 'confirmed',
           handleMasked: outcome.mandate.handleMasked,
         });
-      } catch {
+      } catch (error) {
+        // A lapsed booking is the caller's to save again.
+        if (isLapsedBooking(error)) throw error;
         dispatch({ type: 'START_FAILED', notice: 'error' });
       }
     },
     [checkout],
   );
 
+  /** Sends the customer to approve `target`: a UPI Intent where the server allows it, else Checkout. */
+  const approve = useCallback(
+    async (target: RecurringBookingDto, app: UpiApp): Promise<void> => {
+      if (!serverIntent) {
+        await viaCheckout(target);
+        return;
+      }
+      let attempt;
+      try {
+        attempt = await startMandate.mutateAsync({
+          id: target.recurringBookingId,
+          scope: `recurring.mandate.intent:${target.recurringBookingId}`,
+          flow: 'intent',
+        });
+      } catch (error) {
+        if (isAppError(error) && error.code === 'PROVIDER_TEMPORARILY_UNAVAILABLE') {
+          await viaCheckout(target);
+          return;
+        }
+        throw error;
+      }
+      if (attempt.intentLink === undefined || attempt.attemptExpiresAt === undefined) {
+        await viaCheckout(target);
+        return;
+      }
+      // A cached read about an earlier attempt must not decide this one.
+      queryClient.removeQueries({
+        queryKey: recurringKeys.mandateStatus(target.recurringBookingId),
+      });
+      const opened = await openUpiApp(attempt.intentLink, app);
+      setNow(Date.now());
+      dispatch(
+        opened
+          ? {
+              type: 'OPENED',
+              link: attempt.intentLink,
+              expiresAt: Date.parse(attempt.attemptExpiresAt),
+              now: Date.now(),
+            }
+          : { type: 'OPEN_FAILED' },
+      );
+    },
+    [startMandate, viaCheckout, queryClient, serverIntent],
+  );
+
   const pick = useCallback(
     (app: UpiApp) => {
       dispatch({ type: 'PICK', app });
       void (async () => {
-        let target: RecurringBookingDto;
+        const save = async (): Promise<RecurringBookingDto | null> => {
+          try {
+            const target = await ensureBooking();
+            setBooking(target);
+            return target;
+          } catch (error) {
+            dispatch({
+              type: 'START_FAILED',
+              notice:
+                isAppError(error) && error.code === 'SLOT_UNAVAILABLE' ? 'slotTaken' : 'error',
+            });
+            return null;
+          }
+        };
+        let target = await save();
+        if (target === null) return;
         try {
-          target = await ensureBooking();
-          setBooking(target);
+          await approve(target, app);
         } catch (error) {
-          dispatch({
-            type: 'START_FAILED',
-            notice: isAppError(error) && error.code === 'SLOT_UNAVAILABLE' ? 'slotTaken' : 'error',
-          });
-          return;
-        }
-        if (!serverIntent) {
-          await viaCheckout(target);
-          return;
-        }
-        try {
-          const attempt = await startMandate.mutateAsync({
-            id: target.recurringBookingId,
-            scope: `recurring.mandate.intent:${target.recurringBookingId}`,
-            flow: 'intent',
-          });
-          if (attempt.intentLink === undefined || attempt.attemptExpiresAt === undefined) {
-            await viaCheckout(target);
+          // Picked after the 6-minute hold (or the approval window) ran out: save the plans
+          // again — the times are re-checked and held afresh — and try once more.
+          if (!isLapsedBooking(error) || !dropLapsed()) {
+            dispatch({ type: 'START_FAILED', notice: 'error' });
             return;
           }
-          // A cached read about an earlier attempt must not decide this one.
-          queryClient.removeQueries({
-            queryKey: recurringKeys.mandateStatus(target.recurringBookingId),
-          });
-          const opened = await openUpiApp(attempt.intentLink, app);
-          setNow(Date.now());
-          dispatch(
-            opened
-              ? {
-                  type: 'OPENED',
-                  link: attempt.intentLink,
-                  expiresAt: Date.parse(attempt.attemptExpiresAt),
-                  now: Date.now(),
-                }
-              : { type: 'OPEN_FAILED' },
-          );
-        } catch (error) {
-          if (isAppError(error) && error.code === 'PROVIDER_TEMPORARILY_UNAVAILABLE') {
-            await viaCheckout(target);
-            return;
+          target = await save();
+          if (target === null) return;
+          try {
+            await approve(target, app);
+          } catch {
+            dispatch({ type: 'START_FAILED', notice: 'error' });
           }
-          dispatch({ type: 'START_FAILED', notice: 'error' });
         }
       })();
     },
-    [ensureBooking, startMandate, viaCheckout, queryClient, serverIntent],
+    [ensureBooking, approve, dropLapsed],
   );
 
   // The server's word, as it arrives.
