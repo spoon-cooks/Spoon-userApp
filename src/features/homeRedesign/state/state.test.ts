@@ -7,6 +7,7 @@ import {
   showsMrp,
 } from './durations';
 import { recommendDuration } from './recommendDuration';
+import type { DishComplexity } from './recommendDuration';
 import { poolBeads, recurringChipFor } from './recurring';
 import { resolveHomeVariant } from './variant';
 import { joinWaitlist, waitlistProgress } from './waitlist';
@@ -103,23 +104,45 @@ describe('booking draft', () => {
 
   it('clamps the counters', () => {
     expect(draftReducer(start, { type: 'setDishes', value: 0 }).dishes).toBe(1);
-    expect(draftReducer(start, { type: 'setPeople', value: 99 }).people).toBe(20);
+    expect(draftReducer(start, { type: 'setDishes', value: 9 }).dishes).toBe(5);
+    expect(draftReducer(start, { type: 'setPeople', value: 99 }).people).toBe(8);
   });
 });
 
 describe('recommendDuration', () => {
-  it("lands the frame's inputs (Complex, 2 dishes, 4 people) on the frame's 1.5 hrs", () => {
-    expect(
-      recommendDuration({ complexity: 'complex', dishes: 2, people: 4 }, DURATIONS)?.minutes,
-    ).toBe(90);
-    expect(
-      recommendDuration({ complexity: 'simple', dishes: 2, people: 4 }, DURATIONS)?.minutes,
-    ).toBe(90);
+  const minutes = (complexity: 'simple' | 'complex', dishes: number, people: number) =>
+    recommendDuration({ complexity, dishes, people }, DURATIONS)?.minutes;
+
+  it("reads the owner's dish-load table, every cell", () => {
+    // Columns: 1-2, 3-4, 5-6, 7-8 people; checked at both ends of each band.
+    const table: [DishComplexity, number[], number[]][] = [
+      ['simple', [1, 2], [30, 45, 60, 90]],
+      ['complex', [1, 2], [45, 60, 90, 90]],
+      ['simple', [3], [60, 90, 90, 120]],
+      ['complex', [3], [90, 90, 120, 120]],
+      ['simple', [4, 5], [90, 120, 120, 150]],
+      ['complex', [4, 5], [120, 120, 150, 150]],
+    ];
+    for (const [complexity, dishCounts, row] of table) {
+      for (const dishes of dishCounts) {
+        row.forEach((expected, column) => {
+          expect(minutes(complexity, dishes, column * 2 + 1)).toBe(expected);
+          expect(minutes(complexity, dishes, column * 2 + 2)).toBe(expected);
+        });
+      }
+    }
+  });
+
+  it('puts 2 dishes in the 1-2 row: Complex, 2 dishes, 4 people is 1 hr', () => {
+    expect(minutes('complex', 2, 4)).toBe(60);
   });
   it('caps at the longest duration on offer', () => {
     expect(
-      recommendDuration({ complexity: 'complex', dishes: 10, people: 20 }, DURATIONS)?.minutes,
-    ).toBe(150);
+      recommendDuration({ complexity: 'complex', dishes: 5, people: 8 }, [
+        DURATIONS[0]!,
+        DURATIONS[3]!,
+      ])?.minutes,
+    ).toBe(90);
   });
   it('returns null with nothing on offer', () => {
     expect(recommendDuration({ complexity: 'simple', dishes: 1, people: 1 }, [])).toBeNull();

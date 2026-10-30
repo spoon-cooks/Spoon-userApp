@@ -22,8 +22,8 @@ export interface BookingDraft {
   readonly people: number;
 }
 
-export const DISH_LIMITS = { min: 1, max: 10 } as const;
-export const PEOPLE_LIMITS = { min: 1, max: 20 } as const;
+export const DISH_LIMITS = { min: 1, max: 5 } as const;
+export const PEOPLE_LIMITS = { min: 1, max: 8 } as const;
 
 export type DraftAction =
   | { type: 'setMode'; mode: BookingMode }
