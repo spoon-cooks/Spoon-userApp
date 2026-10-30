@@ -88,7 +88,13 @@ export function CookArrivalNote({
             style={styles.icon24}
           />
         </View>
-        <Text style={styles.emphasis} accessibilityRole="header">
+        {/* One line in both frames; `simple` breaking, as the reassigned title (Android). */}
+        <Text
+          style={styles.emphasis}
+          accessibilityRole="header"
+          numberOfLines={1}
+          textBreakStrategy="simple"
+        >
           {early
             ? 'Your cook might arrive up to 15 minutes early'
             : 'Your cook might arrive up to 10 minutes late'}
