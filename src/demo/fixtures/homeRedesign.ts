@@ -43,7 +43,6 @@ const DURATIONS: readonly DurationOption[] = [
     mrpPaise: 15000,
     payablePaise: 7500,
     available: BOTH,
-    mostBooked: true,
   },
   {
     id: 'd90',
