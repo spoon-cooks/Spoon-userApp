@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
+import type { Href } from 'expo-router';
 
 import { ready } from '@core/data';
+import { ADDRESS_STEPS_VERSION } from '@features/auth';
 import type { ScreenQuery } from '@core/data';
 
 import { EMPTY_ADDRESS_DRAFT, useAddressDraftStore } from '@core/store/addressDraftStore';
@@ -472,4 +474,52 @@ export function useAddressGate(options: { enabled?: boolean } = {}): AddressGate
   const saved = addresses.state.data;
   if (saved.length === 0) return 'required';
   return saved.some(isAddressUsable) ? 'satisfied' : 'required';
+}
+
+/* ------------------------------------------------------------------------ redoing old addresses */
+
+/**
+ * Whether a saved address was last saved by an older version of the address steps (owner, 31 Oct
+ * 2026: every customer goes through the new steps again for every saved address). An address from
+ * a V0 that does not record versions is never outdated.
+ */
+export function isAddressOutdated(address: AddressDto): boolean {
+  return address.detailsVersion !== undefined && address.detailsVersion < ADDRESS_STEPS_VERSION;
+}
+
+/**
+ * Old addresses this app run will not ask about again. V0 refuses any edit to an address an
+ * upcoming booking uses (R-AREA-10), so such an address cannot be redone yet; asking again on the
+ * next launch, once the booking is over, is what keeps the customer from being stuck on it now.
+ */
+const deferredRedos = new Set<string>();
+
+export function deferAddressRedo(addressId: string): void {
+  deferredRedos.add(addressId);
+}
+
+/** The first saved address still owed the current address steps, or `null` when none is. */
+export function addressToRedo(addresses: readonly AddressDto[]): string | null {
+  return (
+    addresses.find((address) => isAddressOutdated(address) && !deferredRedos.has(address.id))?.id ??
+    null
+  );
+}
+
+/**
+ * Where the customer must go to redo an old address: the edit flow for it, map first, with no way
+ * back out (`onboarding=1`). Saving lands on Home, whose gate opens the next one, until none is
+ * left. `resolving` while the list is read; `null` when nothing is owed.
+ */
+export function useAddressRedo(options: { enabled?: boolean } = {}): 'resolving' | Href | null {
+  const addresses = useAddresses({ enabled: options.enabled ?? true });
+  if (options.enabled === false) return 'resolving';
+  if (addresses.state.status === 'loading') return 'resolving';
+  if (addresses.state.status !== 'ready') return null;
+  const id = addressToRedo(addresses.state.data);
+  return id === null ? null : addressRedoHref(id);
+}
+
+export function addressRedoHref(addressId: string): Href {
+  return `/address/location?onboarding=1&addressId=${encodeURIComponent(addressId)}` as Href;
 }

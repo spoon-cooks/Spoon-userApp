@@ -37,6 +37,8 @@ export const authUserSchema = z.object({
    * user has no `user_profiles` row. The client never derives this from a missing name.
    */
   onboardingRequired: z.boolean(),
+  /** `GET /v1/me`'s flag of the same name: the current profile steps are still owed. */
+  profileUpdateRequired: z.boolean().optional(),
 });
 
 export type AuthUser = z.infer<typeof authUserSchema>;
@@ -126,6 +128,12 @@ export const profileDataSchema = z.object({
    * with the server the moment either side moved, so there isn't one.
    */
   profileComplete: z.boolean(),
+  /**
+   * Server-owned: the customer still owes the current version of the profile steps (owner, 31 Oct
+   * 2026, every existing customer redoes them once). Absent from a V0 that predates it, which is
+   * also how the app knows not to send `flowVersion` there (`supportsStepVersions`).
+   */
+  profileUpdateRequired: z.boolean().optional(),
 });
 
 export type ProfileData = z.infer<typeof profileDataSchema>;
@@ -158,6 +166,11 @@ export interface ProfileUpdateRequest {
   readonly oilLevel?: string | null;
   readonly gheeOnly?: boolean | null;
   readonly mealHassles?: readonly string[] | null;
+  /**
+   * The version of the profile steps that sent this save (`PROFILE_STEPS_VERSION`). Sent only to a
+   * V0 that reports `profileUpdateRequired`: an older one refuses keys it does not know.
+   */
+  readonly flowVersion?: number;
 }
 
 /**

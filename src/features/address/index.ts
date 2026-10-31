@@ -20,8 +20,13 @@
  */
 
 export {
+  addressRedoHref,
+  addressToRedo,
+  deferAddressRedo,
+  isAddressOutdated,
   isAddressUsable,
   useAddressGate,
+  useAddressRedo,
   useAddressDetailsData,
   useAddressEditData,
   useAddressLocationData,

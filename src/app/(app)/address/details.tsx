@@ -8,9 +8,11 @@ import {
   RemoveAddressSheet,
   addressCreateScope,
   cardLineOf,
+  deferAddressRedo,
   detailsFieldsFrom,
   detailsFormFrom,
   googleReverseGeocode,
+  isAddressOutdated,
   labelKindOf,
   pinnedSummaryOf,
   resolveAddressSavePoint,
@@ -24,6 +26,7 @@ import {
 } from '@features/address';
 import type { AddressDetailsForm, AddressToastNotice, SavedAddressItem } from '@features/address';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
+import { ADDRESS_STEPS_VERSION, useStepVersionsSupported } from '@features/auth';
 import { getUserMessage, isAppError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
 import { InfoDialog, QueryBoundary } from '@ui';
@@ -168,6 +171,8 @@ export default function AddressDetailsRoute() {
   const goBack = useSafeBack(listHref);
   // One screen per tap: a quick double tap must not open the same screen twice.
   const guard = useNavigationGuard();
+  // Whether this save may say which version of the address steps sent it (`stepVersions.ts`).
+  const versioned = useStepVersionsSupported();
 
   /**
    * Leaves the flow: the map/details pair collapses, then Home (onboarding) or the saved list,
@@ -223,6 +228,9 @@ export default function AddressDetailsRoute() {
             areaLine: area.areaLine ?? '',
           }),
       ...point,
+      // Every save from this form is the current address steps: a new address is never asked
+      // again, and an old one stops being owed (owner, 31 Oct 2026).
+      ...(versioned ? { detailsVersion: ADDRESS_STEPS_VERSION } : {}),
     };
 
     const saved =
@@ -248,6 +256,14 @@ export default function AddressDetailsRoute() {
         // An upcoming booking uses this address, so the backend refuses any edit (R-AREA-10).
         // Not a failure to retry: a toast, and the customer stays on the form.
         if (isAppError(thrown) && thrown.code === 'ADDRESS_IN_USE') {
+          // Redoing an old address an upcoming booking still uses: it cannot change yet, so this
+          // run moves on to the next one and the next launch asks again (`deferAddressRedo`).
+          if (onboarding === '1' && editingId !== null) {
+            deferAddressRedo(editingId);
+            clearDraft();
+            exit();
+            return;
+          }
           setNotice((previous) => ({
             id: (previous?.id ?? 0) + 1,
             message: 'This address is already used in an upcoming booking',
@@ -287,6 +303,7 @@ export default function AddressDetailsRoute() {
             onRetrySocieties={societies.refetch}
             locationReady={locationReady}
             pinMoved={pinMoved}
+            redo={existing !== null && isAddressOutdated(existing)}
           />
         )}
       </QueryBoundary>

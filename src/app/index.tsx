@@ -3,7 +3,7 @@ import type { Href } from 'expo-router';
 
 import { canAccessApp, isGuest, isResolving } from '@core/auth';
 import { useSessionStore } from '@core/store';
-import { useAddressGate, useTriedPlace } from '@features/address';
+import { useAddressGate, useAddressRedo, useTriedPlace } from '@features/address';
 import { useMe } from '@features/auth';
 import { SplashLoading } from '@features/loading';
 import { useProfileGate } from '@features/profile';
@@ -59,6 +59,8 @@ export default function Index() {
   // signed out 401s and burns a refresh against the token family.
   const profileGate = useProfileGate({ enabled: authenticated });
   const addressGate = useAddressGate({ enabled: authenticated });
+  // A saved address that predates the current address steps is redone, one by one (31 Oct 2026).
+  const addressRedo = useAddressRedo({ enabled: authenticated });
   // A customer refused at a place, with no saved address, belongs on Home's inactive-pincode
   // variant for it (`1302:3539`), not on the map they were refused from.
   const me = useMe({ enabled: authenticated });
@@ -78,7 +80,7 @@ export default function Index() {
 
   // Still opening. Holding here is what stops the flicker: every downstream destination is a
   // `Redirect`, so the first screen the customer sees is the right one.
-  if (profileGate === 'resolving' || addressGate === 'resolving') {
+  if (profileGate === 'resolving' || addressGate === 'resolving' || addressRedo === 'resolving') {
     return <SplashLoading />;
   }
 
@@ -93,6 +95,8 @@ export default function Index() {
     // `onboarding=1` is what tells `53:31` to draw no back control and to end at Home.
     return <Redirect href={'/address/location?onboarding=1' as Href} />;
   }
+
+  if (addressRedo !== null) return <Redirect href={addressRedo} />;
 
   return <Redirect href="/home" />;
 }
