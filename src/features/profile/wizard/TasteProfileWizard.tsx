@@ -37,6 +37,7 @@ import {
 } from '../fields';
 import type { WizardStepId } from '../fields';
 import {
+  NO_GENDER_PREFERENCE,
   canAddCuisine,
   canContinueStep,
   canDecrement,
@@ -512,7 +513,8 @@ function CookStep({
               key={option.id}
               option={option}
               compact
-              selected={values.genderPreference === option.id}
+              // No answer (an older draft, or the picked tile tapped off) is "No preference".
+              selected={(values.genderPreference ?? NO_GENDER_PREFERENCE) === option.id}
               onPress={() =>
                 update((current) => ({
                   ...current,

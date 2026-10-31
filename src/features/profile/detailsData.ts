@@ -19,7 +19,7 @@ import {
   isMealSetup,
 } from './fields';
 import type { WizardStepId } from './fields';
-import { EMPTY_PROFILE_DETAILS, showsNonVegPreferences } from './validation';
+import { EMPTY_PROFILE_DETAILS, NO_GENDER_PREFERENCE, showsNonVegPreferences } from './validation';
 import type { ProfileDetailsValues } from './validation';
 
 /**
@@ -73,7 +73,7 @@ export function profileDetailsFromMe(me: MeResponse): ProfileDetailsValues {
     grownUpEating: [...new Set(cuisines)],
     oilLevel: known(OIL_STOPS, me.oilLevel) ?? EMPTY_PROFILE_DETAILS.oilLevel,
     gheeOnly: me.gheeOnly ?? false,
-    genderPreference: known(GENDER_OPTIONS, me.genderPreference),
+    genderPreference: known(GENDER_OPTIONS, me.genderPreference) ?? NO_GENDER_PREFERENCE,
     // Kept even when it is V8's `my-state`, which no tile draws: the customer did not change it.
     regionPreference: me.regionPreference,
     mealStructure,
@@ -95,7 +95,7 @@ export function profileUpdateFrom(values: ProfileDetailsValues): ProfileUpdateRe
     grownUpEating: [...values.grownUpEating],
     oilLevel: values.oilLevel,
     gheeOnly: values.gheeOnly,
-    genderPreference: values.genderPreference,
+    genderPreference: values.genderPreference ?? NO_GENDER_PREFERENCE,
     regionPreference: values.regionPreference,
     mealStructure: values.mealStructure,
     mealHassles: [...values.mealHassles],

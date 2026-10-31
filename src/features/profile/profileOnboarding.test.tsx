@@ -121,7 +121,8 @@ const REQUIRED_ONLY_PAYLOAD = {
   grownUpEating: [],
   oilLevel: 'light',
   gheeOnly: false,
-  genderPreference: null,
+  // "No preference" is chosen by default, so it is sent even when untouched (31 Oct 2026).
+  genderPreference: 'either',
   regionPreference: null,
   mealStructure: 'regular-cook',
   mealHassles: [],
@@ -446,7 +447,10 @@ describe('saving', () => {
     fireEvent.press(screen.getByTestId('taste-profile-oil-moderate'));
     fireEvent.press(screen.getByTestId('taste-profile-ghee'));
     fireEvent.press(cta());
-    fireEvent.press(await screen.findByTestId('taste-profile-gender-either'));
+    // "No preference" is already chosen on arrival, and is what is sent untouched (31 Oct 2026).
+    await screen.findByTestId('taste-profile-gender-either');
+    expect(isChecked('taste-profile-gender-either')).toBe(true);
+    expect(isChecked('taste-profile-gender-female')).toBe(false);
     fireEvent.press(screen.getByTestId('taste-profile-region-south-indian'));
     fireEvent.press(screen.getByTestId('taste-profile-meal-office-meals'));
     fireEvent.press(screen.getByTestId('taste-profile-hassle-office-weekends'));
