@@ -277,7 +277,7 @@ export default function RecurringVisitRoute() {
                   ),
                 })}
             onPrepChange={savePrep}
-            onBookAgain={guard(() => router.push('/recurring-setup/days'))}
+            onBookAgain={guard(() => router.push('/recurring'))}
             onBookOneTime={guard(() =>
               detail === null
                 ? undefined

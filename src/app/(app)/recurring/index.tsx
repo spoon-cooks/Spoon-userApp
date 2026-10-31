@@ -16,7 +16,8 @@ import { useRecurringEligibility } from '@features/recurringSetup';
  *
  * The explainer video's URL is set in one place, `@features/recurringLanding`'s `video.ts`.
  *
- * Opened from Home's "Check Recurring" chip (a household below the unlock).
+ * Opened on every Recurring booking, first or not (owner, 31 Oct 2026): Home's "Check Recurring"
+ * and "Book Recurring" chips and a visit's "Book again" all land here, never on the plan flow.
  */
 export default function RecurringRoute() {
   const router = useRouter();
