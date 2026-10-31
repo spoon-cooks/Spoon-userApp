@@ -19,7 +19,7 @@ import { PrimaryButton } from '@ui/v2/Buttons';
 import { C, SHADOW_1, T, figmaGradient } from '@ui/v2/theme';
 
 import { countLabel, monthGroupsFrom } from './model';
-import type { BookingKind, BookingRow, NextVisit } from './model';
+import type { BookingKind, BookingRow, NextVisit, StatusGlyph } from './model';
 
 export type MyBookingsTab = 'upcoming' | 'past';
 
@@ -261,20 +261,27 @@ function RowList({
   );
 }
 
-function KindWell({ kind, size }: { kind: BookingKind; size: 44 | 32 }) {
+const GLYPH_ART = {
+  check: ACCOUNTS_ART.wellCheck,
+  rescheduled: ACCOUNTS_ART.recurring,
+  closed: ACCOUNTS_ART.wellClose,
+  pending: ACCOUNTS_ART.calendar,
+} as const;
+
+/** The status well: `#FFEF99`, or `#FFF7CC` behind a cross (`2192:4421`). */
+function StatusWell({ glyph, size }: { glyph: StatusGlyph; size: 44 | 32 }) {
   const icon = size === 44 ? 22 : 16;
+  const source = glyph === 'check' && size === 32 ? ACCOUNTS_ART.wellCheckSmall : GLYPH_ART[glyph];
   return (
     <View
       style={[
         styles.well,
         { width: size, height: size, borderRadius: size / 2 },
-        kind === 'recurring' ? styles.wellRecurring : styles.wellOneTime,
+        glyph === 'closed' ? styles.wellClosed : styles.wellOpen,
       ]}
+      testID={`${TEST_ID}-well-${glyph}`}
     >
-      <Image
-        source={kind === 'recurring' ? ACCOUNTS_ART.recurring : ACCOUNTS_ART.calendar}
-        style={{ width: icon, height: icon }}
-      />
+      <Image source={source} style={{ width: icon, height: icon }} />
     </View>
   );
 }
@@ -296,7 +303,7 @@ function BookingCard({ row, onPress }: { row: BookingRow; onPress: () => void })
       style={[styles.card, row.dimmed && styles.dimmed]}
       testID={`${TEST_ID}-card-${row.id}`}
     >
-      <KindWell kind={row.kind} size={44} />
+      <StatusWell glyph={row.glyph} size={44} />
       <View style={styles.info}>
         <View style={styles.infoTop}>
           <Text style={[T.bodyStrong, styles.shrink]} numberOfLines={1}>
@@ -356,7 +363,7 @@ function NextVisitCard({ visit, onPress }: { visit: NextVisit; onPress: () => vo
       </LinearGradient>
       <View style={styles.nextBottom}>
         <View style={styles.nextLeft}>
-          <KindWell kind={visit.kind} size={32} />
+          <StatusWell glyph={visit.glyph} size={32} />
           <Text style={T.body}>{visit.statusLine}</Text>
         </View>
         <KindTag kind={visit.kind} />
@@ -469,8 +476,8 @@ const styles = StyleSheet.create({
   },
   dimmed: { opacity: 0.7 },
   well: { alignItems: 'center', justifyContent: 'center' },
-  wellRecurring: { backgroundColor: C.tint },
-  wellOneTime: { backgroundColor: C.subtle },
+  wellOpen: { backgroundColor: C.border },
+  wellClosed: { backgroundColor: C.subtle },
   info: { flex: 1, gap: 8 },
   infoTop: {
     flexDirection: 'row',

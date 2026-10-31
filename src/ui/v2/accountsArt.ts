@@ -37,6 +37,10 @@ export const ACCOUNTS_ART = {
   calendar: img(require('../../../assets/figma/accounts-v2/icon-calendar.png')),
   recurring: img(require('../../../assets/figma/accounts-v2/icon-recurring.png')),
   stateConfirmed: img(require('../../../assets/figma/accounts-v2/state-confirmed.png')),
+  /** My bookings card wells (`2980:15304` / `2980:15308` / `2980:15300`): the booking's status. */
+  wellCheck: img(require('../../../assets/figma/accounts-v2/well-check.png')),
+  wellCheckSmall: img(require('../../../assets/figma/accounts-v2/well-check-small.png')),
+  wellClose: img(require('../../../assets/figma/accounts-v2/well-close.png')),
   skyGlow: img(require('../../../assets/figma/accounts-v2/sky-glow.png')),
   skyRays: img(require('../../../assets/figma/accounts-v2/sky-rays.png')),
   skySun: img(require('../../../assets/figma/accounts-v2/sky-sun.png')),
