@@ -91,4 +91,4 @@ export const EXPLAINER_PROMPT = 'Tap to watch!';
 /** `970:5531` — the design reads "Swipe to repwatch", a typo for "rewatch". */
 export const EXPLAINER_WATCHED = 'Watched · Swipe to rewatch';
 /** `970:5532`. */
-export const EXPLAINER_COVERS = '3:45 sec · Covers Plans, Visits, Cook Pool and more!';
+export const EXPLAINER_COVERS = 'Under 2 mins · Covers Plans, Visits, Cook Pool and more!';

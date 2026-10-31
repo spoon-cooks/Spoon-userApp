@@ -159,33 +159,33 @@ describe('the explainer video', () => {
     fireEvent.press(screen.getByTestId('recurring-landing-explainer'));
     expect(screen.getByTestId('recurring-landing-player')).toBeTruthy();
     expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:00');
-    expect(screen.getByTestId('recurring-landing-player-total').props.children).toBe('3:45');
+    expect(screen.getByTestId('recurring-landing-player-total').props.children).toBe('1:17');
     act(() => {
       jest.advanceTimersByTime(3000);
     });
     expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:03');
   });
 
-  it('opens at 1:52 when a preview asks, playing', () => {
-    renderLanding({ initialPlayerAt: 112 });
-    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('1:52');
+  it('opens at 0:38 when a preview asks, playing', () => {
+    renderLanding({ initialPlayerAt: 38 });
+    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:38');
     expect(screen.getByLabelText('Pause')).toBeTruthy();
   });
 
   it('pauses, plays, and skips 10 s each way', () => {
-    renderLanding({ initialPlayerAt: 112 });
+    renderLanding({ initialPlayerAt: 38 });
     fireEvent.press(screen.getByTestId('recurring-landing-player-toggle'));
     expect(screen.getByLabelText('Play')).toBeTruthy();
     act(() => {
       jest.advanceTimersByTime(5000);
     });
-    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('1:52');
+    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:38');
 
     fireEvent.press(screen.getByTestId('recurring-landing-player-forward'));
-    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('2:02');
+    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:48');
     fireEvent.press(screen.getByTestId('recurring-landing-player-back'));
     fireEvent.press(screen.getByTestId('recurring-landing-player-back'));
-    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('1:42');
+    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:28');
   });
 
   it('seeks from a touch on the scrubber', () => {
@@ -193,11 +193,12 @@ describe('the explainer video', () => {
     const scrubber = screen.getByTestId('recurring-landing-player-scrubber');
     fireEvent(scrubber, 'layout', { nativeEvent: { layout: { width: 300, height: 4 } } });
     fireEvent(scrubber, 'responderGrant', { nativeEvent: { locationX: 150 } });
-    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('1:52');
+    // Halfway along a 1:17 video.
+    expect(screen.getByTestId('recurring-landing-player-elapsed').props.children).toBe('0:38');
   });
 
   it('is watched when the playhead reaches the end, and the page says so', () => {
-    renderLanding({ initialPlayerAt: 220 });
+    renderLanding({ initialPlayerAt: 72 });
     expect(screen.getByText('Plans, Visits, Cook Pool & more')).toBeTruthy();
     expect(screen.queryByText('Watched · Swipe to rewatch')).toBeNull();
 
@@ -210,7 +211,9 @@ describe('the explainer video', () => {
     expect(screen.getByText('Plans, visits and more')).toBeTruthy();
     expect(screen.queryByText('Plans, Visits, Cook Pool & more')).toBeNull();
     expect(screen.getByText('Watched · Swipe to rewatch')).toBeTruthy();
-    expect(screen.getByText('3:45 sec · Covers Plans, Visits, Cook Pool and more!')).toBeTruthy();
+    expect(
+      screen.getByText('Under 2 mins · Covers Plans, Visits, Cook Pool and more!'),
+    ).toBeTruthy();
   });
 
   it('is watched when it is scrubbed to the end', () => {
