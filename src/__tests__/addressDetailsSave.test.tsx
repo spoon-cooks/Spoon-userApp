@@ -335,6 +335,32 @@ describe('editing an address (1870:2672)', () => {
     expect(isDisabled()).toBe(true);
   });
 
+  it('keeps Save off when the map hands back the saved pin a hair off, and on for a real move', async () => {
+    // Edit passes through the map; addr-1 is saved at 12.902746, 77.648817.
+    const pointNear = (latitude: number, longitude: number) =>
+      useAddressDraftStore.getState().setPoint({
+        latitude,
+        longitude,
+        placeId: null,
+        serviceable: true,
+        editingId: 'addr-1',
+        street: null,
+        city: null,
+        state: null,
+        pincode: null,
+      });
+    pointNear(12.902756, 77.648822); // about 1 m away: the map's settle
+    const first = render();
+    await screen.findByTestId('address-details');
+    expect(isDisabled()).toBe(true);
+    first.unmount();
+
+    pointNear(12.9032, 77.6492); // about 60 m away: moved by the customer
+    render();
+    await screen.findByTestId('address-details');
+    expect(isDisabled()).toBe(false);
+  });
+
   it('updates the same address at its own point, and returns to the list it came from', async () => {
     render();
     await screen.findByTestId('address-details');

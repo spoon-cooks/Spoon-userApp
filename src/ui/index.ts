@@ -109,6 +109,7 @@ export { LaunchSplash } from './feedback/LaunchSplash';
 export { LoadingState } from './feedback/LoadingState';
 export type { LoadingStateProps, LoadingVariant } from './feedback/LoadingState';
 export { TossLoading } from './feedback/TossLoading';
+export { FullScreenLoadingHost } from './feedback/FullScreenLoading';
 export type { TossLoadingProps } from './feedback/TossLoading';
 export { QueryBoundary } from './feedback/QueryBoundary';
 export type { QueryBoundaryProps } from './feedback/QueryBoundary';
