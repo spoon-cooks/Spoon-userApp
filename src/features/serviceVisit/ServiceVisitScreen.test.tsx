@@ -108,6 +108,24 @@ describe('model', () => {
     });
     expect(servicePhaseOf(cooking, now)).toBe('cooking');
     expect(minutesLeft(cooking, now)).toBe(48);
+
+    // A 30-min visit read a moment before its start (a clock not yet ticked past the Start OTP, or
+    // a phone behind the server) said "31" before settling on 30 (device test, 31 Oct 2026).
+    const thirty = booking({
+      status: 'cooking',
+      durationMinutes: 30,
+      totalDurationMinutes: 30,
+      timing: {
+        arrivedAt: null,
+        actualStart: '2026-10-14T03:28:00.000Z',
+        expectedEnd: '2026-10-14T03:58:00.000Z',
+        actualEnd: null,
+      },
+    });
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:27:40.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:28:00.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:28:01.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:29:01.000Z'))).toBe(29);
     expect(servicePhaseOf(cooking, new Date('2026-10-14T04:30:00.000Z'))).toBe('timesUp');
     expect(servicePhaseOf(booking({ status: 'created' }), now)).toBeNull();
     expect(servicePhaseOf(booking({ status: 'cancelled' }), now)).toBeNull();

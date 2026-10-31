@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
+import { currentSkewMs } from '@core/time';
 
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
@@ -99,7 +100,7 @@ export function ServiceVisitHost({
   onBookAnother,
   onViewRefunds,
 }: ServiceVisitHostProps) {
-  const now = useMinuteClock();
+  const now = useMinuteClock(phase);
   const live =
     phase === 'onTheWay' || phase === 'arrived' || phase === 'cooking' || phase === 'timesUp';
   const tracking = useTracking(live ? booking.id : null, { poll: true });
@@ -365,14 +366,31 @@ export function ServiceVisitHost({
   );
 }
 
-/** Ticks every 30s: the countdown and the ETA move in whole minutes (dev note `2165:12402`). */
-function useMinuteClock(): Date {
-  const [now, setNow] = useState(() => new Date());
+/**
+ * Ticks every 30s: the countdown and the ETA move in whole minutes (dev note `2165:12402`).
+ *
+ * Read on the server's clock, as Home and My bookings are: the end time is the server's, so a
+ * phone running behind it would otherwise count a minute too many (device test, 31 Oct 2026).
+ * It also reads again whenever `phase` changes, so the Start OTP's "Cooking" starts from now
+ * rather than from a reading taken up to 30s earlier, while the screen still said "Arrived".
+ */
+function useMinuteClock(phase: ServicePhase): Date {
+  const [now, setNow] = useState(serverNow);
+  const [readFor, setReadFor] = useState(phase);
+  if (readFor !== phase) {
+    // React's "adjust state when a prop changes", done in render rather than an effect.
+    setReadFor(phase);
+    setNow(serverNow());
+  }
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 30_000);
+    const timer = setInterval(() => setNow(serverNow()), 30_000);
     return () => clearInterval(timer);
   }, []);
   return now;
+}
+
+function serverNow(): Date {
+  return new Date(Date.now() - currentSkewMs());
 }
 
 export { servicePhaseOf };

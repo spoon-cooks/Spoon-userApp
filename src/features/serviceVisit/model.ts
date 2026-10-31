@@ -143,11 +143,20 @@ export function endsAt(booking: BookingDetailDto): string | null {
   return new Date(Date.parse(start) + totalMinutes(booking) * 60_000).toISOString();
 }
 
-/** Dev note `2165:12402`: time left, whole minutes, never negative. */
+/**
+ * Dev note `2165:12402`: time left, whole minutes, never negative, and never more than the visit's
+ * booked total.
+ *
+ * The cap is the fix for a 30-min visit that opened on "31" (device test, 31 Oct 2026). Time left
+ * rounds UP, so any `now` even a second before the true start reads one minute over: a clock read
+ * while the screen showed "Arrived" and not yet ticked past the Start OTP, or a phone whose clock
+ * runs behind the server's. A visit cannot have more left than it was booked for.
+ */
 export function minutesLeft(booking: BookingDetailDto, now: Date): number {
+  const total = totalMinutes(booking);
   const end = endsAt(booking);
-  if (end === null) return totalMinutes(booking);
-  return Math.max(0, Math.ceil((Date.parse(end) - now.getTime()) / 60_000));
+  if (end === null) return total;
+  return Math.min(total, Math.max(0, Math.ceil((Date.parse(end) - now.getTime()) / 60_000)));
 }
 
 /** "1 : 42" — the hour tile (0–2) and the two minute tiles. */
