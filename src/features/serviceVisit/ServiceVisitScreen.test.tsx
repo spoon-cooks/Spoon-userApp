@@ -45,7 +45,7 @@ const option = (minutes: number, totalAmountPaise: number) => ({
 
 const MODEL: ServiceVisitModel = {
   phase: 'assigned',
-  title: 'On-time visit',
+  title: 'One-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: 'SPOON TRAINED · VERIFIED', name: 'Cook Meera', note: '' },
@@ -134,7 +134,7 @@ describe('model', () => {
 describe('Service flow screen (2165:11841)', () => {
   it('assigned: banner, cook, recipe and before-arrival checklist, with Modify booking', () => {
     renderPhase({ phase: 'assigned' });
-    expect(screen.getByText('On-time visit')).toBeTruthy();
+    expect(screen.getByText('One-time visit')).toBeTruthy();
     expect(screen.getByText('ASSIGNED')).toBeTruthy();
     expect(screen.getByTestId('service-visit-prep')).toBeTruthy();
     expect(screen.getByTestId('service-visit-dock-modify')).toBeTruthy();

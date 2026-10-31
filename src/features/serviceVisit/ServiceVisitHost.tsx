@@ -181,8 +181,8 @@ export function ServiceVisitHost({
     // `2878:7730` / `2878:7959`: the cook is due early or late against the booked time (§8).
     cookArrival: booking.cookArrival ?? null,
     title:
-      // Figma names every one-time visit, Instant or scheduled, "On-time visit".
-      link !== null ? 'Recurring visit' : 'On-time visit',
+      // Every one-time visit, Instant or scheduled, is "One-time visit" (Figma's "On-time" was a typo, 31 Oct 2026).
+      link !== null ? 'Recurring visit' : 'One-time visit',
     bannerTitle:
       start === null
         ? length

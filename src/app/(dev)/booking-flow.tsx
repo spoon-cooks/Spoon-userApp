@@ -70,7 +70,7 @@ const option = (minutes: number, totalAmountPaise: number) => ({
 
 const MODEL: ServiceVisitModel = {
   phase: 'assigned',
-  title: 'On-time visit',
+  title: 'One-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: {
@@ -357,7 +357,7 @@ function VisitPreview({ view }: { view: string }) {
     <>
       <VisitDetailsScreen
         model={model}
-        title="On-time visit"
+        title="One-time visit"
         onBack={() => router.back()}
         onPaymentDetails={() => setOpen(true)}
         onHelp={() => undefined}

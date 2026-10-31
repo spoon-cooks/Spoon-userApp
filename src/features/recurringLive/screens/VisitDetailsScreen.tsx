@@ -86,7 +86,7 @@ export interface VisitDetailsScreenProps {
   readonly addingCookToPool?: boolean;
   /** Completed only: tip the cook (only while the server allows it). */
   readonly onTipCook?: (() => void) | undefined;
-  /** The header title; "Recurring visit" by default, "On-time visit" for a one-time booking. */
+  /** The header title; "Recurring visit" by default, "One-time visit" for a one-time booking. */
   readonly title?: string | undefined;
   /**
    * The action buttons scroll with the page instead of pinning to the bottom — a one-time visit
