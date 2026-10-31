@@ -34,32 +34,40 @@ export interface PastTab extends BookingTabPaging {
 }
 
 /**
- * A finished booking (from `GET /v1/me/bookings`) whose booked slot is still ahead — a visit
- * cancelled for a later date, or one completed before its window closed. Dev note `2192:4489`:
- * "Cancelled … stays here until its date passes, then moves to Past", so it is drawn on Upcoming,
- * not Past, until then. `/me/bookings/active` cannot carry it: it lists a cancelled booking only
- * while Spoon's own cancellation notice is unread. An instant booking has no slot, so it is Past.
+ * A finished booking (from `GET /v1/me/bookings`) whose booked slot is still ahead, such as one
+ * completed before its window closed: it stays on Upcoming until its slot passes. An instant
+ * booking has no slot, so it is Past.
+ *
+ * A cancelled booking is Past at once, whatever its date (device test, 31 Oct 2026). This replaces
+ * dev note `2192:4489`, "Cancelled … stays here until its date passes, then moves to Past".
  */
 function slotStillAhead(booking: BookingSummaryDto, now: Date): boolean {
   return (
+    booking.status !== 'cancelled' &&
     booking.scheduledStart !== null &&
     !slotHasEnded(booking.scheduledStart, booking.durationMinutes, now)
   );
 }
 
-/** The live list's still-upcoming rows plus history rows whose slot is ahead, soonest first. */
+/**
+ * The live list's still-upcoming rows plus history rows whose slot is ahead, soonest first. The
+ * live list can carry a cancelled booking (while Spoon's cancellation notice is unread); that is
+ * Past too.
+ */
 export function upcomingBookingsFrom(
   active: readonly BookingSummaryDto[],
   history: readonly BookingSummaryDto[],
   now: Date,
 ): readonly BookingSummaryDto[] {
-  const live = active.filter((booking) => isStillUpcoming(booking, now));
+  const live = active.filter(
+    (booking) => booking.status !== 'cancelled' && isStillUpcoming(booking, now),
+  );
   const ids = new Set(live.map((booking) => booking.id));
   const ahead = history.filter((booking) => !ids.has(booking.id) && slotStillAhead(booking, now));
   return [...live, ...ahead].sort(bySoonestFirst);
 }
 
-/** History rows whose slot has passed (or that never had one) — the Past tab. */
+/** History rows whose slot has passed (or that never had one), and every cancelled one: Past. */
 export function pastBookingsFrom(
   history: readonly BookingSummaryDto[],
   now: Date,
