@@ -11,6 +11,15 @@
     "preview": {
       "distribution": "internal"
     },
+    "staging": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://spoon-api-staging.onrender.com"
+      }
+    },
     "production-apk": {
       "extends": "production",
       "android": { "buildType": "apk" }
@@ -33,6 +42,13 @@
         "track": "internal",
         "releaseStatus": "draft",
         "changesNotSentForReview": false
+      }
+    },
+    "staging": {
+      "ios": {
+        "ascAppId": "6829188313",
+        "appleTeamId": "4D772L6YDV",
+        "bundleIdentifier": "com.spoonhelp.userapp.staging"
       }
     }
   }
