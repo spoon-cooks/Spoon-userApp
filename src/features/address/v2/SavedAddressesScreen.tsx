@@ -244,9 +244,8 @@ function AddressCard({
             </View>
           )}
         </View>
-        <Text style={styles.line} numberOfLines={1}>
-          {address.line}
-        </Text>
+        {/* The whole address, wrapped: it is what the customer saved, not a summary of it. */}
+        <Text style={styles.line}>{address.line}</Text>
       </View>
     </View>
   );
@@ -385,9 +384,7 @@ export function RemoveAddressSheet({
               <Text style={styles.bodyStrong} numberOfLines={1}>
                 {shown.label}
               </Text>
-              <Text style={styles.line} numberOfLines={1}>
-                {shown.line}
-              </Text>
+              <Text style={styles.line}>{shown.line}</Text>
             </View>
           </View>
           {blocked === null ? null : (

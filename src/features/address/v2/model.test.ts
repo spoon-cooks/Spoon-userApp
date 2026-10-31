@@ -80,7 +80,9 @@ describe('savedListFrom (1870:2770, dev note 2075:11950)', () => {
 
 describe('cardLineOf', () => {
   it('prefixes an apartment’s number with "Flat"', () => {
-    expect(cardLineOf(address())).toBe('Flat 402, B, Purva Skydale, Silver County Road, Bengaluru');
+    expect(cardLineOf(address())).toBe(
+      'Flat 402, B, Purva Skydale, Silver County Road, Bengaluru, 560102',
+    );
   });
 
   it('prefixes a house’s number with "No." and includes its lane', () => {
@@ -95,12 +97,33 @@ describe('cardLineOf', () => {
           street: 'Indiranagar',
         }),
       ),
-    ).toBe('No. 27, 5th Cross, Indiranagar, Bengaluru');
+    ).toBe('No. 27, 5th Cross, Indiranagar, Bengaluru, 560102');
+  });
+
+  it('shows everything entered on Address details: floor, lane, landmark and pincode too', () => {
+    expect(
+      cardLineOf(
+        address({
+          propertyType: 'house',
+          flat: '27',
+          floor: '2',
+          tower: null,
+          society: null,
+          lane: '5th Cross',
+          landmark: 'Near Metro',
+          street: 'Indiranagar',
+        }),
+      ),
+    ).toBe('No. 27, Floor 2, 5th Cross, Near Metro, Indiranagar, Bengaluru, 560102');
+    // A floor typed with words is kept as typed.
+    expect(cardLineOf(address({ floor: 'Ground floor' }))).toBe(
+      'Flat 402, Ground floor, B, Purva Skydale, Silver County Road, Bengaluru, 560102',
+    );
   });
 
   it('shows the number as typed for an address saved before property types existed', () => {
     expect(cardLineOf(address({ propertyType: null, flat: 'E102', tower: null }))).toBe(
-      'E102, Purva Skydale, Silver County Road, Bengaluru',
+      'E102, Purva Skydale, Silver County Road, Bengaluru, 560102',
     );
   });
 });

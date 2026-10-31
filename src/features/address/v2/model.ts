@@ -62,10 +62,13 @@ export function savedListFrom(
 }
 
 /**
- * The card's one line, in the frames' own shape: "Flat 402, Tower B, Whitefield" for an apartment
- * and "No. 27, 5th Cross, Indiranagar" for a house — the number with its prefix, then the
- * tower or lane, the society, and the pinned street and city. Empty parts are dropped; an address
- * saved before property types existed shows its number as it was typed.
+ * The card's address, everything the customer entered on Address details and in the order they
+ * entered it (owner, 31 Oct 2026: Saved addresses shows the exact address saved), then where the
+ * pin is: "Flat 402, Floor 4, B, Purva Skydale, Silver County Road, Bengaluru, 560037" for an
+ * apartment and "No. 27, Floor 2, 5th Cross, Near Metro, Indiranagar, Bengaluru, 560038" for a
+ * house. The number takes its "Flat" / "No." prefix and a bare floor number its "Floor"; every
+ * other part is shown as typed. Empty parts are dropped; an address saved before property types
+ * existed shows its number as it was typed.
  */
 export function cardLineOf(address: AddressDto): string {
   const number = address.flat?.trim() ?? '';
@@ -77,7 +80,19 @@ export function cardLineOf(address: AddressDto): string {
         : address.propertyType === 'house'
           ? `No. ${number}`
           : number;
-  return [numbered, address.tower, address.lane, address.society, address.street, address.city]
+  const floor = address.floor?.trim() ?? '';
+  const floored = /^\d+$/u.test(floor) ? `Floor ${floor}` : floor;
+  return [
+    numbered,
+    floored,
+    address.tower,
+    address.society,
+    address.lane,
+    address.landmark,
+    address.street,
+    address.city,
+    address.pincode,
+  ]
     .map((part) => part?.trim() ?? '')
     .filter((part) => part.length > 0)
     .join(', ');
