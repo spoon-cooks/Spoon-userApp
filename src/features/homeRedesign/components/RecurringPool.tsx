@@ -30,21 +30,23 @@ export function RecurringPool({
     <View style={styles.section}>
       <Image source={ART.thread} style={styles.thread} resizeMode="stretch" />
 
-      <Text style={styles.title}>Book for multiple days at once!</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Book for multiple days at once!</Text>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onPressChip}
-        style={[
-          styles.pill,
-          styles.recurring,
-          chip.tone === 'outline' ? styles.recurringOutline : null,
-          SHADOW_PILL,
-        ]}
-      >
-        <Image source={ART.restart} style={styles.pillIcon} />
-        <Text style={styles.pillLabel}>{chip.label}</Text>
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onPressChip}
+          style={[
+            styles.pill,
+            styles.recurring,
+            chip.tone === 'outline' ? styles.recurringOutline : null,
+            SHADOW_PILL,
+          ]}
+        >
+          <Image source={ART.restart} style={styles.pillIcon} />
+          <Text style={styles.pillLabel}>{chip.label}</Text>
+        </Pressable>
+      </View>
 
       <ScrollView
         horizontal
@@ -83,18 +85,33 @@ const styles = StyleSheet.create({
   section: { height: 283, width: '100%', paddingHorizontal: 16, overflow: 'hidden' },
   /** `1256:1013` — 432 × 199 at (−14, 45), its image inset −1.51 % top and bottom. */
   thread: { position: 'absolute', left: -14, top: 45 - 3, width: 432, height: 205 },
+  /**
+   * The headline and the recurring chip share one row that wraps (device test, 31 Oct 2026). Figma
+   * draws a 180pt headline with the chip 16 from the right, which on a 360dp phone (the S21) put
+   * the chip over "days". Now the headline needs at least 170pt beside the chip (Figma's 4pt gap,
+   * so a 393pt iPhone still fits): where it has that, the row reads as Figma (chip on the right,
+   * centred on the headline, ~23pt down); where it does not, the headline takes the full width
+   * (two lines) and the chip sits below it, still above the beads at 134.
+   */
+  header: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: 4,
+    rowGap: 8,
+  },
   title: {
-    position: 'absolute',
-    left: 16,
-    top: 0,
-    width: 180,
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 170,
+    maxWidth: '100%',
     fontFamily: F.bold,
     fontSize: 24,
     lineHeight: 32,
     color: C.text,
   },
   pill: {
-    position: 'absolute',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -104,13 +121,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   /**
-   * `1257:1016` sits at x 200, 186 wide — i.e. 16 from the right edge. Anchored right so a longer
-   * label ("Check Recurring", "Recurring · Live") grows leftwards instead of off-screen.
+   * `1257:1016` sits at x 200, 186 wide — i.e. 16 from the right edge, in the header row above.
+   * A longer label ("Check Recurring", "Recurring · Live") takes room from the headline, or moves
+   * the chip under it, instead of running off-screen.
    */
-  recurring: { right: 16, top: 23, backgroundColor: C.lime },
+  recurring: { flexShrink: 0, backgroundColor: C.lime },
   /** `1290:1183` — 'Check Recurring': white with a 1pt `#FFD600` hairline. */
   recurringOutline: { backgroundColor: C.base, borderWidth: 1, borderColor: C.brand },
-  pool: { left: 14, top: 222, backgroundColor: C.brand },
+  pool: { position: 'absolute', left: 14, top: 222, backgroundColor: C.brand },
   pillIcon: { width: 24, height: 24 },
   pillLabel: { fontFamily: F.bold, fontSize: 16, lineHeight: 24, color: C.text },
   beads: { position: 'absolute', left: 0, right: 0, top: 134, height: 56 },
