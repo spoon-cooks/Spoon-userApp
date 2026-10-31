@@ -4,6 +4,7 @@ import { Card } from '@ui/primitives/Card';
 import { Text } from '@ui/primitives/Text';
 import { lightTheme } from '@ui/theme/ThemeProvider';
 
+import { useFullScreenLoading } from './FullScreenLoading';
 import { Skeleton } from './Skeleton';
 import { TossLoading } from './TossLoading';
 
@@ -13,7 +14,8 @@ import { TossLoading } from './TossLoading';
  * `spinner` — indeterminate work with no known shape (submitting, checking availability).
  * `card`    — placeholder for a list of cards (booking history, refunds, saved addresses).
  * `screen`  — a full surface while the first payload resolves: the toss (`2692:864`,
- *             `TossLoading`), the same screen the app opens on.
+ *             `TossLoading`), the same screen the app opens on. Drawn edge to edge by the
+ *             root's `FullScreenLoadingHost`, not inside the screen's padded frame.
  *
  * LOADING RULE (owner, 30 Oct 2026): every full-screen wait shows the toss — the app opening
  * (`SplashLoading` at the boot gate) and any screen whose first read is in flight, which is what
@@ -65,7 +67,7 @@ export function LoadingState({
   }
 
   if (variant === 'screen') {
-    return <TossLoading label={label} {...(testID === undefined ? {} : { testID })} />;
+    return <ScreenLoading label={label} {...(testID === undefined ? {} : { testID })} />;
   }
 
   return (
@@ -85,9 +87,18 @@ export function LoadingState({
   );
 }
 
+/** The toss over the whole window through the root host, or in place when there is none. */
+function ScreenLoading({ label, testID }: { readonly label: string; readonly testID?: string }) {
+  const hosted = useFullScreenLoading(label);
+  if (hosted) return <View style={styles.screenHold} testID={testID} />;
+  return <TossLoading label={label} {...(testID === undefined ? {} : { testID })} />;
+}
+
 const SPINNER_COLOR = lightTheme.colors.textSecondary;
 
 const styles = StyleSheet.create({
+  /** Holds the screen's place while the host draws the toss over everything. */
+  screenHold: { flex: 1 },
   inline: {
     flexDirection: 'row',
     alignItems: 'center',

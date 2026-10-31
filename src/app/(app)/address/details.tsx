@@ -41,6 +41,21 @@ import { InfoDialog, QueryBoundary } from '@ui';
  * Serviceability was already checked against the pinned coordinates on the map step, and the
  * backend checks again on the write — the client asserts nothing about coverage either time.
  */
+/** A pin this close to the saved one is the same place: the map's settle, not the customer. */
+const PIN_MOVED_METRES = 5;
+
+/** Metres between two nearby points (equirectangular; ample at a few hundred metres). */
+function metresBetween(
+  a: { readonly latitude: number; readonly longitude: number },
+  b: { readonly latitude: number; readonly longitude: number },
+): number {
+  const metresPerDegree = 111_320;
+  const north = (a.latitude - b.latitude) * metresPerDegree;
+  const east =
+    (a.longitude - b.longitude) * metresPerDegree * Math.cos((b.latitude * Math.PI) / 180);
+  return Math.hypot(north, east);
+}
+
 export default function AddressDetailsRoute() {
   const router = useRouter();
   const { addressId, onboarding, from } = useLocalSearchParams<{
@@ -111,11 +126,17 @@ export default function AddressDetailsRoute() {
       ? { latitude: draft.latitude, longitude: draft.longitude }
       : savedPoint,
   );
+  // Moved means moved by the customer: Edit now passes through the map, and the map's settled
+  // centre comes back a hair off the saved point, which alone enabled Save on an untouched address
+  // (device test, 31 Oct 2026).
   const pinMoved =
     editingId !== null &&
     draftIsOurs &&
     savedPoint !== null &&
-    (draft.latitude !== savedPoint.latitude || draft.longitude !== savedPoint.longitude);
+    draft.latitude !== null &&
+    draft.longitude !== null &&
+    metresBetween({ latitude: draft.latitude, longitude: draft.longitude }, savedPoint) >
+      PIN_MOVED_METRES;
 
   /**
    * "Edit" on the pinned card is a DIGRESSION to the map, unconditional however this screen was

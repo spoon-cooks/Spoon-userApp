@@ -61,12 +61,18 @@ export function SocietyPicker({
   societies,
   onRetry,
   onChange,
+  onSearching,
   testID,
 }: {
   readonly value: SocietyChoice;
   readonly societies: DataState<readonly SocietyDto[]>;
   readonly onRetry: () => void;
   readonly onChange: (patch: Partial<SocietyChoice>) => void;
+  /**
+   * The search box took focus or its text changed (true), or a society was picked (false): the
+   * form keeps the field and its list above the keyboard while true.
+   */
+  readonly onSearching?: (searching: boolean) => void;
   readonly testID: string;
 }) {
   const chosen = value.societyId !== null || value.societyOthers || value.societyLegacy;
@@ -79,6 +85,7 @@ export function SocietyPicker({
     // screen's keyboard avoider drop its padding, which otherwise stayed as a blank gap on Android
     // after a society was picked (device test, 31 Oct 2026).
     Keyboard.dismiss();
+    onSearching?.(false);
     onChange(patch);
     setOpen(false);
     setQuery('');
@@ -123,7 +130,11 @@ export function SocietyPicker({
       <View style={[styles.field, styles.fieldOpen]}>
         <TextInput
           value={query}
-          onChangeText={setQuery}
+          onChangeText={(text) => {
+            setQuery(text);
+            onSearching?.(true);
+          }}
+          onFocus={() => onSearching?.(true)}
           placeholder="Society / Building name *"
           placeholderTextColor={C.textSecondary}
           autoFocus={chosen}
