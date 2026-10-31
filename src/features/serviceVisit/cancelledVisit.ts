@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import { bookingStrikeOf } from '@features/booking';
 import type { BookingDetailDto, RefundDto } from '@features/booking';
 import { visitDemoModel } from '@features/recurringLive';
@@ -122,12 +123,13 @@ export function cancelledVisitModelFrom(
   cookName: string | null,
 ): VisitDetailsModel {
   const base = visitDemoModel('cancelled');
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  // The visit's own times: the booked slot, or the start OTP's if it was cancelled after starting.
+  const { start, end } = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
   const length = duration(booking.durationMinutes);
-  const end =
-    start === null
-      ? null
-      : new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString();
   const cancellation = booking.cancellation;
   const by =
     cancellation?.cancelledBy === 'customer'

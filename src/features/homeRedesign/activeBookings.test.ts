@@ -99,7 +99,7 @@ describe('activeBookingCardsFrom', () => {
     ]);
   });
 
-  it('reads In progress as "Today · start time" and its duration from the detail', () => {
+  it('reads In progress as "Today · start OTP time" and its duration from the detail', () => {
     const [card] = activeBookingCardsFrom(
       sources({
         bookings: [booking('c', 'cooking', '2026-10-12T03:30:00Z')],
@@ -115,7 +115,8 @@ describe('activeBookingCardsFrom', () => {
         ]),
       }),
     );
-    expect(card?.whenLabel.replace(/\s/g, ' ')).toBe('Today · 9:00 AM');
+    // Booked for 9:00; the start OTP was entered at 9:05, which the card shows (31 Oct 2026).
+    expect(card?.whenLabel.replace(/\s/g, ' ')).toBe('Today · 9:05 AM');
     // Extended to 2.5 hrs: the duration follows the detail, not the original booking.
     expect(card?.duration).toEqual({ value: '2.5', unit: 'HRS' });
   });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
-import { currentSkewMs } from '@core/time';
+import { currentSkewMs, serviceWindowOf } from '@core/time';
 
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
@@ -178,7 +178,12 @@ export function ServiceVisitHost({
     }));
   }, [profile.state]);
 
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  // The visit's own start (the rating card's line): the booked slot until the start OTP, then its.
+  const { start } = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
   const length = duration(booking.durationMinutes);
   const end = endsAt(booking);
   // The trust marks, caption and stat lines are the backend's (DEC-114), first visit included.

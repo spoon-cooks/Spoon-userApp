@@ -1,3 +1,4 @@
+import { serviceWindowOf } from '@core/time';
 import type { BookingDetailDto, BookingStatus, BookingSummaryDto } from '@features/booking';
 import type { RecurringBookingDto, VisitSummaryDto } from '@features/recurringSetup';
 import {
@@ -143,10 +144,17 @@ export function activeBookingCardsFrom(sources: ActiveBookingSources): ActiveBoo
     const state = STATE_OF[booking.status];
     const startMs = epochOf(booking.scheduledStart);
     if (state === undefined || startMs === null) continue;
-    const start = new Date(startMs);
     const detail = sources.details.get(booking.id);
     const minutes =
       detail?.totalDurationMinutes ?? detail?.durationMinutes ?? booking.durationMinutes;
+    // The time the card says is the visit's own: the booked slot until the start OTP, then when
+    // it was entered (owner, 31 Oct 2026). The carousel still orders by the booked slot.
+    const shown = serviceWindowOf({
+      bookedStart: booking.scheduledStart,
+      durationMinutes: booking.durationMinutes,
+      timing: booking.timing ?? detail?.timing,
+    }).start;
+    const start = new Date(shown === null ? startMs : Date.parse(shown));
 
     cards.push({
       startMs,

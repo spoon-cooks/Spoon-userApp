@@ -585,6 +585,11 @@ export const bookingSummarySchema = z.object({
   scheduledStart: z.string().datetime().nullable(),
   durationMinutes: z.number().int().positive(),
   price: priceSchema,
+  /**
+   * The session's own moments, as the detail's `timing` (start OTP, the end it runs to, end OTP).
+   * Absent from a V0 that predates it; the cards then show the booked slot (`serviceWindowOf`).
+   */
+  timing: bookingTimingSchema.nullish(),
   addressLabel: z.string().nullish(),
   cook: bookingSummaryCookSchema.nullish(),
   reassignment: bookingReassignmentSchema.nullish(),

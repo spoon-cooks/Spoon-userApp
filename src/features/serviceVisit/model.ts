@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import { bookingStrikeOf } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto, TrackingDto } from '@features/booking';
 import type { PaymentDetailsSheetData } from '@features/recurringLive';
@@ -95,26 +96,36 @@ export function reassignedOneTime(booking: BookingDetailDto): boolean {
  * visit is live ("9:00 AM · 1 hr"), the date over the slot before and after it ("Wed, 14 Oct" /
  * "9:00 AM – 10:00 AM · 1 hr").
  *
- * An Instant visit has no booked time, so it says "Instant · 1 hr" where a scheduled one says its
- * time (Figma `Visit details / In progress · Cook on the way (ETA)`, device test 31 Oct 2026):
- * the title while it is live, the line under the date once it is done.
+ * The times are the visit's own (`serviceWindowOf`, owner 31 Oct 2026): the booked slot until the
+ * start OTP, then when it was entered and the end the session runs to, then the end OTP's time.
+ * Once started, the length is the whole session's, extensions included, so it matches the times.
+ *
+ * An Instant visit has no booked time, so until its start OTP it says "Instant · 1 hr" where a
+ * scheduled one says its time (Figma `Visit details / In progress · Cook on the way (ETA)`).
  */
 export function visitBannerOf(
-  booking: Pick<BookingDetailDto, 'slotType' | 'scheduledStart' | 'durationMinutes' | 'timing'>,
+  booking: Pick<
+    BookingDetailDto,
+    'slotType' | 'scheduledStart' | 'durationMinutes' | 'totalDurationMinutes' | 'timing'
+  >,
   phase: ServicePhase,
 ): { readonly title: string; readonly slot: string | null } {
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
-  const length = duration(booking.durationMinutes);
+  const window = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
+  const length = duration(
+    window.phase === 'booked'
+      ? booking.durationMinutes
+      : (booking.totalDurationMinutes ?? booking.durationMinutes),
+  );
   const dated = phase === 'assigned' || phase === 'completed';
-  if (booking.slotType === 'instant') {
-    const instant = `Instant · ${length}`;
-    return dated && start !== null
-      ? { title: day(start), slot: instant }
-      : { title: instant, slot: null };
+  const { start, end } = window;
+  if (start === null || end === null) {
+    return { title: booking.slotType === 'instant' ? `Instant · ${length}` : length, slot: null };
   }
-  if (start === null) return { title: length, slot: null };
   if (!dated) return { title: `${clock(start)} · ${length}`, slot: null };
-  const end = new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString();
   return { title: day(start), slot: `${clock(start)} – ${clock(end)} · ${length}` };
 }
 
@@ -264,7 +275,12 @@ function methodTypeOf(type: string): 'upi' | 'card' | 'wallet' | 'netbanking' {
  * is left out until the server knows it rather than guessed.
  */
 export function paymentSheetFrom(booking: BookingDetailDto, cookName: string | null) {
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  // The visit's own start: the booked slot until the start OTP, then when it was entered.
+  const { start } = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
   const extensions = booking.charges?.extensions ?? [];
   const extensionTax = extensions.reduce(
     (sum, extension) => sum + Math.max(0, extension.chargedAmountPaise - extension.baseAmountPaise),

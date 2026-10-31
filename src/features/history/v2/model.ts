@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import type { BookingSummaryDto } from '@features/booking';
 
 import { myBookingPresentationFor } from '../adapters';
@@ -79,9 +80,20 @@ export function durationOf(minutes: number): string {
   return `${text} ${hours === 1 ? 'hr' : 'hrs'}`;
 }
 
-function startOf(dto: Pick<BookingSummaryDto, 'scheduledStart'>): Date | null {
-  if (dto.scheduledStart === null) return null;
-  const instant = new Date(dto.scheduledStart);
+/**
+ * The card's start: the booked slot until the start OTP, then when it was entered
+ * (`serviceWindowOf`, owner 31 Oct 2026).
+ */
+function startOf(
+  dto: Pick<BookingSummaryDto, 'scheduledStart' | 'durationMinutes' | 'timing'>,
+): Date | null {
+  const { start } = serviceWindowOf({
+    bookedStart: dto.scheduledStart,
+    durationMinutes: dto.durationMinutes,
+    timing: dto.timing,
+  });
+  if (start === null) return null;
+  const instant = new Date(start);
   return Number.isNaN(instant.getTime()) ? null : instant;
 }
 

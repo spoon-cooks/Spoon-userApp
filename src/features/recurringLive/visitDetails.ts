@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import type { RatingAttachment } from '@features/booking';
 import type { CookProfile, PoolCookProfileDto } from '@features/cookPool';
 import type {
@@ -132,6 +133,23 @@ export function dayLabel(dateId: string): string {
 /** "9:00 AM" → "9 AM" on the hour, as the frames write a deadline. */
 const shortClock = (hhmm: string) => clockText(hhmm).replace(':00 ', ' ');
 
+/**
+ * When a visit is shown to start, in Kolkata: its planned slot until its booking's start OTP,
+ * then when that was entered (`serviceWindowOf`, owner 31 Oct 2026).
+ */
+function shownStartOf(
+  visit: Pick<VisitDetailDto, 'start' | 'date' | 'startTime' | 'durationMinutes' | 'timing'>,
+): { dateId: string; hhmm: string } {
+  const shown = serviceWindowOf({
+    bookedStart: visit.start,
+    durationMinutes: visit.durationMinutes,
+    timing: visit.timing,
+  });
+  return shown.phase === 'booked' || shown.start === null
+    ? { dateId: visit.date, hhmm: visit.startTime }
+    : kolkata(shown.start);
+}
+
 function plusMinutes(hhmm: string, minutes: number): string {
   const [h, m] = hhmm.split(':').map(Number) as [number, number];
   const total = (h * 60 + m + minutes) % (24 * 60);
@@ -165,9 +183,23 @@ const NOTICE_BODY =
 export function visitDetailsFrom(sources: VisitDetailsSources): VisitDetailsModel {
   const { visit, booking, cookProfile, cookCard, quote, todayId } = sources;
   const variant = VARIANTS[visit.displayState];
-  const start = visit.startTime;
-  const end = plusMinutes(start, visit.durationMinutes);
-  const date = dayLabel(visit.date);
+  /*
+   * The visit's own times (`serviceWindowOf`, owner 31 Oct 2026): the planned slot until its
+   * booking's start OTP, then when that was entered and the end the session runs to, then the end
+   * OTP's time. The fee window, the T−3h and the countdown still follow the planned slot.
+   */
+  const shown = serviceWindowOf({
+    bookedStart: visit.start,
+    durationMinutes: visit.durationMinutes,
+    timing: visit.timing,
+  });
+  const started = shown.phase !== 'booked' && shown.start !== null && shown.end !== null;
+  const start = started && shown.start !== null ? kolkata(shown.start).hhmm : visit.startTime;
+  const end =
+    started && shown.end !== null
+      ? kolkata(shown.end).hhmm
+      : plusMinutes(visit.startTime, visit.durationMinutes);
+  const date = dayLabel(started && shown.start !== null ? kolkata(shown.start).dateId : visit.date);
   const duration = durationText(visit.durationMinutes);
   const cookName = visit.cook?.displayName ?? null;
   const fixture = VISIT_FIXTURE;
@@ -421,7 +453,8 @@ export function visitWhatsAppLink(
     purpose === 'help'
       ? `Hi Spoon, I need help with ${subject}`
       : `Hi Spoon, I have a recipe/dish in mind for ${subject}`;
-  const parts = [opening, `${dayLabel(visit.date)}, ${clockText(visit.startTime)}`];
+  const at = shownStartOf(visit);
+  const parts = [opening, `${dayLabel(at.dateId)}, ${clockText(at.hhmm)}`];
   if (visit.cook !== null) parts.push(visit.cook.displayName);
   return `${url.split('?')[0] ?? url}?text=${encodeURIComponent(`${parts.join(' · ')}.`)}`;
 }
@@ -434,9 +467,10 @@ const MEALS = { morning: 'Breakfast', afternoon: 'Lunch', evening: 'Dinner' } as
  */
 export function rateVisitInfo(visit: VisitDetailDto): RateVisitInfo | null {
   if (visit.cook === null) return null;
+  const at = shownStartOf(visit);
   return {
     title: `${MEALS[visit.timeOfDay]} with ${visit.cook.displayName}`,
-    meta: `${dayLabel(visit.date)} · ${clockText(visit.startTime)} · ${durationText(visit.durationMinutes)}`,
+    meta: `${dayLabel(at.dateId)} · ${clockText(at.hhmm)} · ${durationText(visit.durationMinutes)}`,
     cookName: visit.cook.displayName,
     photoUri: visit.cook.profileImageUrl,
   };

@@ -14,3 +14,5 @@ export {
   observeServerTime,
   resetSkewObservation,
 } from './clockSkew';
+export { serviceWindowOf } from './serviceWindow';
+export type { ServiceTiming, ServiceWindow } from './serviceWindow';

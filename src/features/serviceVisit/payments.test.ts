@@ -257,7 +257,7 @@ describe('Visit details · Cancelled for a one-time booking (2165:11853, dev not
   });
 });
 
-describe('Visit banner: Instant in place of a time (device test, 31 Oct 2026)', () => {
+describe("Visit banner: the visit's own times (device test, 31 Oct 2026)", () => {
   const scheduled = booking();
   const instant = booking({
     slotType: 'instant',
@@ -265,7 +265,7 @@ describe('Visit banner: Instant in place of a time (device test, 31 Oct 2026)', 
     timing: { arrivedAt: null, actualStart: null, expectedEnd: null, actualEnd: null },
   });
 
-  it('names a scheduled visit by its time', () => {
+  it('names a scheduled visit by its booked time until the start OTP', () => {
     expect(visitBannerOf(scheduled, 'onTheWay')).toEqual({ title: '9:00 AM · 1 hr', slot: null });
     expect(visitBannerOf(scheduled, 'assigned')).toEqual({
       title: 'Wed, 14 Oct',
@@ -273,18 +273,32 @@ describe('Visit banner: Instant in place of a time (device test, 31 Oct 2026)', 
     });
   });
 
-  it('says "Instant · 1 hr" for an Instant visit, live or not yet started', () => {
+  it('shows the start OTP time and the end it runs to once started, then the end OTP time', () => {
+    // Booked for 9:00; started at 9:08 and extended by 30 minutes.
+    const cooking = booking({
+      totalDurationMinutes: 90,
+      timing: {
+        arrivedAt: null,
+        actualStart: '2026-10-14T03:38:00.000Z',
+        expectedEnd: '2026-10-14T05:08:00.000Z',
+        actualEnd: null,
+      },
+    });
+    expect(visitBannerOf(cooking, 'cooking')).toEqual({ title: '9:08 AM · 1.5 hrs', slot: null });
+    const done = {
+      ...cooking,
+      timing: { ...cooking.timing, actualEnd: '2026-10-14T05:05:00.000Z' },
+    };
+    expect(visitBannerOf(done, 'completed')).toEqual({
+      title: 'Wed, 14 Oct',
+      slot: '9:08 AM – 10:35 AM · 1.5 hrs',
+    });
+  });
+
+  it('says "Instant · 1 hr" for an Instant visit until its start OTP, then its own times', () => {
     expect(visitBannerOf(instant, 'onTheWay')).toEqual({ title: 'Instant · 1 hr', slot: null });
     expect(visitBannerOf(instant, 'assigned')).toEqual({ title: 'Instant · 1 hr', slot: null });
     const cooking = { ...instant, timing: { ...instant.timing, actualStart: START } };
-    expect(visitBannerOf(cooking, 'cooking')).toEqual({ title: 'Instant · 1 hr', slot: null });
-  });
-
-  it('dates a finished Instant visit, with "Instant" under it in place of the slot', () => {
-    const done = { ...instant, timing: { ...instant.timing, actualStart: START } };
-    expect(visitBannerOf(done, 'completed')).toEqual({
-      title: 'Wed, 14 Oct',
-      slot: 'Instant · 1 hr',
-    });
+    expect(visitBannerOf(cooking, 'cooking')).toEqual({ title: '9:00 AM · 1 hr', slot: null });
   });
 });

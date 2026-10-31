@@ -28,6 +28,17 @@ describe('My bookings rows (dev notes 2192:4489 / 2192:4497)', () => {
     expect(row.dimmed).toBe(false);
   });
 
+  it('writes the start OTP time once the visit has started, not the booked slot (31 Oct 2026)', () => {
+    const started = dto('a', '2026-11-12T06:00:00.000Z', {
+      timing: {
+        actualStart: '2026-11-12T05:50:00.000Z',
+        expectedEnd: '2026-11-12T06:50:00.000Z',
+        actualEnd: null,
+      },
+    });
+    expect(bookingRowFrom(started, NOW).when).toBe('12 Nov · 11:20 AM · 1 hr');
+  });
+
   it('tags a visit of a recurring plan as Recurring', () => {
     expect(
       bookingRowFrom(dto('a', '2026-11-12T06:00:00.000Z', { recurringBookingId: 'r1' }), NOW).kind,

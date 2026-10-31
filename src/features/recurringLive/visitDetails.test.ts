@@ -123,6 +123,23 @@ function sources(overrides: Partial<VisitDetailsSources> = {}): VisitDetailsSour
 }
 
 describe('visitDetailsFrom', () => {
+  it("shows the booking's start OTP time and the end it runs to once the visit started", () => {
+    // Planned for 9:00; the cook started at 8:50 (31 Oct 2026: the -15/+10 minute window).
+    const started = visit({
+      displayState: 'cook_assigned',
+      status: 'charged',
+      bookingId: 'bk-1',
+      timing: {
+        actualStart: '2026-10-14T03:20:00.000Z',
+        expectedEnd: '2026-10-14T04:20:00.000Z',
+        actualEnd: null,
+      },
+    });
+    expect(visitDetailsFrom(sources({ visit: started })).banner.slot).toBe(
+      '8:50 AM – 9:50 AM · 1 hr',
+    );
+  });
+
   it('writes the banner as the frames do, with days to go while the cook is pending', () => {
     const model = visitDetailsFrom(sources());
     expect(model.variant).toBe('pending');
