@@ -56,7 +56,7 @@ describe('Payment details sheet (2257:3939, dev note 2255:3939)', () => {
       { label: 'Extension 2 · +10 mins', caption: 'Added during the visit', amount: '₹29.66' },
     ]);
     expect(sheet.taxLine.amount).toBe('₹61.63');
-    expect(sheet.tipLine).toEqual({ label: 'Tip for Meera', amount: '₹50' });
+    expect(sheet.tipLine).toEqual({ label: 'Tip for Cook Meera', amount: '₹50' });
     expect(sheet.total).toBe('₹454');
     expect(sheet).toMatchObject({
       methodType: 'upi',

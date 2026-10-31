@@ -93,7 +93,7 @@ describe('the assigned-cook card is payload-driven', () => {
     expect(model.cook).toMatchObject({
       id: KAVITA_CARD.cookId,
       displayName: 'Cook Kavita',
-      firstName: 'Kavita',
+      firstName: 'Cook Kavita',
       gender: 'Female',
       cuisine: 'North Indian',
       homeState: 'Odisha',
@@ -188,7 +188,7 @@ describe('the assigned-cook card is payload-driven', () => {
     expect(before.cook?.id).not.toBe(after.cook?.id);
     expect(after.cook).toMatchObject({
       displayName: 'Cook Asha',
-      firstName: 'Asha',
+      firstName: 'Cook Asha',
       homeState: 'West Bengal',
     });
     expect(after.cook?.languages).toBeUndefined();

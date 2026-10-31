@@ -322,7 +322,7 @@ export function visitDetailsFrom(sources: VisitDetailsSources): VisitDetailsMode
             allSet:
               cookName === null
                 ? 'Kitchen’s ready! Your cook can start cooking the moment they arrive.'
-                : `Kitchen’s ready! ${cookName.replace(/^Cook\s+/, '')} can start cooking right away.`,
+                : `Kitchen’s ready! ${cookName} can start cooking right away.`,
           }
         : null,
     prepChecked:
@@ -437,7 +437,7 @@ export function rateVisitInfo(visit: VisitDetailDto): RateVisitInfo | null {
   return {
     title: `${MEALS[visit.timeOfDay]} with ${visit.cook.displayName}`,
     meta: `${dayLabel(visit.date)} · ${clockText(visit.startTime)} · ${durationText(visit.durationMinutes)}`,
-    cookName: visit.cook.displayName.replace(/^Cook\s+/, ''),
+    cookName: visit.cook.displayName,
     photoUri: visit.cook.profileImageUrl,
   };
 }

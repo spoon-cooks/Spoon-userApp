@@ -70,7 +70,7 @@ export interface ServiceVisitModel {
   readonly bannerSlot: string | null;
   readonly cook: VisitCookData;
   readonly menu: readonly VisitMenuSection[];
-  readonly cookFirstName: string | null;
+  readonly cookName: string | null;
   readonly cookPhoto: ImageSourcePropType | null;
   readonly prepChecked: readonly VisitPrepKey[];
   readonly arrival: {
@@ -190,9 +190,9 @@ export function ServiceVisitScreen({
         prep={{
           ...COPY.prep,
           allSet:
-            model.cookFirstName === null
+            model.cookName === null
               ? 'Kitchen’s ready! Your cook can start cooking the moment they arrive.'
-              : `Kitchen’s ready! ${model.cookFirstName} can start cooking the moment she walks in.`,
+              : `Kitchen’s ready! ${model.cookName} can start cooking the moment she walks in.`,
         }}
         initialChecked={model.prepChecked}
         onChange={onPrepChange}
@@ -206,7 +206,7 @@ export function ServiceVisitScreen({
       endsAt={model.endsAt}
       // Time's up (`2165:12117`) draws "Need more time?" without the "free till" line.
       freeTill={phase === 'timesUp' ? null : model.freeTill}
-      cookName={model.cookFirstName}
+      cookName={model.cookName}
       extending={extending}
       onExtend={onExtend}
       onPaymentDetails={onPaymentDetails}
@@ -310,7 +310,7 @@ export function ServiceVisitScreen({
             {ratingSlot ?? null}
             {model.canTip || model.tipPaid !== null ? (
               <TipCard
-                cookName={model.cookFirstName}
+                cookName={model.cookName}
                 cookPhoto={model.cookPhoto}
                 paid={model.tipPaid}
                 paying={tipping}

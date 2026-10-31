@@ -40,7 +40,7 @@ import {
   endsAt,
   extendChoicesFrom,
   extendedMinutes,
-  firstName,
+  cookNameOf,
   freeTill,
   minutesLeft,
   otpDigits,
@@ -196,13 +196,13 @@ export function ServiceVisitHost({
             new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString(),
           )} · ${length}`,
     cook: {
-      name: cookName === null ? 'Your cook' : `Cook ${firstName(cookName) ?? cookName}`,
+      name: cookNameOf(cookName) ?? 'Your cook',
       ...lines,
       note: '',
       ...(photoUrl === null ? {} : { photo: { uri: photoUrl } }),
     },
     menu,
-    cookFirstName: firstName(cookName),
+    cookName: cookNameOf(cookName),
     cookPhoto,
     prepChecked:
       prep.state.status !== 'ready'
@@ -257,9 +257,9 @@ export function ServiceVisitHost({
   const ratedBefore = !rated && (booking.ratingStars ?? null) !== null;
   const savedMedia = useMyRatingMedia(phase === 'completed' && ratedBefore ? booking.id : null);
   const visitInfo = {
-    title: cookName === null ? 'Your cook' : `Cook ${firstName(cookName) ?? cookName}`,
+    title: cookNameOf(cookName) ?? 'Your cook',
     meta: start === null ? length : `${day(start)} · ${clock(start)} · ${length}`,
-    cookName: firstName(cookName) ?? 'your cook',
+    cookName: cookNameOf(cookName) ?? 'your cook',
     photoUri: photoUrl,
   };
   const ratingSlot =

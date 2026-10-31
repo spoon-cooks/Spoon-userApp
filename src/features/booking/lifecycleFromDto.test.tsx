@@ -247,7 +247,7 @@ describe('booking lifecycle from real DTOs', () => {
     expect(screen.getByTestId('tracking-banner')).toBeTruthy();
     expect(screen.queryByTestId('booking-unknown-view')).toBeNull();
     // The banner names the booking's OWN cook, not the frame's "Asha".
-    expect(screen.getByText('Cook Meera is arriving in')).toBeTruthy();
+    expect(screen.getByText('Meera is arriving in')).toBeTruthy();
   });
 
   /**
@@ -733,7 +733,7 @@ describe('booking lifecycle from real DTOs', () => {
     });
 
     await jest.advanceTimersByTimeAsync(50);
-    expect(screen.getByText('Cook Meera is arriving in')).toBeTruthy();
+    expect(screen.getByText('Meera is arriving in')).toBeTruthy();
 
     arrived = true;
     // `LIVE_POLL_MS` is 30s for the detail; tracking follows the server's `refreshAfterSeconds`.

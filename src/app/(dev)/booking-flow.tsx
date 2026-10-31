@@ -86,7 +86,7 @@ const MODEL: ServiceVisitModel = {
   },
   // The frames' own sample menu and cook photo, so the preview compares like for like.
   menu: visitDemoModel('assigned').menu,
-  cookFirstName: 'Meera',
+  cookName: 'Meera',
   cookPhoto: visitDemoModel('assigned').cook.photo ?? null,
   prepChecked: [],
   arrival: { by: '8:57 AM', minutes: 24, onTime: true },

@@ -29,11 +29,6 @@ import type {
  */
 export const DEFAULT_MINIMUM_SIZE = 2;
 
-/** `Cook Meera` → `Meera`: the pool grid's caption. Mirrors the booking card's first name. */
-export function shortNameOf(displayName: string): string {
-  return displayName.replace(/^Cook\s+/iu, '');
-}
-
 /** The hosted photo, or none: the place keeps its `#FFF7CC` ground. */
 export function cookPhotoFor(
   card: Pick<PoolCookCardDto, 'profileImageUrl'>,
@@ -46,7 +41,8 @@ export function cookPoolSummaryFrom(pool: CookPoolListDto, minimumSize: number):
     minimumSize,
     members: pool.cooks.map(({ cook }) => ({
       cookId: cook.cookId,
-      name: shortNameOf(cook.displayName),
+      // Exactly as registered (owner, 31 Oct 2026).
+      name: cook.displayName,
       photo: cookPhotoFor(cook),
     })),
   };

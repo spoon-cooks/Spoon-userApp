@@ -50,7 +50,7 @@ const MODEL: ServiceVisitModel = {
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: 'SPOON TRAINED · VERIFIED', name: 'Cook Meera', note: '' },
   menu: [],
-  cookFirstName: 'Meera',
+  cookName: 'Meera',
   cookPhoto: null,
   prepChecked: [],
   arrival: { by: '8:57 AM', minutes: 24, onTime: true },
