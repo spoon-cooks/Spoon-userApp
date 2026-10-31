@@ -124,8 +124,12 @@ function VideoBackedPlayer({
       {...sheet}
       playback={playback}
       surface={
-        <View style={styles.scene} testID="explainer-player-surface">
-          {/* The pale scene shows until the first frame, and as the video's letterbox. */}
+        <View style={styles.videoScene} testID="explainer-player-surface">
+          {/*
+           * The sheet's ink behind the video, not the pale scene: the video is narrower than the
+           * frame on a phone, and the pale scene showed as a strip down each side (device test,
+           * 31 Oct 2026). Ink blends into the video's own dark frame.
+           */}
           <VideoView
             player={player}
             style={StyleSheet.absoluteFill}
@@ -512,9 +516,12 @@ const styles = StyleSheet.create({
   },
   /** `970:5608`. */
   scene: { flex: 1, backgroundColor: lightTheme.colors.surfaceVideoScene },
-  /** Over the scene, when the video would not load. */
+  /** Behind a real video: the sheet's own ink, so a letterbox does not show as pale strips. */
+  videoScene: { flex: 1, backgroundColor: lightTheme.colors.surfaceInk },
+  /** Over the scene, when the video would not load: pale, so the dark copy reads on it. */
   failure: {
     ...StyleSheet.absoluteFill,
+    backgroundColor: lightTheme.colors.surfaceVideoScene,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: lightTheme.space.xl,

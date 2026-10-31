@@ -155,6 +155,9 @@ export function useCreateAddress() {
         customSociety: variables.input.customSociety ?? null,
         // Just created: the address has not been used for an order yet.
         lastUsedAt: null,
+        ...(result.address.detailsVersion === undefined
+          ? {}
+          : { detailsVersion: result.address.detailsVersion }),
       };
       queryClient.setQueryData<readonly AddressDto[]>(addressKeys.list(), (previous) =>
         previous === undefined ? [created] : [...previous, created],
@@ -171,7 +174,22 @@ export function useUpdateAddress() {
 
   return useMutation<AddressWriteResponse, Error, { id: string; input: AddressWriteInput }>({
     mutationFn: ({ id, input }) => addresses.update(id, input),
-    onSuccess() {
+    onSuccess(result, { id }) {
+      /*
+       * The version of the address steps the save stored goes into the cached list AT ONCE, then
+       * the list is re-read. Redoing an old address ends at Home, whose gate asks this list which
+       * addresses are still owed the new steps; with only the invalidation it read the cached,
+       * pre-save version first and sent the customer straight back to the address just saved,
+       * now with Save disabled (device test, 31 Oct 2026).
+       */
+      const stored = result.address.detailsVersion;
+      if (stored !== undefined) {
+        queryClient.setQueryData<readonly AddressDto[]>(addressKeys.list(), (list) =>
+          list?.map((address) =>
+            address.id === id ? { ...address, detailsVersion: stored } : address,
+          ),
+        );
+      }
       void queryClient.invalidateQueries({ queryKey: addressKeys.all() });
     },
   });

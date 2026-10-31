@@ -184,7 +184,13 @@ export function ServiceVisitHost({
     durationMinutes: booking.durationMinutes,
     timing: booking.timing,
   });
-  const length = duration(booking.durationMinutes);
+  // Once started, the whole session's length, extensions included, as the banner says it
+  // (`visitBannerOf`): the two read "2 hrs" and "1.5 hrs" on one screen (device test, 31 Oct 2026).
+  const length = duration(
+    booking.timing.actualStart === null
+      ? booking.durationMinutes
+      : (booking.totalDurationMinutes ?? booking.durationMinutes),
+  );
   const end = endsAt(booking);
   // The trust marks, caption and stat lines are the backend's (DEC-114), first visit included.
   const lines = cookCardLines(

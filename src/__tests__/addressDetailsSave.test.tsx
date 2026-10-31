@@ -9,7 +9,7 @@ import {
 } from '@/test/renderWithRuntime';
 import type { AppError } from '@core/errors';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
-import { addressToRedo } from '@features/address';
+import { addressKeys, addressToRedo } from '@features/address';
 
 /**
  * The details form (`1870:2485` / `1870:2576` / `1870:2672`) as a WRITE contract: what Save sends,
@@ -463,6 +463,37 @@ describe('redoing an address saved by the older steps (owner, 31 Oct 2026)', () 
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0]).toMatchObject({ method: 'PUT', body: { detailsVersion: 2 } });
     await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
+  });
+
+  it('marks the address done in the cached list at once, so Home does not send it back', async () => {
+    // Device test, 31 Oct 2026: Home read the pre-save list and reopened the saved address.
+    let saved = false;
+    const runtime = createTestRuntime({
+      api: createStubApi({
+        ...DEFAULT_API_STUBS,
+        'GET /v1/me': me,
+        // After the save the list's re-read is still in flight, as on a phone's network.
+        'GET /v1/me/addresses': () => (saved ? new Promise(() => undefined) : oldAddress()),
+        'GET /v1/societies': () => ({ societies: [] }),
+        'PUT /v1/me/addresses/addr-1': () => {
+          saved = true;
+          return { address: { ...WRITTEN, id: 'addr-1', detailsVersion: 2 } };
+        },
+      }),
+    });
+    // What Home's gate will read the moment the flow lands on it.
+    let atHome: readonly { id: string; detailsVersion?: number }[] | undefined;
+    mockRouter.replace.mockImplementation(() => {
+      atHome = runtime.queryClient.getQueryData(addressKeys.list());
+    });
+    renderWithRuntime(<AddressDetailsRoute />, { runtime });
+    await screen.findByTestId('address-details');
+    await waitFor(() => expect(isDisabled()).toBe(false));
+    fireEvent.press(save());
+
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
+    expect(atHome?.find((address) => address.id === 'addr-1')?.detailsVersion).toBe(2);
+    expect(addressToRedo((atHome ?? []) as never)).toBeNull();
   });
 
   it('moves on when an upcoming booking still uses it, and does not ask again this run', async () => {
