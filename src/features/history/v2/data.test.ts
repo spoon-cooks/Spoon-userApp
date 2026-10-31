@@ -15,7 +15,7 @@ const dto = (id: string, extra: Partial<BookingSummaryDto>): BookingSummaryDto =
     ...extra,
   }) as BookingSummaryDto;
 
-describe('My bookings tabs (31 Oct 2026: a cancelled booking is Past, whatever its date)', () => {
+describe('My bookings tabs (dev note 2192:4489: Cancelled stays on Upcoming until its date)', () => {
   const live = dto('live', {});
   const cancelledAhead = dto('cancelled-ahead', {
     status: 'cancelled',
@@ -25,40 +25,28 @@ describe('My bookings tabs (31 Oct 2026: a cancelled booking is Past, whatever i
     status: 'cancelled',
     scheduledStart: '2026-10-01T06:00:00.000Z',
   });
-  const completedAhead = dto('completed-ahead', {
-    status: 'completed',
-    scheduledStart: '2026-10-11T05:30:00.000Z',
-  });
   const instantDone = dto('instant-done', { status: 'completed', scheduledStart: null });
 
-  it('draws a booking cancelled for a later date on Past, not Upcoming', () => {
+  it('draws a booking cancelled for a later date on Upcoming, not Past', () => {
     const history = [cancelledAhead, cancelledPast, instantDone];
-    expect(upcomingBookingsFrom([live], history, NOW).map((b) => b.id)).toEqual(['live']);
-    expect(pastBookingsFrom(history, NOW).map((b) => b.id)).toEqual([
+    expect(upcomingBookingsFrom([live], history, NOW).map((b) => b.id)).toEqual([
       'cancelled-ahead',
+      'live',
+    ]);
+    expect(pastBookingsFrom(history, NOW).map((b) => b.id)).toEqual([
       'cancelled-past',
       'instant-done',
     ]);
   });
 
-  it('keeps a cancelled booking off Upcoming even when the live list still carries it', () => {
-    const apology = dto('apology', { status: 'cancelled' });
-    expect(upcomingBookingsFrom([apology, live], [apology], NOW).map((b) => b.id)).toEqual([
-      'live',
-    ]);
-    expect(pastBookingsFrom([apology], NOW)).toEqual([apology]);
-  });
-
-  it('still keeps a visit completed before its window closed on Upcoming until the slot passes', () => {
-    expect(upcomingBookingsFrom([], [completedAhead], NOW).map((b) => b.id)).toEqual([
-      'completed-ahead',
-    ]);
-    const later = new Date('2026-10-11T07:00:00.000Z');
-    expect(upcomingBookingsFrom([], [completedAhead], later)).toEqual([]);
-    expect(pastBookingsFrom([completedAhead], later)).toEqual([completedAhead]);
+  it('moves it to Past once its slot has passed', () => {
+    const later = new Date('2026-10-12T07:30:00.000Z');
+    expect(upcomingBookingsFrom([], [cancelledAhead], later)).toEqual([]);
+    expect(pastBookingsFrom([cancelledAhead], later)).toEqual([cancelledAhead]);
   });
 
   it('never lists a booking twice when both endpoints carry it', () => {
-    expect(upcomingBookingsFrom([live], [live], NOW).map((b) => b.id)).toEqual(['live']);
+    const apology = dto('apology', { status: 'cancelled' });
+    expect(upcomingBookingsFrom([apology], [apology], NOW).map((b) => b.id)).toEqual(['apology']);
   });
 });

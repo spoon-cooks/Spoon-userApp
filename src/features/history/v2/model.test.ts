@@ -63,6 +63,22 @@ describe('My bookings rows (dev notes 2192:4489 / 2192:4497)', () => {
     });
   });
 
+  it('draws the status in the well: tick, rescheduled arrows or a cross (2192:4371 / 2192:4430)', () => {
+    const at = '2026-11-12T06:00:00.000Z';
+    const glyph = (extra: Partial<BookingSummaryDto>) =>
+      bookingRowFrom(dto('a', at, extra), NOW).glyph;
+    expect(glyph({})).toBe('check');
+    expect(glyph({ status: 'completed' })).toBe('check');
+    expect(glyph({ rescheduleCount: 1 })).toBe('rescheduled');
+    expect(glyph({ status: 'cancelled' })).toBe('closed');
+    expect(glyph({ status: 'cancelled', policyBand: 'SERVICE_FAILURE_FULL_REFUND' })).toBe(
+      'closed',
+    );
+    expect(glyph({ status: 'created' })).toBe('pending');
+    // A recurring visit is still a tick: the tag, not the well, says Recurring.
+    expect(glyph({ recurringBookingId: 'plan-1' })).toBe('check');
+  });
+
   it('does not call an unpaid hold "paid"', () => {
     expect(
       bookingRowFrom(dto('a', '2026-11-12T06:00:00.000Z', { status: 'created' }), NOW).statusLine,

@@ -10,10 +10,12 @@ import { myBookingPresentationFor } from '../adapters';
  *
  *   - Line 1 is "date · start time · duration"; line 2 is "status · amount paid" (tax included —
  *     the summary's `totalAmountPaise`).
- *   - The well and the top-right tag say the booking type: a visit of a recurring plan
+ *   - The top-right tag says the booking type: a visit of a recurring plan
  *     (`recurringBookingId`) is Recurring, everything else One-time.
- *   - Cancelled and Unfulfilled cards sit at 70% opacity. A cancelled booking is always on Past,
- *     whatever its date (31 Oct 2026; the dev note had it on Upcoming until its date).
+ *   - The well says the status: a tick (Confirmed, Completed), the recurring arrows
+ *     (Rescheduled) or a cross on a paler well (Cancelled, Unfulfilled). Payment pending has no
+ *     frame; it keeps the calendar glyph rather than a tick it has not earned.
+ *   - Cancelled (both tabs) and Unfulfilled (Past) cards sit at 70% opacity.
  *   - "Next visit" is the nearest upcoming booking that isn't cancelled.
  *   - Past is grouped under month headers, newest first.
  *
@@ -23,11 +25,15 @@ const TIME_ZONE = 'Asia/Kolkata';
 
 export type BookingKind = 'one-time' | 'recurring';
 
+/** The glyph in a card's well. */
+export type StatusGlyph = 'check' | 'rescheduled' | 'closed' | 'pending';
+
 export interface BookingRow {
   readonly id: string;
   /** "12 Nov · 11:30 AM · 1.5 hrs". */
   readonly when: string;
   readonly kind: BookingKind;
+  readonly glyph: StatusGlyph;
   /** "Confirmed", "Rescheduled", "Cancelled", "Completed", "Unfulfilled", "Payment pending". */
   readonly status: string;
   /** "Confirmed · ₹188 paid". */
@@ -48,6 +54,7 @@ export interface NextVisit {
   readonly badge: string;
   readonly statusLine: string;
   readonly kind: BookingKind;
+  readonly glyph: StatusGlyph;
 }
 
 export interface MonthGroup {
@@ -110,6 +117,13 @@ export function kindOf(dto: Pick<BookingSummaryDto, 'recurringBookingId'>): Book
     : 'one-time';
 }
 
+export function glyphOf(status: string): StatusGlyph {
+  if (status === 'Cancelled' || status === 'Unfulfilled') return 'closed';
+  if (status === 'Rescheduled') return 'rescheduled';
+  if (status === 'Payment pending') return 'pending';
+  return 'check';
+}
+
 function statusLineOf(status: string, totalPaise: number): string {
   const amount = formatPaise(totalPaise);
   // An unpaid hold has paid nothing yet: the amount is still owed, not "paid".
@@ -131,6 +145,7 @@ export function bookingRowFrom(dto: BookingSummaryDto, now: Date): BookingRow {
     id: dto.id,
     when,
     kind: kindOf(dto),
+    glyph: glyphOf(label),
     status: label,
     statusLine: statusLineOf(label, dto.price.totalAmountPaise),
     dimmed: label === 'Cancelled' || label === 'Unfulfilled',
@@ -157,13 +172,13 @@ export function nextVisitFrom(dto: BookingSummaryDto): NextVisit {
     badge: label.toUpperCase(),
     statusLine: statusLineOf(label, dto.price.totalAmountPaise),
     kind: kindOf(dto),
+    glyph: glyphOf(label),
   };
 }
 
 /**
  * The Upcoming tab: the nearest booking that isn't cancelled is lifted into "Next visit"; every
- * other row stays in "Later" in the order given (soonest first). The tab's rows no longer include
- * cancelled bookings (`upcomingBookingsFrom`); the guard stays for any caller that passes one.
+ * other row, cancelled ones included, stays in "Later" in the order given (soonest first).
  */
 export function upcomingFrom(
   bookings: readonly BookingSummaryDto[],
