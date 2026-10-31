@@ -737,7 +737,7 @@ describe('address edit now returns to the list', () => {
     expect(mockRouter.replace).toHaveBeenCalledWith('/address?from=home');
   });
 
-  it('opens Edit with the id of the row that was tapped', async () => {
+  it('opens Edit on the map, with the id of the row that was tapped', async () => {
     // The kebab menu is anchored by measuring the kebab; the test host's measure never answers.
     const native = jest.requireActual<{ default: { measureInWindow: jest.Mock } }>(
       '@react-native/jest-preset/jest/MockNativeMethods',
@@ -752,7 +752,7 @@ describe('address edit now returns to the list', () => {
     fireEvent.press(screen.getByTestId('saved-addresses-card-addr-1-kebab'));
     fireEvent.press(await screen.findByTestId('saved-addresses-menu-edit'));
 
-    expect(mockRouter.push).toHaveBeenCalledWith('/address/details?addressId=addr-1');
+    expect(mockRouter.push).toHaveBeenCalledWith('/address/location?addressId=addr-1');
   });
 });
 
