@@ -585,7 +585,14 @@ function Step({
   );
 }
 
-/** `1870:2516` — a 2pt `#FFD600` line, dashes 2 on / 5 off with round caps. */
+/**
+ * `1870:2516` — a 2pt `#FFD600` line, dashes 2 on / 5 off with round caps.
+ *
+ * The dashes are drawn OVER the rail's space, not in it: laid out in flow, the dashes for a tall
+ * step (the society list open) held the step at that height after the list closed, leaving a
+ * blank gap below the society field (device test, 31 Oct 2026). Now the rail only takes the
+ * height the step's content gives it, and the dashes follow.
+ */
 function DashedRail() {
   const [height, setHeight] = useState(0);
   const count = Math.max(0, Math.floor((height + 3) / 7));
@@ -595,9 +602,11 @@ function DashedRail() {
       onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
       pointerEvents="none"
     >
-      {Array.from({ length: count }, (_, index) => (
-        <View key={index} style={styles.dash} />
-      ))}
+      <View style={styles.dashesDrawn}>
+        {Array.from({ length: count }, (_, index) => (
+          <View key={index} style={styles.dash} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -705,7 +714,16 @@ const styles = StyleSheet.create({
   rail: { width: 28, alignItems: 'center', gap: 4 },
   badge: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   flower: { position: 'absolute', left: 0, top: 1.47, width: 28, height: 25.06 },
-  dashes: { flex: 1, width: 2, alignItems: 'center', gap: 3, overflow: 'hidden' },
+  dashes: { flex: 1, width: 2, overflow: 'hidden' },
+  dashesDrawn: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    gap: 3,
+  },
   dash: { width: 2, height: 4, borderRadius: 1, backgroundColor: C.brand },
   stepContent: { flex: 1, minWidth: 0, gap: 12 },
   stepContentPad: { paddingBottom: 24 },
