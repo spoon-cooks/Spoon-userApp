@@ -218,6 +218,31 @@ describe('Visit details · Cancelled for a one-time booking (2165:11853, dev not
     expect(model.cancelled.byline.startsWith('By Spoon')).toBe(true);
   });
 
+  it('shows the fee the server kept, not ₹0 (device test, 31 Oct 2026)', () => {
+    const partial = booking({
+      ...cancelled,
+      cancellation: {
+        ...cancelled.cancellation,
+        refundAmountPaise: 14950,
+        chargeAmountPaise: 14950,
+      },
+    });
+    const card = cancelledVisitModelFrom(partial, { ...refund, amountPaise: 14950 }, null).refund;
+    expect(card?.lines[2]).toMatchObject({ label: 'Cancellation fee', amount: '– ₹149.50' });
+    expect(card?.total).toMatchObject({ detail: 'Inclusive of taxes', amount: '₹149.50' });
+    expect(card?.total.was).toBeUndefined();
+  });
+
+  it('works the fee out from the refund when the detail does not carry it', () => {
+    const older = booking({
+      ...cancelled,
+      cancellation: { cancelledBy: 'customer', cancelledAt: '2026-10-01T13:10:00.000Z' },
+    });
+    const card = cancelledVisitModelFrom(older, { ...refund, amountPaise: 22425 }, null).refund;
+    expect(card?.lines[2]?.amount).toBe('– ₹74.75');
+    expect(card?.total.amount).toBe('₹224.25');
+  });
+
   it('has nothing to refund when the booking was never paid', () => {
     const model = cancelledVisitModelFrom(
       booking({

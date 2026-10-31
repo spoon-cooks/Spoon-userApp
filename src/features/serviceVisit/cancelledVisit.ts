@@ -97,6 +97,22 @@ export function spoonCancelHelpMessage(booking: BookingDetailDto): string {
  * A booking cancelled before it was ever paid has nothing to refund: the charge card then says
  * nothing was charged.
  */
+/**
+ * The fee kept on cancellation, as the server states it (`cancellation.chargeAmountPaise`). Where
+ * the detail does not carry it (a server before it was published), it is what was paid less what
+ * is being refunded; with neither known it is nothing. It was always ₹0 before (device test, 31
+ * Oct 2026), because the detail never carried the fee and the refund was not used.
+ */
+export function cancellationFeePaise(
+  paidPaise: number,
+  chargePaise: number | null | undefined,
+  refundPaise: number | null,
+): number {
+  if (chargePaise !== null && chargePaise !== undefined) return chargePaise;
+  if (refundPaise === null) return 0;
+  return Math.max(0, paidPaise - refundPaise);
+}
+
 /** `2165:11890` — the one-time refund's last step; the Recurring summary no longer draws it. */
 const REFUND_CREDIT_NOTE = 'It takes 5-7 working days for the amount to get credited to source';
 
@@ -122,8 +138,8 @@ export function cancelledVisitModelFrom(
   const at = cancellation?.cancelledAt ?? null;
 
   const paid = booking.price.totalAmountPaise;
-  const feePaise = cancellation?.chargeAmountPaise ?? 0;
   const refundPaise = refund?.amountPaise ?? cancellation?.refundAmountPaise ?? null;
+  const feePaise = cancellationFeePaise(paid, cancellation?.chargeAmountPaise, refundPaise);
   const charged = refund !== null || (refundPaise !== null && refundPaise > 0) || feePaise > 0;
   const method = booking.paymentMethod ?? null;
   const was = bookingStrikeOf(booking.price)?.totalPaise ?? null;
