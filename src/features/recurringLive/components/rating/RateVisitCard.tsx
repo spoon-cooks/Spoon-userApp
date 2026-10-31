@@ -339,7 +339,8 @@ export function RateVisitCard({
             <Image source={RATING_ART.cookPhoto} style={styles.cookPhoto} resizeMode="cover" />
           )}
           <View style={styles.cookText}>
-            <Text variant="spoonBodyStrong" numberOfLines={1}>
+            {/* The cook's registered name: a long one wraps to a second line (31 Oct 2026). */}
+            <Text variant="spoonBodyStrong" numberOfLines={2}>
               {visit.title}
             </Text>
             <Text variant="spoonCaption" color="textRatingSubtle" numberOfLines={1}>

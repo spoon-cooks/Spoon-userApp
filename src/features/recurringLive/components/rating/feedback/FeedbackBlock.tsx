@@ -122,7 +122,8 @@ function FeedbackBlockView({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.head}>
-        <Text variant="spoonBodyStrong" numberOfLines={1}>
+        {/* Carries the cook's registered name: a long one wraps to a second line (31 Oct 2026). */}
+        <Text variant="spoonBodyStrong" numberOfLines={2}>
           {title}
         </Text>
         <Text variant="spoonCaption" color="textSecondarySoft">
@@ -327,7 +328,7 @@ export function SubmittedFeedback({
         end={{ x: 1, y: 0.5 }}
         style={StyleSheet.absoluteFill}
       />
-      <Text variant="spoonBodyStrong" numberOfLines={1}>
+      <Text variant="spoonBodyStrong" numberOfLines={2}>
         {title}
       </Text>
 
