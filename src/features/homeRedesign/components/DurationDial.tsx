@@ -110,6 +110,18 @@ export function DurationDial({
             );
           })}
           {recommended === null ? null : <Text style={styles.centre}>{recommended.label}</Text>}
+          {/* `784:4089` — under the duration, centred on the same axis as it (device test, 31 Oct
+              2026: placed from the card's edge, it drifted left of centre on a full-width card). */}
+          {recommended === null ? null : (
+            <View
+              style={[styles.tagRow, { top: TAG_TOP - (editable ? 0 : CARD_PADDING) }]}
+              pointerEvents="none"
+            >
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>Recommended</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {editable ? (
@@ -140,13 +152,6 @@ export function DurationDial({
             app anytime!
           </Text>
         </View>
-
-        {/* `784:4089` — positioned from the card's own edge in every frame. */}
-        {recommended === null ? null : (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>Recommended</Text>
-          </View>
-        )}
       </View>
 
       {editable && onSelectDuration !== undefined ? (
@@ -240,6 +245,10 @@ function Stepper({
   );
 }
 
+const CARD_PADDING = 16;
+/** `784:4089` — the tag's top, 172 from the card's edge in every frame. */
+const TAG_TOP = 172;
+
 const styles = StyleSheet.create({
   section: { gap: 12, paddingHorizontal: 16, paddingBottom: 8, width: '100%' },
   eyebrow: {
@@ -251,7 +260,7 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: F.bold, fontSize: 20, lineHeight: 28, color: C.text },
   card: { alignItems: 'center', gap: 16, borderRadius: 24, width: '100%' },
-  cardPadded: { padding: 16 },
+  cardPadded: { padding: CARD_PADDING },
   dial: { width: 280, height: 235 },
   ellipse: { position: 'absolute', left: 41.4, top: 35.19, width: 200, height: 200 },
   segmentBox: {
@@ -281,10 +290,9 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     color: C.text,
   },
+  /** The duration's own box (`centre`), so the tag shares its axis. */
+  tagRow: { position: 'absolute', left: 60.4, width: 159, alignItems: 'center' },
   tag: {
-    position: 'absolute',
-    left: 139,
-    top: 172,
     backgroundColor: C.limeSoft,
     paddingHorizontal: 10,
     paddingVertical: 3,
