@@ -8,6 +8,7 @@ import { lightTheme } from '@ui/theme/ThemeProvider';
 import { ActionDock } from '../components/visit/ActionDock';
 import { BeforeArrivalCard } from '../components/visit/BeforeArrivalCard';
 import { CookAssignedCard } from '../components/visit/CookAssignedCard';
+import type { CookAssignedCardProps } from '../components/visit/CookAssignedCard';
 import { CookPendingCard } from '../components/visit/CookPendingCard';
 import { UpiAutopayCard } from '../components/visit/UpiAutopayCard';
 import { RecipeShareRow } from '../components/visit/RecipeShareRow';
@@ -54,6 +55,8 @@ export interface VisitDetailsScreenProps {
   /** The dev preview's frame; ignored when `model` is given. */
   readonly variant?: VisitVariant;
   readonly onBack: () => void;
+  /** The household's dish likes, for the hearts on the cook card's dishes. */
+  readonly dishLikes?: CookAssignedCardProps['dishLikes'];
   readonly onPaymentDetails?: (() => void) | undefined;
   readonly onModifyBooking?: (() => void) | undefined;
   /** Per `1434:2205`: one tap straight to WhatsApp, no in-app sheet. */
@@ -100,6 +103,7 @@ export function VisitDetailsScreen({
   model: given,
   variant: demoVariant = 'assigned',
   onBack,
+  dishLikes,
   onPaymentDetails,
   onModifyBooking,
   onHelp,
@@ -177,6 +181,7 @@ export function VisitDetailsScreen({
           <CookAssignedCard
             cook={{ ...model.cook, note: '' }}
             menu={model.menu}
+            dishLikes={dishLikes}
             testID={`${testID}-cook`}
           />
         ) : null}

@@ -12,8 +12,8 @@ export { CookProfileScreen } from './screens/CookProfileScreen';
 export type { CookProfileScreenProps } from './screens/CookProfileScreen';
 export { CookPoolFlow } from './screens/CookPoolFlow';
 export type { CookPoolFlowProps } from './screens/CookPoolFlow';
-export { API_COOK_POOL_SOURCE, CookPoolSourceProvider } from './data';
-export type { CookPoolActions, CookPoolSource } from './data';
+export { API_COOK_POOL_SOURCE, CookPoolSourceProvider, useDishLikes } from './data';
+export type { CookPoolActions, CookPoolSource, DishLikes } from './data';
 export { createDemoCookPoolSource } from './demoSource';
 /** A pooled cook's profile as the app draws it (lines, stats and the menu with dish pictures). */
 export { cookCardLines, cookProfileFrom } from './adapters';

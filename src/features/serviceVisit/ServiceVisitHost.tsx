@@ -5,7 +5,12 @@ import { currentSkewMs } from '@core/time';
 
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
-import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import {
+  cookCardLines,
+  cookProfileFrom,
+  useCookPoolProfile,
+  useDishLikes,
+} from '@features/cookPool';
 import { TaxDetailsDialog } from '@features/homeRedesign';
 import {
   PaymentDetailsSheet,
@@ -119,6 +124,8 @@ export function ServiceVisitHost({
   );
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [taxOpen, setTaxOpen] = useState(false);
+  // The hearts on the cook card: the same household likes as the Cook Pool profile.
+  const dishLikes = useDishLikes();
   const [tipPaid, setTipPaid] = useState<ServiceVisitModel['tipPaid']>(null);
   const [rated, setRated] = useState(false);
   // The score picked on the rate card; 4 and above warms the tip card (`2165:14445`).
@@ -306,6 +313,7 @@ export function ServiceVisitHost({
         onBack={onBack}
         onPaymentDetails={() => setPaymentOpen(true)}
         onExtendPaymentDetails={() => setTaxOpen(true)}
+        dishLikes={dishLikes}
         onModifyBooking={onModifyBooking}
         onHelp={onHelp}
         onCall={booking.allowedActions.canCallCook ? onCall : undefined}

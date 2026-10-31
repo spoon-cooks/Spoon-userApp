@@ -10,7 +10,12 @@ import { useBookingDetail } from '@features/booking';
 import { CancelVisitSheet, cancelReasonsFrom } from '@features/cancellation';
 import type { CancelQuote, CancelStep, CancelVisit } from '@features/cancellation';
 import { useCatalogue } from '@features/catalogue';
-import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import {
+  cookCardLines,
+  cookProfileFrom,
+  useCookPoolProfile,
+  useDishLikes,
+} from '@features/cookPool';
 import {
   PaymentDetailsSheet,
   VisitDetailsScreen,
@@ -59,6 +64,8 @@ import { QueryBoundary } from '@ui';
  */
 export default function RecurringVisitRoute() {
   const router = useRouter();
+  // The hearts on the cook card: the same household likes as the Cook Pool profile.
+  const dishLikes = useDishLikes();
   const { bookingId, visitId, modify } = useLocalSearchParams<{
     bookingId: string;
     visitId: string;
@@ -259,6 +266,7 @@ export default function RecurringVisitRoute() {
           <VisitDetailsScreen
             model={model}
             onBack={guard(goBack)}
+            dishLikes={dishLikes}
             onPaymentDetails={() => setPaymentOpen(true)}
             {...(model.modifySheet === null
               ? {}

@@ -17,6 +17,7 @@ import type {
   VisitMenuSection,
   VisitPrepKey,
   VisitToastHandle,
+  CookAssignedCardProps,
 } from '@features/recurringLive';
 import { Screen } from '@ui';
 
@@ -100,6 +101,8 @@ export interface ServiceVisitScreenProps {
    * Confirm Booking (device test, 31 Oct 2026). Falls back to `onPaymentDetails` when not given.
    */
   readonly onExtendPaymentDetails?: (() => void) | undefined;
+  /** The household's dish likes, for the hearts on the cook card's dishes. */
+  readonly dishLikes?: CookAssignedCardProps['dishLikes'];
   readonly onModifyBooking?: (() => void) | undefined;
   readonly onHelp?: (() => void) | undefined;
   readonly onCall?: (() => void) | undefined;
@@ -125,6 +128,7 @@ export function ServiceVisitScreen({
   onBack,
   onPaymentDetails,
   onExtendPaymentDetails,
+  dishLikes,
   onModifyBooking,
   onHelp,
   onCall,
@@ -177,6 +181,7 @@ export function ServiceVisitScreen({
     <CookAssignedCard
       cook={model.cook}
       menu={model.menu}
+      dishLikes={dishLikes}
       onCall={withCall ? onCall : undefined}
       windowHeight={windowHeight}
       testID={`${testID}-cook`}

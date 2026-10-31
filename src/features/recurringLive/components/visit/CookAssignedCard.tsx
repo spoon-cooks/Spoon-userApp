@@ -37,6 +37,15 @@ export interface CookAssignedCardProps {
   readonly menu?: readonly VisitMenuSection[];
   /** Absent: no Call button (there is no way to reach the cook yet). */
   readonly onCall?: (() => void) | undefined;
+  /**
+   * The household's dish likes (`useDishLikes`, DEC-115), keyed by dish code like the Cook Pool
+   * profile's. Given, each dish's heart is a button that fills when liked; absent (the dev
+   * previews), it is drawn idle. Before 31 Oct 2026 it was always a picture, so a cook seen on a
+   * booking (the App Review cook on staging) could not have a dish liked at all.
+   */
+  readonly dishLikes?:
+    | { readonly liked: ReadonlySet<string>; readonly toggle: (dishCode: string) => void }
+    | undefined;
   /** The window's height: 450 (`1462:5794`), or 372 on Cook arrived (Service flow `2165:11952`). */
   readonly windowHeight?: number | undefined;
   readonly testID?: string | undefined;
@@ -44,10 +53,14 @@ export interface CookAssignedCardProps {
 
 const DEMO = visitDemoModel('assigned');
 
+/** The 13×12 heart is far below a 44pt target; its touch area reaches past it on every side. */
+const HEART_SLOP = { top: 12, right: 12, bottom: 16, left: 16 };
+
 export function CookAssignedCard({
   cook = DEMO.cook,
   menu = DEMO.menu,
   onCall,
+  dishLikes,
   windowHeight = 450,
   testID = 'visit-cook-assigned',
 }: CookAssignedCardProps) {
@@ -173,7 +186,29 @@ export function CookAssignedCard({
                               resizeMode="contain"
                             />
                           )}
-                          <Image source={VISIT_DISH_FAVORITE} style={styles.favorite} />
+                          {dishLikes === undefined ? (
+                            <Image source={VISIT_DISH_FAVORITE} style={styles.favorite} />
+                          ) : (
+                            <Pressable
+                              onPress={() => dishLikes.toggle(dish.id)}
+                              hitSlop={HEART_SLOP}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Favourite ${dish.name}`}
+                              accessibilityState={{ selected: dishLikes.liked.has(dish.id) }}
+                              style={styles.favorite}
+                              testID={`${testID}-dish-${dish.id}-favourite`}
+                            >
+                              <Image
+                                source={VISIT_DISH_FAVORITE}
+                                style={[
+                                  styles.favoriteIcon,
+                                  dishLikes.liked.has(dish.id)
+                                    ? styles.favoriteOn
+                                    : styles.favoriteOff,
+                                ]}
+                              />
+                            </Pressable>
+                          )}
                         </View>
                         <Text variant="spoonCaption" color="textVisitDish" numberOfLines={1}>
                           {dish.name}
@@ -308,6 +343,10 @@ const styles = StyleSheet.create({
   dishImage: { width: 120, height: 120 },
   /** `848:7803` — the heart, 13×12 at x 107, y 0. */
   favorite: { position: 'absolute', left: 107, top: 0, width: 13, height: 12 },
+  favoriteIcon: { width: 13, height: 12 },
+  favoriteOff: { tintColor: lightTheme.colors.iconIdle },
+  /** `848:7806` — a liked dish's heart, `#FFD600`, as on the Cook Pool dish card. */
+  favoriteOn: { tintColor: lightTheme.colors.surfaceBrand },
   /** `1463:7967` — 88 tall, content pinned to the bottom with 12 under it. */
   cue: {
     position: 'absolute',
