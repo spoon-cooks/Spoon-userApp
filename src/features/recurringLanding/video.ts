@@ -9,50 +9,36 @@ import type { ExplainerVideoSource } from './components/ExplainerPlayer';
  * The Recurring landing's explainer video, set from Firebase Remote Config (owner, 31 Oct 2026),
  * so it changes without a release:
  *
- *   recurring_explainer_video_url   the video: an `https://` link to an `.mp4` (or HLS `.m3u8`)
- *                                   on S3. Unset, blank or not `https://`: no video yet. The
- *                                   block still shows; its card opens the placeholder player.
- *   recurring_explainer_subhead     the line under the heading ("See the whole flow in under 4
- *                                   minutes."). Unset: that default.
+ *   recurring_explainer_video_url   an `https://` link to the `.mp4` (or HLS `.m3u8`) on S3.
  *
- * Staging and development read the same names with their environment's prefix
- * (`staging_recurring_explainer_video_url`), so a test video never reaches customers
- * (`@core/remoteConfig`). Remote Config is asked at most every 15 minutes; a change reaches an
- * open app within that.
+ * Unset, blank or not `https://`: no video yet. The landing still shows its explainer block, and
+ * the card opens the placeholder player. Staging and development read the same name with their
+ * environment's prefix (`staging_recurring_explainer_video_url`), so a test video never reaches
+ * customers (`@core/remoteConfig`). Remote Config is asked at most every 15 minutes; a change
+ * reaches an open app within that.
  */
 
-export interface ExplainerVideo {
-  readonly source: ExplainerVideoSource;
-  /** The line under the heading; `null` for the screen's own default. */
-  readonly subhead: string | null;
-}
-
 const VIDEO_URL = 'recurring_explainer_video_url';
-const SUBHEAD = 'recurring_explainer_subhead';
 
-/** The explainer from the console's values, or `null` when no usable video is set. */
-export function explainerVideoFrom(values: {
-  readonly url: string | null;
-  readonly subhead: string | null;
-}): ExplainerVideo | null {
-  if (values.url === null || !/^https:\/\/\S+$/u.test(values.url)) return null;
-  return { source: { uri: values.url }, subhead: values.subhead };
+/** The video for a link set in the console, or `null` when it is not a usable `https://` link. */
+export function explainerVideoFrom(url: string | null): ExplainerVideoSource | null {
+  if (url === null || !/^https:\/\/\S+$/u.test(url)) return null;
+  return { uri: url };
 }
 
-export async function fetchExplainerVideo(): Promise<ExplainerVideo | null> {
-  const values = await readRemoteStrings([VIDEO_URL, SUBHEAD], getConfig().appEnv);
-  if (values === null) return null;
-  return explainerVideoFrom({ url: values[VIDEO_URL], subhead: values[SUBHEAD] });
+export async function fetchExplainerVideo(): Promise<ExplainerVideoSource | null> {
+  const values = await readRemoteStrings([VIDEO_URL], getConfig().appEnv);
+  return values === null ? null : explainerVideoFrom(values[VIDEO_URL]);
 }
 
 const STALE_MS = 15 * 60 * 1000;
 
-/** The explainer the landing shows, or `null` while there is none (or none has been read yet). */
-export function useExplainerVideo(): ExplainerVideo | null {
+/** The video the Recurring landing plays, or `undefined` while there is none. */
+export function useExplainerVideoSource(): ExplainerVideoSource | undefined {
   const query = useQuery({
     queryKey: ['remoteConfig', 'recurringExplainer'],
     queryFn: fetchExplainerVideo,
     staleTime: STALE_MS,
   });
-  return query.data ?? null;
+  return query.data ?? undefined;
 }

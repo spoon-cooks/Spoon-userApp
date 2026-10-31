@@ -8,5 +8,4 @@ export { RecurringLandingScreen } from './screens/RecurringLandingScreen';
 export type { RecurringLandingScreenProps } from './screens/RecurringLandingScreen';
 export type { ExplainerVideoSource } from './components/ExplainerPlayer';
 export type { RecurringCta } from './components/ScheduleTag';
-export { explainerVideoFrom, useExplainerVideo } from './video';
-export type { ExplainerVideo } from './video';
+export { explainerVideoFrom, useExplainerVideoSource } from './video';

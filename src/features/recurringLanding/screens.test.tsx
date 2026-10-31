@@ -29,20 +29,6 @@ function renderLanding(props: Partial<Parameters<typeof RecurringLandingScreen>[
 }
 
 describe('Recurring landing', () => {
-  it('always shows the explainer block, with its own subhead when no video is set', () => {
-    const handlers = { onBack: jest.fn(), onSchedule: jest.fn(), onMakeCookPool: jest.fn() };
-    render(<RecurringLandingScreen {...handlers} />);
-    expect(screen.getByTestId('recurring-landing-explainer')).toBeTruthy();
-    expect(screen.getByText('Plans, Visits, Cook Pool & more')).toBeTruthy();
-    expect(screen.getByText('See the whole flow in under 4 minutes.')).toBeTruthy();
-  });
-
-  it('shows the subhead set in Remote Config, and its own line without one', () => {
-    renderLanding({ explainer: { subhead: 'The whole flow in 2 minutes.' } });
-    expect(screen.getByText('The whole flow in 2 minutes.')).toBeTruthy();
-    expect(screen.queryByText('See the whole flow in under 4 minutes.')).toBeNull();
-  });
-
   it('draws the page, top to bottom', () => {
     renderLanding();
     expect(screen.getByText('Recurring')).toBeTruthy();

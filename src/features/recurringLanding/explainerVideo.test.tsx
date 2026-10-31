@@ -78,12 +78,7 @@ const SOURCE = { uri: 'https://videos.example.com/recurring.mp4' };
 function renderPlayer(props: Partial<Parameters<typeof RecurringLandingScreen>[0]> = {}) {
   const handlers = { onBack: jest.fn(), onSchedule: jest.fn(), onMakeCookPool: jest.fn() };
   render(
-    <RecurringLandingScreen
-      {...handlers}
-      explainer={{ source: SOURCE }}
-      initialPlayerAt={0}
-      {...props}
-    />,
+    <RecurringLandingScreen {...handlers} videoSource={SOURCE} initialPlayerAt={0} {...props} />,
   );
   return handlers;
 }

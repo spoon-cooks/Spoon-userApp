@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { RecurringLandingScreen, useExplainerVideo } from '@features/recurringLanding';
+import { RecurringLandingScreen, useExplainerVideoSource } from '@features/recurringLanding';
 import { RouteScaffold } from '@ui';
 
 /**
@@ -15,7 +15,7 @@ import { RouteScaffold } from '@ui';
  * `?pool=1` draws the Cook Pool button as for a household with a pool ("Check your Cook Pool");
  * without it the button reads "Make your Cook Pool".
  *
- * `?video=<url>` plays that video in the player, in place of the one set in Remote Config (`video.ts`) —
+ * `?video=<url>` plays that video in the player, in place of the configured one (`video.ts`) —
  * for trying a link without editing code. Needs a build that has `expo-video`; an older one plays
  * the placeholder. Percent-encode the URL (`?video=https%3A%2F%2F…`).
  *
@@ -33,12 +33,8 @@ export default function RecurringLandingPreviewRoute() {
     video?: string;
     pool?: string;
   }>();
-  const configured = useExplainerVideo();
-  // The preview always shows the block: with no video set it plays the placeholder.
-  const explainer =
-    video === undefined || video === ''
-      ? (configured ?? {})
-      : { source: { uri: video }, subhead: configured?.subhead ?? null };
+  const configured = useExplainerVideoSource();
+  const videoSource = video === undefined || video === '' ? configured : { uri: video };
 
   if (!__DEV__) {
     return (
@@ -60,7 +56,7 @@ export default function RecurringLandingPreviewRoute() {
       hasCookPool={pool === '1'}
       initialScroll={state === 'bottom' || state === 'watched' ? 'end' : 'top'}
       initialWatched={state === 'watched'}
-      explainer={explainer}
+      {...(videoSource === undefined ? {} : { videoSource })}
       {...(state === 'player' ? { initialPlayerAt: PLAYER_AT_SECONDS } : {})}
     />
   );

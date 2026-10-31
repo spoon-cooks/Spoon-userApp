@@ -74,15 +74,8 @@ export interface RecurringLandingScreenProps {
    * Cook Pool" (`983:6046`). False or absent (empty, or not known yet) reads "Make your Cook Pool".
    */
   readonly hasCookPool?: boolean;
-  /**
-   * The explainer video and its subhead, set from Remote Config (`video.ts`). The block ("Plans,
-   * Visits, Cook Pool & more" and its card) is always shown (owner, 31 Oct 2026); with no video
-   * set, the card opens the placeholder player and the subhead is the screen's own line.
-   */
-  readonly explainer?: {
-    readonly source?: ExplainerVideoSource;
-    readonly subhead?: string | null;
-  };
+  /** The explainer video. Absent until there is one. */
+  readonly videoSource?: ExplainerVideoSource;
   /** Where the page opens: scrolled to the top (the default) or to the end. For previews. */
   readonly initialScroll?: 'top' | 'end';
   /** Opens with the video already watched. For previews. */
@@ -99,7 +92,7 @@ export function RecurringLandingScreen({
   onOpenLive,
   onMakeCookPool,
   hasCookPool = false,
-  explainer,
+  videoSource,
   initialScroll = 'top',
   initialWatched = false,
   initialPlayerAt,
@@ -238,7 +231,7 @@ export function RecurringLandingScreen({
                       {watched ? EXPLAINER_HEADING_WATCHED : EXPLAINER_HEADING}
                     </Text>
                     <Text variant="bodyLarge" color="textExplainer">
-                      {explainer?.subhead ?? EXPLAINER_SUBHEAD}
+                      {EXPLAINER_SUBHEAD}
                     </Text>
                   </View>
                   <ExplainerCard
@@ -269,7 +262,7 @@ export function RecurringLandingScreen({
 
       {playerAt === null ? null : (
         <ExplainerPlayer
-          {...(explainer?.source === undefined ? {} : { source: explainer.source })}
+          {...(videoSource === undefined ? {} : { source: videoSource })}
           initialPosition={playerAt}
           onEnded={onEnded}
           onClose={closePlayer}
