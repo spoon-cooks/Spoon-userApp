@@ -678,9 +678,10 @@ export function TipCard({
               ))}
               {picked === 'other' ? (
                 <View style={[styles.tipPill, styles.tipPillOn]}>
-                  <Text style={styles.button}>₹</Text>
+                  {/* The "₹" is part of the field so "₹" and the amount centre together in the
+                      pill, like the amounts beside it (device test, 31 Oct 2026). */}
                   <TextInput
-                    value={other}
+                    value={`₹${other}`}
                     onChangeText={(text) => setOther(text.replace(/\D/g, '').slice(0, 5))}
                     keyboardType="number-pad"
                     autoFocus
@@ -1089,6 +1090,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 24,
     padding: 0,
+    textAlign: 'center',
     fontFamily: T.button.fontFamily,
     fontSize: T.button.fontSize,
     color: C.text,

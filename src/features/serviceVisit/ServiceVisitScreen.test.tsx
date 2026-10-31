@@ -199,7 +199,11 @@ describe('Service flow screen (2165:11841)', () => {
   it('completed: "Other" takes a typed amount', () => {
     const props = renderPhase({ phase: 'completed' });
     fireEvent.press(screen.getByTestId('service-visit-tip-other'));
-    fireEvent.changeText(screen.getByTestId('service-visit-tip-other-input'), '75');
+    const input = screen.getByTestId('service-visit-tip-other-input');
+    // The field holds "₹" and the amount together, centred in the pill.
+    expect(input.props.value).toBe('₹');
+    fireEvent.changeText(input, '₹75');
+    expect(screen.getByTestId('service-visit-tip-other-input').props.value).toBe('₹75');
     fireEvent.press(screen.getByTestId('service-visit-tip-pay'));
     expect(props.onTip).toHaveBeenCalledWith(7500);
   });
