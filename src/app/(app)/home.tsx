@@ -35,9 +35,9 @@ const logger = getLogger('home');
  * An address OUTSIDE the service area now renders the not-live Home (waitlist + referral) rather
  * than bouncing to the map; only an account with no saved address at all is sent to add one.
  *
- * The pool block: "Check Recurring" opens the Recurring landing (explainer + "Make your Cook
- * Pool"), "Book Recurring" the plan flow, the pool card the Cook Pool, and a bead that cook's
- * profile. "Recurring · Live" opens that booking's Live booking tab (`/recurring/[bookingId]`).
+ * The pool block: "Check Recurring" and "Book Recurring" both open the Recurring landing (owner,
+ * 31 Oct 2026: shown on every booking, not only the first; its own "Book Recurring" opens the
+ * plan flow), the pool card the Cook Pool, and a bead that cook's profile. "Recurring · Live" opens that booking's Live booking tab (`/recurring/[bookingId]`).
  *
  * Active bookings (`2243:1120`): a card opens its booking (`/booking/[id]`); "View all" opens My
  * bookings on Upcoming.
@@ -175,11 +175,7 @@ function SignedInHomeRoute() {
 
   /** `liveBookingId`: the household's live Recurring booking, which the "Live" chip opens. */
   const openRecurring = (target: RecurringTarget, liveBookingId: string | null): boolean => {
-    if (target === 'recurringFlow') {
-      router.push('/recurring-setup/days');
-      return true;
-    }
-    if (target === 'explainer') {
+    if (target === 'recurringFlow' || target === 'explainer') {
       router.push('/recurring');
       return true;
     }

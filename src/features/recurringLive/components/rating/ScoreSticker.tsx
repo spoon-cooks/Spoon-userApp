@@ -19,6 +19,10 @@ import { FULL_TURN, IDLE_MARK, STICKER_MOTION } from './ratingMotion';
  *   disappointing  `1501:7508` blob at 0,4; centred 50.24 down
  *   very poor      `1501:7657` blob at 0,4; centred 51.36 down
  *
+ * On a blob the numeral is centred across the BLOB, not the 96pt sticker: the blobs are narrower
+ * (78 – 88) and sit at its left edge, so a sticker-centred "1" / "0.5" / "1.5" stood 9pt right of
+ * its 78pt blob (device test, 31 Oct 2026).
+ *
  * Motion (`ratingMotion.ts`): a rated sticker plays its entrance on the card's `clock`; the idle
  * sticker's "?" bobs on the first look's loop while its ring turns on `spin`.
  */
@@ -53,6 +57,7 @@ export interface ScoreStickerProps {
 export function ScoreSticker({ tier, value, clock, testID }: ScoreStickerProps) {
   const blob = BLOBS[tier];
   const centreY = blob?.centreY ?? 48;
+  const centreX = blob === undefined ? 48 : blob.width / 2;
   const motion = STICKER_MOTION[tier];
   const animate = (part: Parameters<typeof keyframedStyle>[1] | undefined) =>
     clock === undefined || part === undefined ? null : keyframedStyle(clock, part);
@@ -77,7 +82,10 @@ export function ScoreSticker({ tier, value, clock, testID }: ScoreStickerProps) 
           style={[styles.blob, { width: blob.width, height: blob.height }, animate(motion.shape)]}
         />
       ) : null}
-      <Animated.View style={[styles.numeral, { top: centreY - 48 }, animate(motion.numeral)]}>
+      <Animated.View
+        style={[styles.numeral, { left: centreX - 48, top: centreY - 48 }, animate(motion.numeral)]}
+        testID={`${testID}-numeral`}
+      >
         <Text variant="spoonDisplayLarge" align="center">
           {formatRating(value)}
         </Text>
@@ -143,7 +151,6 @@ const styles = StyleSheet.create({
   blob: { position: 'absolute', left: 0, top: 4 },
   numeral: {
     position: 'absolute',
-    left: 0,
     width: 96,
     height: 96,
     alignItems: 'center',

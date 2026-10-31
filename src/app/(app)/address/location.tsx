@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 
@@ -100,6 +100,23 @@ export default function AddressLocationRoute() {
         : { latitude: savedFallback.latitude, longitude: savedFallback.longitude },
     );
   }, [failed, savedFallback, selectPoint]);
+
+  /**
+   * An EDIT opens on the address's saved pin, not wherever the phone is: the customer is moving
+   * THAT pin. Placed once, as the customer's own point, so a device fix still in flight is dropped
+   * rather than dragging the map away; from there the pin moves only when they move it.
+   */
+  // Not on a `resume` visit: that one returns to a form whose point may already have moved.
+  const editing =
+    editingId === null || resume !== undefined || addresses.state.status !== 'ready'
+      ? undefined
+      : addresses.state.data.find((address) => address.id === editingId);
+  const placedEditPin = useRef(false);
+  useEffect(() => {
+    if (editing === undefined || placedEditPin.current) return;
+    placedEditPin.current = true;
+    selectPoint({ latitude: editing.latitude, longitude: editing.longitude });
+  }, [editing, selectPoint]);
 
   /** Android back closes the Search layer before it touches the stack. */
   useAndroidBackHandler(() => {

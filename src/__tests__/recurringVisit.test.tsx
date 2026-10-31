@@ -217,7 +217,7 @@ describe('Recurring Visit details route', () => {
   it('offers Book again after a failed debit', async () => {
     render(jest.fn(), FAILED_DEBIT);
     fireEvent.press(await screen.findByTestId('visit-details-screen-rebook-again'));
-    expect(mockPush).toHaveBeenCalledWith('/recurring-setup/days');
+    expect(mockPush).toHaveBeenCalledWith('/recurring');
   });
 
   it('offers only Book again on a visit the customer cancelled', async () => {

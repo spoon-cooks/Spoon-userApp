@@ -339,7 +339,8 @@ export function RateVisitCard({
             <Image source={RATING_ART.cookPhoto} style={styles.cookPhoto} resizeMode="cover" />
           )}
           <View style={styles.cookText}>
-            <Text variant="spoonBodyStrong" numberOfLines={1}>
+            {/* The cook's registered name: a long one wraps to a second line (31 Oct 2026). */}
+            <Text variant="spoonBodyStrong" numberOfLines={2}>
               {visit.title}
             </Text>
             <Text variant="spoonCaption" color="textRatingSubtle" numberOfLines={1}>
@@ -638,15 +639,10 @@ function RatedBody({
             testID={`${testID}-feedback`}
           />
 
-          {/* `1501:7471` — below 4 only (dev note `2238:930`). */}
+          {/* `1501:7471` — below 4 only (dev note `2238:930`). Only the toggle is pressable; the
+              icon and copy beside it are not (device test, 31 Oct 2026). */}
           {copy.differentCook ? (
-            <Pressable
-              onPress={onToggleAvoidCook}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: avoidCook }}
-              style={styles.support}
-              testID={`${testID}-support`}
-            >
+            <View style={styles.support} testID={`${testID}-support`}>
               <View style={styles.supportDisc}>
                 <Image source={RATING_ART.restart} style={styles.icon} />
               </View>
@@ -664,11 +660,20 @@ function RatedBody({
                   {RATING_DIFFERENT_COOK.body}
                 </Text>
               </View>
-              <Image
-                source={avoidCook ? RATING_ART.toggleOn : RATING_ART.toggleOff}
-                style={styles.toggle}
-              />
-            </Pressable>
+              <Pressable
+                onPress={onToggleAvoidCook}
+                accessibilityRole="switch"
+                accessibilityLabel={RATING_DIFFERENT_COOK.title}
+                accessibilityState={{ checked: avoidCook }}
+                hitSlop={TOGGLE_HIT_SLOP}
+                testID={`${testID}-support-toggle`}
+              >
+                <Image
+                  source={avoidCook ? RATING_ART.toggleOn : RATING_ART.toggleOff}
+                  style={styles.toggle}
+                />
+              </Pressable>
+            </View>
           ) : null}
 
           {/* `1501:6844` — CTA. */}
@@ -765,6 +770,9 @@ function useCompactCard(): boolean {
 
 /** `1501:6849` — the confetti frame's width: the card as Figma draws it. */
 const CONFETTI_FRAME_WIDTH = 370;
+
+/** The 44 × 26 toggle reaches a 48pt touch target. */
+const TOGGLE_HIT_SLOP = { top: 11, bottom: 11, left: 2, right: 2 };
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

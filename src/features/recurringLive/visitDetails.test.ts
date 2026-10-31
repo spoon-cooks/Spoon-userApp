@@ -205,7 +205,7 @@ describe('visitDetailsFrom', () => {
         }),
       }),
     );
-    expect(model.prep?.allSet).toBe('Kitchen’s ready! Meera can start cooking right away.');
+    expect(model.prep?.allSet).toBe('Kitchen’s ready! Cook Meera can start cooking right away.');
     expect(model.prepChecked).toEqual(['entry', 'utensils']);
   });
 
@@ -417,7 +417,7 @@ describe('rating a visit', () => {
     expect(rateVisitInfo(visit({ cook: COOK, timeOfDay: 'afternoon' }))).toEqual({
       title: 'Lunch with Cook Meera',
       meta: 'Wed, 14 Oct · 9:00 AM · 1 hr',
-      cookName: 'Meera',
+      cookName: 'Cook Meera',
       photoUri: 'https://img/meera.jpg',
     });
     expect(rateVisitInfo(visit())).toBeNull();

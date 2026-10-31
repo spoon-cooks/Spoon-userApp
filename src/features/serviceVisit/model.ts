@@ -197,15 +197,13 @@ export function freeTill(options: readonly ExtensionOptionDto[]): string | null 
   return latest === null ? null : clock(latest);
 }
 
-/** The cook's first name, as the cards address her. */
-export function firstName(name: string | null | undefined): string | null {
+/**
+ * The cook's name as the cards address her: exactly as registered, nothing added or dropped
+ * (owner, 31 Oct 2026 — no "Cook" prefix, no first word only).
+ */
+export function cookNameOf(name: string | null | undefined): string | null {
   if (name === null || name === undefined || name.trim() === '') return null;
-  return (
-    name
-      .replace(/^Cook\s+/u, '')
-      .trim()
-      .split(/\s+/)[0] ?? null
-  );
+  return name.trim();
 }
 
 /** The tip card's amounts (`2216:4345`); "Most tipped" sits on ₹50. */
@@ -242,7 +240,7 @@ export function paymentSheetFrom(booking: BookingDetailDto, cookName: string | n
   const capturedTip = booking.tip?.status === 'captured' ? booking.tip.amountPaise : 0;
   const tipPaise = Math.max(booking.charges?.tipAmountPaise ?? 0, capturedTip);
   const method = booking.paymentMethod ?? null;
-  const cook = firstName(cookName);
+  const cook = cookNameOf(cookName);
   const strike = bookingStrikeOf(booking.price);
   return {
     title: 'Payment details',

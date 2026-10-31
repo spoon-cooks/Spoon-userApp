@@ -1,4 +1,4 @@
-import { cookPoolSummaryFrom, cookProfileFrom, deckCooksFrom, shortNameOf } from './adapters';
+import { cookPoolSummaryFrom, cookProfileFrom, deckCooksFrom } from './adapters';
 import type { CookProfilePresentationDto, PoolCookCardDto, PoolCookProfileDto } from './api';
 
 function card(overrides: Partial<PoolCookCardDto> = {}): PoolCookCardDto {
@@ -60,7 +60,7 @@ const PRESENTATION: CookProfilePresentationDto = {
 };
 
 describe('Cook Pool adapters', () => {
-  it('captions the pool with short names, in the backend’s order, at the minimum it is given', () => {
+  it('captions the pool with the registered names, in the backend’s order, at the minimum it is given', () => {
     const summary = cookPoolSummaryFrom(
       {
         cooks: [
@@ -78,14 +78,10 @@ describe('Cook Pool adapters', () => {
 
     expect(summary.minimumSize).toBe(3);
     expect(summary.members.map((member) => [member.cookId, member.name])).toEqual([
-      ['asha', 'Asha'],
-      ['cook-meera', 'Meera'],
+      ['asha', 'Cook Asha'],
+      ['cook-meera', 'Cook Meera'],
     ]);
     expect(summary.members[0]?.photo).toBeUndefined();
-  });
-
-  it('keeps a name with no honorific as it is', () => {
-    expect(shortNameOf('Meera')).toBe('Meera');
   });
 
   it('draws the hosted photo, and no photo at all without one', () => {

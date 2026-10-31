@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Keyboard } from 'react-native';
 
 import {
   DEFAULT_API_STUBS,
@@ -226,6 +227,47 @@ describe('the society dropdown (2825:4858, 2825:5126, 2829:4973)', () => {
     fireEvent.changeText(screen.getByTestId('address-details-number'), '402');
     fireEvent.press(screen.getByTestId('address-details-label-home'));
   };
+
+  it('opens no list until a first letter is typed, then every society with a word starting so', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: `soc-p${String(i)}`,
+      name: `Prestige Tower ${String(i)}`,
+    }));
+    render({
+      'GET /v1/societies': () => ({
+        societies: [
+          ...many,
+          { id: 'soc-lake', name: 'Prestige Lakeside Habitat' },
+          { id: 'soc-ups', name: 'Upstream Heights' },
+        ],
+      }),
+    });
+    await screen.findByTestId('address-details');
+    expect(screen.queryByTestId('address-details-society-list')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('address-details-society-input'), 'p');
+    // All 13 Prestige societies, not the first eight; "Upstream" has a "p" but no word starting so.
+    expect(await screen.findByTestId('address-details-society-option-soc-p11')).toBeTruthy();
+    expect(screen.getByTestId('address-details-society-option-soc-lake')).toBeTruthy();
+    expect(screen.queryByTestId('address-details-society-option-soc-ups')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('address-details-society-input'), 'lake');
+    expect(screen.getByTestId('address-details-society-option-soc-lake')).toBeTruthy();
+    expect(screen.queryByTestId('address-details-society-option-soc-p0')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('address-details-society-input'), '');
+    expect(screen.queryByTestId('address-details-society-list')).toBeNull();
+  });
+
+  it('closes the keyboard as a society is picked, so no gap is left where the list was', async () => {
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    render();
+    await screen.findByTestId('address-details');
+    await pickSociety('pres', 'soc-prestige');
+    expect(dismiss).toHaveBeenCalled();
+    expect(screen.queryByTestId('address-details-society-list')).toBeNull();
+    dismiss.mockRestore();
+  });
 
   it('lists matches with Others last, and holds Save until a society is picked', async () => {
     render();

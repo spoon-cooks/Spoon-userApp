@@ -291,12 +291,8 @@ export function headerSubtitleFrom(dto: BookingDetailDto): string {
  */
 function withCookName(title: string, cookName: string | null): string {
   if (cookName === null || cookName.trim().length === 0) return title;
-  return title.replace(/^Cook\s+\S+/u, `Cook ${cookFirstNameFrom(cookName.trim())}`);
-}
-
-/** `Cook Asha` -> `Asha`. The backend may or may not carry the honorific; both are handled. */
-function cookFirstNameFrom(name: string): string {
-  return name.replace(/^Cook\s+/iu, '');
+  // The registered name exactly, in place of the design's sample "Cook <name>" (owner, 31 Oct 2026).
+  return title.replace(/^Cook\s+\S+/u, () => cookName.trim());
 }
 
 /**
@@ -321,7 +317,7 @@ function cookViewModelFrom(
   return {
     id: cook.id ?? bookingId,
     displayName: cook.name,
-    firstName: cookFirstNameFrom(cook.name),
+    firstName: cook.name,
     ...(photoUrl === undefined || photoUrl === null ? {} : { photoUrl }),
     ...(cook.gender === null || cook.gender === undefined ? {} : { gender: cook.gender }),
     ...(cuisine === undefined ? {} : { cuisine }),

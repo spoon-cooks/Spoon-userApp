@@ -24,7 +24,7 @@ const MODEL: ServiceVisitModel = {
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: '', name: 'Cook Sanchita', note: '' },
   menu: [],
-  cookFirstName: 'Sanchita',
+  cookName: 'Sanchita',
   cookPhoto: null,
   prepChecked: [],
   arrival: { by: null, minutes: null, onTime: true },

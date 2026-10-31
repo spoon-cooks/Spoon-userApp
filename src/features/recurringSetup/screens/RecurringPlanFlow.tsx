@@ -1,6 +1,14 @@
 import { useState } from 'react';
 
-import { busyWindowsFor, ordinal, visitCaption, withoutVisit, withoutVisitDay } from '../data';
+import {
+  busyWindowsFor,
+  ordinal,
+  sameVisit,
+  visitCaption,
+  withDayInMatchingPlan,
+  withoutVisit,
+  withoutVisitDay,
+} from '../data';
 import { RecurringInfoProvider } from '../components/HelpFab';
 import type { EditDateDraft, EditDateField } from '../editDateDraft';
 import type { RecurringPlanDraft, RecurringVisitChoice } from '../types';
@@ -252,8 +260,22 @@ function RecurringPlanFlowScreens({ onExit, onComplete, today, seed }: Recurring
         )}
         onBack={() => setStage({ kind: 'summary', planIndex: index, visitIndex: stage.visitIndex })}
         onSave={(choice: RecurringVisitChoice) => {
+          // Nothing changed: the date stays where it was rather than splitting into a plan of its own.
+          if (sameVisit(choice, visit)) {
+            setStage({ kind: 'summary', planIndex: index, visitIndex: stage.visitIndex });
+            return;
+          }
+          // The date joins the plan that already has exactly this visit; only a visit no plan has
+          // starts a new one (owner, 31 Oct 2026).
+          const rest = withoutDate();
+          const joined = withDayInMatchingPlan(rest, stage.dayId, choice);
+          if (joined !== null) {
+            setPlans(joined.plans);
+            setStage({ kind: 'summary', planIndex: joined.planIndex, visitIndex: 0 });
+            return;
+          }
           const next = [
-            ...withoutDate(),
+            ...rest,
             { id: nextPlanId(plans), dayIds: [stage.dayId], visits: [choice] },
           ];
           setPlans(next);

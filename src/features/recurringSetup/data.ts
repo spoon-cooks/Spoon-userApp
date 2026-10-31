@@ -348,6 +348,38 @@ export function withoutVisitDay(
   };
 }
 
+/** The same visit: time of day, duration and start time all equal (the days aside). */
+export function sameVisit(a: RecurringVisitChoice, b: RecurringVisitChoice): boolean {
+  return (
+    a.timeOfDay === b.timeOfDay &&
+    a.durationId === b.durationId &&
+    a.startMinutes === b.startMinutes
+  );
+}
+
+/**
+ * One date given its own visit, placed where it belongs (owner, 31 Oct 2026): into the plan whose
+ * 1st visit is exactly that visit, when one exists, rather than a new plan alongside an identical
+ * one. A plan's 1st visit runs on every plan day, so the date simply joins that plan's days.
+ * `null` when no plan has that visit; the caller then starts a new plan for the date.
+ */
+export function withDayInMatchingPlan(
+  plans: readonly RecurringPlanDraft[],
+  dayId: string,
+  choice: RecurringVisitChoice,
+): { readonly plans: readonly RecurringPlanDraft[]; readonly planIndex: number } | null {
+  const planIndex = plans.findIndex(
+    (plan) => plan.visits[0] !== undefined && sameVisit(plan.visits[0], choice),
+  );
+  const target = plans[planIndex];
+  if (target === undefined) return null;
+  const dayIds = target.dayIds.includes(dayId) ? target.dayIds : [...target.dayIds, dayId].sort();
+  return {
+    plans: plans.map((plan, index) => (index === planIndex ? { ...plan, dayIds } : plan)),
+    planIndex,
+  };
+}
+
 /** "Afternoon", "60 minutes", "9:00 AM" — a visit as the dialogs' tags list it (`586:4379`). */
 export function visitTags(visit: RecurringVisitChoice): readonly string[] {
   const band = TIME_OF_DAY_BANDS.find((entry) => entry.id === visit.timeOfDay);

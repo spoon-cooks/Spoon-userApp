@@ -200,7 +200,7 @@ export function VisitDetailsScreen({
         {variant === 'completed' ? (ratingSlot ?? null) : null}
         {variant === 'completed' ? (
           <VisitCookActions
-            cookName={model.cook.name.replace(/^Cook\s+/u, '')}
+            cookName={model.cook.name}
             onAddToPool={onAddCookToPool}
             adding={addingCookToPool}
             onTip={onTipCook}

@@ -20,7 +20,7 @@ type RecurringInput = Pick<HomeModel, 'cookPool' | 'activeRecurringPlan' | 'recu
 /**
  * The lime chip on the pool block:
  *   plan active            → "Recurring · Live" → plan tracker
- *   pool qualifies (≥ 2)   → "Book Recurring"   → recurring flow
+ *   pool qualifies (≥ 2)   → "Book Recurring"   → recurring flow, via the landing (Home opens it)
  *   pool under 2           → "Check Recurring"  → explainer  (proposed in the dev note)
  *
  * The backend's `chip` (eligibility) decides when it has answered — its unlock threshold is policy,

@@ -94,6 +94,39 @@ describe('Recurring landing', () => {
     expect(onMakeCookPool).not.toHaveBeenCalled();
   });
 
+  it('keeps both Book Recurring buttons disabled while the Cook Pool is below the unlock', () => {
+    const handlers = { onBack: jest.fn(), onSchedule: jest.fn(), onMakeCookPool: jest.fn() };
+    render(<RecurringLandingScreen {...handlers} cta="locked" initialScroll="end" />);
+    fireEvent(screen.getByTestId('recurring-landing-scroll'), 'contentSizeChange', 402, 1600);
+    const tag = screen.getByTestId('recurring-landing-tag');
+    const footer = screen.getByTestId('recurring-landing-footer-cta');
+    expect(tag).toBeDisabled();
+    expect(footer).toBeDisabled();
+    expect(screen.getAllByText('Book Recurring')).toHaveLength(2);
+    fireEvent.press(tag);
+    fireEvent.press(footer);
+    expect(handlers.onSchedule).not.toHaveBeenCalled();
+  });
+
+  it('reads "Recurring · Live" on both buttons with a live booking, and opens it', () => {
+    const onOpenLive = jest.fn();
+    const { onSchedule } = renderLanding({ cta: 'live', onOpenLive, initialScroll: 'end' });
+    fireEvent(screen.getByTestId('recurring-landing-scroll'), 'contentSizeChange', 402, 1600);
+    expect(screen.getAllByText('Recurring · Live')).toHaveLength(2);
+    expect(screen.queryByText('Book Recurring')).toBeNull();
+    fireEvent.press(screen.getByTestId('recurring-landing-tag'));
+    fireEvent.press(screen.getByTestId('recurring-landing-footer-cta'));
+    expect(onOpenLive).toHaveBeenCalledTimes(2);
+    expect(onSchedule).not.toHaveBeenCalled();
+  });
+
+  it('offers Book Recurring when live but given no booking to open', () => {
+    const { onSchedule } = renderLanding({ cta: 'live' });
+    expect(screen.queryByText('Recurring · Live')).toBeNull();
+    fireEvent.press(screen.getByTestId('recurring-landing-tag'));
+    expect(onSchedule).toHaveBeenCalledTimes(1);
+  });
+
   it('opens the Cook Pool from "Make your Cook Pool", and only that', () => {
     const { onSchedule, onMakeCookPool } = renderLanding();
     fireEvent.press(screen.getByTestId('recurring-landing-cook-pool'));

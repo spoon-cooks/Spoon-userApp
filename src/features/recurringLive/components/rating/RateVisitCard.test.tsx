@@ -49,7 +49,7 @@ describe('Rate card (Figma 1603:50)', () => {
     expect(screen.getByText('Show us what went wrong')).toBeTruthy();
 
     fireEvent.press(screen.getByTestId('rate-visit-card-chip-slow'));
-    fireEvent.press(screen.getByTestId('rate-visit-card-support'));
+    fireEvent.press(screen.getByTestId('rate-visit-card-support-toggle'));
     fireEvent.press(screen.getByTestId('rate-visit-card-feedback-write'));
     fireEvent.changeText(
       screen.getByTestId('rate-visit-card-feedback-input'),
@@ -63,6 +63,18 @@ describe('Rate card (Figma 1603:50)', () => {
       avoidCook: true,
       feedback: { voice: null, media: [], text: 'Sabzi was a little salty' },
     });
+  });
+
+  it('flips "a different cook" from the toggle only, not its icon or copy', () => {
+    render(<RateVisitCard live visit={VISIT} initialRating={1.5} />);
+    const toggle = screen.getByTestId('rate-visit-card-support-toggle');
+    fireEvent.press(screen.getByTestId('rate-visit-card-support'));
+    fireEvent.press(screen.getByText('Prefer a different cook next time?'));
+    expect(toggle.props.accessibilityState).toMatchObject({ checked: false });
+    fireEvent.press(toggle);
+    expect(
+      screen.getByTestId('rate-visit-card-support-toggle').props.accessibilityState,
+    ).toMatchObject({ checked: true });
   });
 
   it('fills a star’s first half on one tap and its second half on the next, however late', () => {

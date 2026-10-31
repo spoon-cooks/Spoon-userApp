@@ -267,6 +267,17 @@ describe('confirm is the only thing that asks the server', () => {
     });
   });
 
+  it('opens an Edit on the address’s saved pin, not wherever the phone is', async () => {
+    mockSearchParams = { addressId: 'addr-1' };
+    render();
+    await pin();
+    // addr-1 is saved at 12.902746, 77.648817; the device fix is 12.9027, 77.6488.
+    await waitFor(() => {
+      fireEvent.press(screen.getByTestId('address-confirm'));
+      expect(checks.at(-1)).toEqual({ latitude: 12.902746, longitude: 77.648817 });
+    });
+  });
+
   /** The first-run flow carries its own context the same way, and ends at Home rather than 18. */
   it('carries the onboarding flag straight through to the form', async () => {
     mockSearchParams = { onboarding: '1' };

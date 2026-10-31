@@ -204,7 +204,7 @@ describe('Cook Pool on the API (default source)', () => {
       'GET /v1/recurring/eligibility': NO_ELIGIBILITY,
     });
 
-    await waitFor(() => expect(screen.getByText('Meera')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Cook Meera')).toBeTruthy());
     expect(screen.getAllByTestId('cook-pool-screen-pool-add')).toHaveLength(1);
   });
 

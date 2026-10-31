@@ -122,11 +122,13 @@ export default function SavedAddressesRoute() {
                 });
               });
             }}
+            // Edit starts on the map, on the address's own pin (owner, 31 Oct 2026); Confirm then
+            // opens the details form for the same address, as adding one does.
             onEdit={guard((id: string) =>
               router.push(
                 (from === undefined
-                  ? `/address/details?addressId=${id}`
-                  : `/address/details?addressId=${id}&from=${from}`) as Href,
+                  ? `/address/location?addressId=${id}`
+                  : `/address/location?addressId=${id}&from=${from}`) as Href,
               ),
             )}
             onRemove={async (id) => {
