@@ -12,7 +12,8 @@ import type { ExplainerVideoSource } from '../components/ExplainerPlayer';
 import { ExplainerPlayer } from '../components/ExplainerPlayer';
 import { FeatureRow } from '../components/FeatureRow';
 import { RailMarker } from '../components/RailMarker';
-import { ScheduleTag } from '../components/ScheduleTag';
+import { RECURRING_CTA_LABEL, ScheduleTag } from '../components/ScheduleTag';
+import type { RecurringCta } from '../components/ScheduleTag';
 import { StickyFooter, useStickyFooter } from '../components/StickyFooter';
 import { TicketRow } from '../components/TicketRow';
 import {
@@ -43,6 +44,10 @@ import {
  * the button while it is on screen; once it has scrolled off the top the footer slides in, and
  * out again when the tag returns (`stickyFooter.ts`).
  *
+ * Both follow `cta` (the page's design notes): while the Cook Pool is below the unlock they stay
+ * "Book Recurring" but disabled; once the household has a live Recurring booking both read
+ * "Recurring · Live" and open it (`onOpenLive`).
+ *
  * ## The video
  *
  * The explainer's card opens the player (`ExplainerPlayer`), which sits over the dimmed page.
@@ -58,6 +63,10 @@ export interface RecurringLandingScreenProps {
   readonly onBack: () => void;
   /** The "Book Recurring" tag and footer: both open the plan flow. */
   readonly onSchedule: () => void;
+  /** What the tag and footer offer: book (the default), locked (disabled) or the live booking. */
+  readonly cta?: RecurringCta;
+  /** The "Recurring · Live" tag and footer: open the live booking. */
+  readonly onOpenLive?: () => void;
   /** The Cook Pool button ("Make your Cook Pool" / "Check your Cook Pool"). */
   readonly onMakeCookPool: () => void;
   /**
@@ -79,6 +88,8 @@ export interface RecurringLandingScreenProps {
 export function RecurringLandingScreen({
   onBack,
   onSchedule,
+  cta = 'book',
+  onOpenLive,
   onMakeCookPool,
   hasCookPool = false,
   videoSource,
@@ -97,6 +108,9 @@ export function RecurringLandingScreen({
   const [playerAt, setPlayerAt] = useState<number | null>(initialPlayerAt ?? null);
   const [footerHeight, setFooterHeight] = useState(FOOTER_HEIGHT);
   const { jumpTo } = footer;
+  // A live page without a way to open its booking offers the flow instead of a dead button.
+  const shown: RecurringCta = cta === 'live' && onOpenLive === undefined ? 'book' : cta;
+  const onCta = shown === 'live' && onOpenLive !== undefined ? onOpenLive : onSchedule;
 
   const openPlayer = useCallback(() => setPlayerAt(0), []);
   const closePlayer = useCallback(() => setPlayerAt(null), []);
@@ -231,7 +245,7 @@ export function RecurringLandingScreen({
 
             {/* `983:6074` — the tag hangs off the thread's knot, 250 from the frame's top. */}
             <View style={styles.tag} pointerEvents="box-none">
-              <ScheduleTag onPress={onSchedule} testID={`${testID}-tag`} />
+              <ScheduleTag onPress={onCta} cta={shown} testID={`${testID}-tag`} />
             </View>
           </View>
         </Animated.ScrollView>
@@ -239,8 +253,9 @@ export function RecurringLandingScreen({
 
       <StickyFooter
         state={footer}
-        label="Book Recurring"
-        onPress={onSchedule}
+        label={RECURRING_CTA_LABEL[shown]}
+        onPress={onCta}
+        disabled={shown === 'locked'}
         onHeight={setFooterHeight}
         testID={`${testID}-footer`}
       />

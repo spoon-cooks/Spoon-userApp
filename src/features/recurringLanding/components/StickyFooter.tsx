@@ -82,6 +82,8 @@ export interface StickyFooterProps {
   readonly state: Pick<StickyFooterState, 'progress' | 'interactive'>;
   readonly label: string;
   readonly onPress: () => void;
+  /** Greyed and not pressable — the Cook Pool is below the unlock. */
+  readonly disabled?: boolean;
   /** Reports the footer's height, for the page to leave room for it at the end of its scroll. */
   readonly onHeight?: (height: number) => void;
   readonly testID?: string;
@@ -91,6 +93,7 @@ export function StickyFooter({
   state,
   label,
   onPress,
+  disabled = false,
   onHeight,
   testID = 'sticky-footer',
 }: StickyFooterProps) {
@@ -128,6 +131,8 @@ export function StickyFooter({
       <Button
         label={label}
         onPress={onPress}
+        disabled={disabled}
+        disabledTone="soft"
         size="pillLg"
         flat
         labelColor="textPrimary"

@@ -33,6 +33,10 @@ export const LIKE_ICON =
 export const CALENDAR_ADD_ICON =
   require('../../../assets/figma/recurringLanding/calendar-add.png') as ImageSourcePropType;
 
+/** The "Recurring · Live" tag's 24pt circular arrow — the same icon as Home's Live chip. */
+export const RESTART_ICON =
+  require('../../../assets/figma/home2/icon-restart.png') as ImageSourcePropType;
+
 /** `983:6052` — "Schedule", 20pt. */
 export const SCHEDULE_ICON =
   require('../../../assets/figma/recurringLanding/calendar.png') as ImageSourcePropType;
