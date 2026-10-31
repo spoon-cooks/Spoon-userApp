@@ -57,7 +57,9 @@ export default function AddressLocationRoute() {
   const firstRun = onboarding === '1';
   const editingId = typeof addressId === 'string' && addressId !== '' ? addressId : null;
   const location = useAddressLocation();
-  const addresses = useAddresses({ enabled: !firstRun });
+  // A first run has no addresses to read, except when it is redoing a saved one (`addressId`):
+  // the map then opens on that address's own pin.
+  const addresses = useAddresses({ enabled: !firstRun || editingId !== null });
   const setPoint = useAddressDraftStore((store) => store.setPoint);
   const setNotServiceable = useNotServiceableStore((store) => store.set);
   const me = useMe();

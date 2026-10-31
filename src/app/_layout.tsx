@@ -15,7 +15,7 @@ import { createAppRuntime } from '@core/runtime';
 import { RuntimeProvider } from '@core/runtimeContext';
 import { useSessionStore } from '@core/store';
 import { AppUpdateGate } from '@features/appUpdate';
-import { ErrorBoundary, FullScreenLoadingHost, LaunchSplash, ThemeProvider } from '@ui';
+import { ErrorBoundary, FullScreenLoadingProvider, LaunchSplash, ThemeProvider } from '@ui';
 import { BackdropTargetRoot } from '@ui/v2/Backdrop';
 
 /**
@@ -110,23 +110,24 @@ function RootProviders({ runtime }: { readonly runtime: ReturnType<typeof create
         <QueryProvider client={runtime.queryClient}>
           <RuntimeProvider runtime={runtime}>
             <ThemeProvider>
-              <ErrorBoundary scope="root">
-                {/* Over EVERYTHING, signed in or not: an old build is blocked at the login screen too. */}
-                <AppUpdateGate>
-                  {/* What every sheet's blurred scrim blurs on Android (`@ui/v2/Backdrop`). */}
-                  <BackdropTargetRoot>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="(auth)" />
-                      <Stack.Screen name="(app)" />
-                      {/* Legal sits OUTSIDE both groups on purpose — see `app/legal/[doc].tsx`. */}
-                      <Stack.Screen name="legal/[doc]" />
-                    </Stack>
-                  </BackdropTargetRoot>
-                </AppUpdateGate>
-              </ErrorBoundary>
               {/* Every screen's full-screen wait, over the whole window (`FullScreenLoading`). */}
-              <FullScreenLoadingHost />
+              <FullScreenLoadingProvider>
+                <ErrorBoundary scope="root">
+                  {/* Over EVERYTHING, signed in or not: an old build is blocked at the login screen too. */}
+                  <AppUpdateGate>
+                    {/* What every sheet's blurred scrim blurs on Android (`@ui/v2/Backdrop`). */}
+                    <BackdropTargetRoot>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="(auth)" />
+                        <Stack.Screen name="(app)" />
+                        {/* Legal sits OUTSIDE both groups on purpose — see `app/legal/[doc].tsx`. */}
+                        <Stack.Screen name="legal/[doc]" />
+                      </Stack>
+                    </BackdropTargetRoot>
+                  </AppUpdateGate>
+                </ErrorBoundary>
+              </FullScreenLoadingProvider>
             </ThemeProvider>
           </RuntimeProvider>
         </QueryProvider>

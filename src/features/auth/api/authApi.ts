@@ -203,6 +203,7 @@ export function createAuthApi(api: ApiClient) {
       if (patch.mealHassles !== undefined) {
         body.mealHassles = patch.mealHassles === null ? null : [...patch.mealHassles];
       }
+      if (patch.flowVersion !== undefined) body.flowVersion = patch.flowVersion;
 
       return api.request(AUTH_PATHS.profile, {
         method: 'PUT',

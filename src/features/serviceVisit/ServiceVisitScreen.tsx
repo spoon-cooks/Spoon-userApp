@@ -17,6 +17,7 @@ import type {
   VisitMenuSection,
   VisitPrepKey,
   VisitToastHandle,
+  CookAssignedCardProps,
 } from '@features/recurringLive';
 import { Screen } from '@ui';
 
@@ -95,6 +96,13 @@ export interface ServiceVisitScreenProps {
   readonly model: ServiceVisitModel;
   readonly onBack: () => void;
   readonly onPaymentDetails: () => void;
+  /**
+   * "Check payment details" under Extend: the tax details popup, as under Schedule for Later's
+   * Confirm Booking (device test, 31 Oct 2026). Falls back to `onPaymentDetails` when not given.
+   */
+  readonly onExtendPaymentDetails?: (() => void) | undefined;
+  /** The household's dish likes, for the hearts on the cook card's dishes. */
+  readonly dishLikes?: CookAssignedCardProps['dishLikes'];
   readonly onModifyBooking?: (() => void) | undefined;
   readonly onHelp?: (() => void) | undefined;
   readonly onCall?: (() => void) | undefined;
@@ -119,6 +127,8 @@ export function ServiceVisitScreen({
   model,
   onBack,
   onPaymentDetails,
+  onExtendPaymentDetails,
+  dishLikes,
   onModifyBooking,
   onHelp,
   onCall,
@@ -171,6 +181,7 @@ export function ServiceVisitScreen({
     <CookAssignedCard
       cook={model.cook}
       menu={model.menu}
+      dishLikes={dishLikes}
       onCall={withCall ? onCall : undefined}
       windowHeight={windowHeight}
       testID={`${testID}-cook`}
@@ -209,7 +220,7 @@ export function ServiceVisitScreen({
       cookName={model.cookName}
       extending={extending}
       onExtend={onExtend}
-      onPaymentDetails={onPaymentDetails}
+      onPaymentDetails={onExtendPaymentDetails ?? onPaymentDetails}
       onBookAnother={onBookAnother}
       testID={`${testID}-extend`}
     />

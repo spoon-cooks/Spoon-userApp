@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
+import { currentSkewMs, serviceWindowOf } from '@core/time';
 
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
-import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import {
+  cookCardLines,
+  cookProfileFrom,
+  useCookPoolProfile,
+  useDishLikes,
+} from '@features/cookPool';
+import { useStepVersionsSupported } from '@features/auth';
+import { TaxDetailsDialog } from '@features/homeRedesign';
 import {
   PaymentDetailsSheet,
   RateVisitCard,
@@ -49,6 +57,7 @@ import {
   reassignedOneTime,
   recurringPaymentSheetFrom,
   servicePhaseOf,
+  visitBannerOf,
 } from './model';
 import type { ServicePhase } from './model';
 
@@ -98,12 +107,18 @@ export function ServiceVisitHost({
   onBookAnother,
   onViewRefunds,
 }: ServiceVisitHostProps) {
-  const now = useMinuteClock();
+  const now = useMinuteClock(phase);
   const live =
     phase === 'onTheWay' || phase === 'arrived' || phase === 'cooking' || phase === 'timesUp';
   const tracking = useTracking(live ? booking.id : null, { poll: true });
   const cookId = booking.cook?.id ?? null;
-  const profile = useCookPoolProfile(cookId ?? 'none', { enabled: cookId !== null });
+  // Read for THIS booking: its time orders the dish shelves (workbook T1), and its cook is answered
+  // on a first visit. Only a V0 that takes the booking is sent it (`useCookPoolProfile`).
+  const profileForBooking = useStepVersionsSupported();
+  const profile = useCookPoolProfile(cookId ?? 'none', {
+    enabled: cookId !== null,
+    bookingId: profileForBooking ? booking.id : null,
+  });
   const prep = useBookingPrep(phase === 'assigned' || phase === 'onTheWay' ? booking.id : null);
   const updatePrep = useUpdateBookingPrep();
   const extension = useExtensionOptions(
@@ -115,6 +130,9 @@ export function ServiceVisitHost({
     () => briefByBooking.get(booking.id) ?? [],
   );
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [taxOpen, setTaxOpen] = useState(false);
+  // The hearts on the cook card: the same household likes as the Cook Pool profile.
+  const dishLikes = useDishLikes();
   const [tipPaid, setTipPaid] = useState<ServiceVisitModel['tipPaid']>(null);
   const [rated, setRated] = useState(false);
   // The score picked on the rate card; 4 and above warms the tip card (`2165:14445`).
@@ -160,7 +178,12 @@ export function ServiceVisitHost({
     }));
   }, [profile.state]);
 
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  // The visit's own start (the rating card's line): the booked slot until the start OTP, then its.
+  const { start } = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
   const length = duration(booking.durationMinutes);
   const end = endsAt(booking);
   // The trust marks, caption and stat lines are the backend's (DEC-114), first visit included.
@@ -174,6 +197,7 @@ export function ServiceVisitHost({
    * never shows it (dev note `2353:17578`).
    */
   const reassigned = reassignedOneTime(booking);
+  const banner = visitBannerOf(booking, phase);
 
   const model: ServiceVisitModel = {
     phase,
@@ -181,20 +205,10 @@ export function ServiceVisitHost({
     // `2878:7730` / `2878:7959`: the cook is due early or late against the booked time (§8).
     cookArrival: booking.cookArrival ?? null,
     title:
-      // Figma names every one-time visit, Instant or scheduled, "On-time visit".
-      link !== null ? 'Recurring visit' : 'On-time visit',
-    bannerTitle:
-      start === null
-        ? length
-        : phase === 'assigned' || phase === 'completed'
-          ? day(start)
-          : `${clock(start)} · ${length}`,
-    bannerSlot:
-      start === null || !(phase === 'assigned' || phase === 'completed')
-        ? null
-        : `${clock(start)} – ${clock(
-            new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString(),
-          )} · ${length}`,
+      // Every one-time visit, Instant or scheduled, is "One-time visit" (Figma's "On-time" was a typo, 31 Oct 2026).
+      link !== null ? 'Recurring visit' : 'One-time visit',
+    bannerTitle: banner.title,
+    bannerSlot: banner.slot,
     cook: {
       name: cookNameOf(cookName) ?? 'Your cook',
       ...lines,
@@ -310,6 +324,8 @@ export function ServiceVisitHost({
         model={model}
         onBack={onBack}
         onPaymentDetails={() => setPaymentOpen(true)}
+        onExtendPaymentDetails={() => setTaxOpen(true)}
+        dishLikes={dishLikes}
         onModifyBooking={onModifyBooking}
         onHelp={onHelp}
         onCall={booking.allowedActions.canCallCook ? onCall : undefined}
@@ -369,18 +385,41 @@ export function ServiceVisitHost({
           : {})}
       />
       {wholeBooking.sheet}
+      {/* The extension is taxed at the booking's rate. */}
+      <TaxDetailsDialog
+        visible={taxOpen}
+        onClose={() => setTaxOpen(false)}
+        gstPercent={booking.price.taxRateBps / 100}
+      />
     </>
   );
 }
 
-/** Ticks every 30s: the countdown and the ETA move in whole minutes (dev note `2165:12402`). */
-function useMinuteClock(): Date {
-  const [now, setNow] = useState(() => new Date());
+/**
+ * Ticks every 30s: the countdown and the ETA move in whole minutes (dev note `2165:12402`).
+ *
+ * Read on the server's clock, as Home and My bookings are: the end time is the server's, so a
+ * phone running behind it would otherwise count a minute too many (device test, 31 Oct 2026).
+ * It also reads again whenever `phase` changes, so the Start OTP's "Cooking" starts from now
+ * rather than from a reading taken up to 30s earlier, while the screen still said "Arrived".
+ */
+function useMinuteClock(phase: ServicePhase): Date {
+  const [now, setNow] = useState(serverNow);
+  const [readFor, setReadFor] = useState(phase);
+  if (readFor !== phase) {
+    // React's "adjust state when a prop changes", done in render rather than an effect.
+    setReadFor(phase);
+    setNow(serverNow());
+  }
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 30_000);
+    const timer = setInterval(() => setNow(serverNow()), 30_000);
     return () => clearInterval(timer);
   }, []);
   return now;
+}
+
+function serverNow(): Date {
+  return new Date(Date.now() - currentSkewMs());
 }
 
 export { servicePhaseOf };

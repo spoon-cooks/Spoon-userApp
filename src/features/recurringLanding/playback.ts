@@ -6,8 +6,11 @@
  * `m:ss` the player draws (`970:5610` "1:52", `970:5624` "3:45").
  */
 
-/** `970:5624` — the explainer runs 3:45. */
-export const VIDEO_DURATION_SECONDS = 225;
+/**
+ * The explainer's length, shown until the video itself reports one: 1:17, the video set in Remote
+ * Config on 31 Oct 2026 (`recurring-explainer-v1.mp4`). Figma `970:5624` drew 3:45.
+ */
+export const VIDEO_DURATION_SECONDS = 77;
 /** `970:5612` / `970:5620` — the skip buttons move the playhead 10 s. */
 export const SKIP_SECONDS = 10;
 

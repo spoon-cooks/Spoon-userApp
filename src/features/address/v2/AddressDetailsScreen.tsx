@@ -156,6 +156,11 @@ export interface AddressDetailsScreenProps {
   readonly locationReady: boolean;
   /** Editing: the pin itself was moved on the map, which is a change even with the form as it was. */
   readonly pinMoved?: boolean;
+  /**
+   * Editing an address saved by older address steps, which the customer must save through the new
+   * ones (owner, 31 Oct 2026): Save is offered once the form is complete, changed or not.
+   */
+  readonly redo?: boolean;
   /** The society dropdown's options at the pin (`GET /v1/societies`), and its retry. */
   readonly societies?: DataState<readonly SocietyDto[]>;
   readonly onRetrySocieties?: () => void;
@@ -173,6 +178,7 @@ export function AddressDetailsScreen({
   saving,
   locationReady,
   pinMoved = false,
+  redo = false,
   societies = { status: 'ready', data: [] },
   onRetrySocieties = () => undefined,
   testID = 'address-details',
@@ -183,7 +189,7 @@ export function AddressDetailsScreen({
   const set = (patch: Partial<AddressDetailsForm>) =>
     setForm((current) => ({ ...current, ...patch }));
 
-  const changed = mode === 'add' || pinMoved || detailsFingerprint(form) !== initialPrint;
+  const changed = mode === 'add' || pinMoved || redo || detailsFingerprint(form) !== initialPrint;
   const ready = locationReady && isDetailsFormComplete(form) && changed;
   const apartment = form.propertyType === 'apartment';
 

@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import type { BookingSummaryDto } from '@features/booking';
 
 import { myBookingPresentationFor } from '../adapters';
@@ -11,7 +12,8 @@ import { myBookingPresentationFor } from '../adapters';
  *     the summary's `totalAmountPaise`).
  *   - The well and the top-right tag say the booking type: a visit of a recurring plan
  *     (`recurringBookingId`) is Recurring, everything else One-time.
- *   - Cancelled (both tabs) and Unfulfilled (Past) cards sit at 70% opacity.
+ *   - Cancelled and Unfulfilled cards sit at 70% opacity. A cancelled booking is always on Past,
+ *     whatever its date (31 Oct 2026; the dev note had it on Upcoming until its date).
  *   - "Next visit" is the nearest upcoming booking that isn't cancelled.
  *   - Past is grouped under month headers, newest first.
  *
@@ -78,9 +80,20 @@ export function durationOf(minutes: number): string {
   return `${text} ${hours === 1 ? 'hr' : 'hrs'}`;
 }
 
-function startOf(dto: Pick<BookingSummaryDto, 'scheduledStart'>): Date | null {
-  if (dto.scheduledStart === null) return null;
-  const instant = new Date(dto.scheduledStart);
+/**
+ * The card's start: the booked slot until the start OTP, then when it was entered
+ * (`serviceWindowOf`, owner 31 Oct 2026).
+ */
+function startOf(
+  dto: Pick<BookingSummaryDto, 'scheduledStart' | 'durationMinutes' | 'timing'>,
+): Date | null {
+  const { start } = serviceWindowOf({
+    bookedStart: dto.scheduledStart,
+    durationMinutes: dto.durationMinutes,
+    timing: dto.timing,
+  });
+  if (start === null) return null;
+  const instant = new Date(start);
   return Number.isNaN(instant.getTime()) ? null : instant;
 }
 
@@ -149,7 +162,8 @@ export function nextVisitFrom(dto: BookingSummaryDto): NextVisit {
 
 /**
  * The Upcoming tab: the nearest booking that isn't cancelled is lifted into "Next visit"; every
- * other row, cancelled ones included, stays in "Later" in the order given (soonest first).
+ * other row stays in "Later" in the order given (soonest first). The tab's rows no longer include
+ * cancelled bookings (`upcomingBookingsFrom`); the guard stays for any caller that passes one.
  */
 export function upcomingFrom(
   bookings: readonly BookingSummaryDto[],

@@ -62,7 +62,7 @@ export function CancelledVisitHost({
     <>
       <VisitDetailsScreen
         model={model}
-        title="On-time visit"
+        title="One-time visit"
         inlineDock
         onBack={onBack}
         onPaymentDetails={() => setPaymentOpen(true)}

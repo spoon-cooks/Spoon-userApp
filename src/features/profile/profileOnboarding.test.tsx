@@ -121,7 +121,8 @@ const REQUIRED_ONLY_PAYLOAD = {
   grownUpEating: [],
   oilLevel: 'light',
   gheeOnly: false,
-  genderPreference: null,
+  // "No preference" is chosen by default, so it is sent even when untouched (31 Oct 2026).
+  genderPreference: 'either',
   regionPreference: null,
   mealStructure: 'regular-cook',
   mealHassles: [],
@@ -185,6 +186,48 @@ describe('the boot gate', () => {
   it('sends a complete profile with a saved address to Home', async () => {
     renderWithRuntime(<BootGate />, {
       runtime: runtimeWith({ 'GET /v1/me': () => ME_COMPLETE }),
+    });
+
+    await waitFor(() => expect(mockRedirected).toContain('/home'));
+  });
+
+  it('sends a finished profile from older steps back through the new ones (31 Oct 2026)', async () => {
+    renderWithRuntime(<BootGate />, {
+      runtime: runtimeWith({
+        'GET /v1/me': () => ({ ...ME_COMPLETE, profileUpdateRequired: true }),
+      }),
+    });
+
+    await waitFor(() => expect(mockRedirected).toContain('/profile/details?context=onboarding'));
+    expect(mockRedirected).not.toContain('/home');
+  });
+
+  it('then sends each saved address from older steps through the new ones, map first', async () => {
+    const old = (
+      DEFAULT_API_STUBS['GET /v1/me/addresses']?.(undefined) as Record<string, unknown>[]
+    )[0];
+    renderWithRuntime(<BootGate />, {
+      runtime: runtimeWith({
+        'GET /v1/me': () => ({ ...ME_COMPLETE, profileUpdateRequired: false }),
+        'GET /v1/me/addresses': () => [{ ...old, detailsVersion: 1 }],
+      }),
+    });
+
+    await waitFor(() =>
+      expect(mockRedirected).toContain('/address/location?onboarding=1&addressId=addr-1'),
+    );
+    expect(mockRedirected).not.toContain('/home');
+  });
+
+  it('goes Home once the profile and every address are on the current steps', async () => {
+    const old = (
+      DEFAULT_API_STUBS['GET /v1/me/addresses']?.(undefined) as Record<string, unknown>[]
+    )[0];
+    renderWithRuntime(<BootGate />, {
+      runtime: runtimeWith({
+        'GET /v1/me': () => ({ ...ME_COMPLETE, profileUpdateRequired: false }),
+        'GET /v1/me/addresses': () => [{ ...old, detailsVersion: 2 }],
+      }),
     });
 
     await waitFor(() => expect(mockRedirected).toContain('/home'));
@@ -446,7 +489,10 @@ describe('saving', () => {
     fireEvent.press(screen.getByTestId('taste-profile-oil-moderate'));
     fireEvent.press(screen.getByTestId('taste-profile-ghee'));
     fireEvent.press(cta());
-    fireEvent.press(await screen.findByTestId('taste-profile-gender-either'));
+    // "No preference" is already chosen on arrival, and is what is sent untouched (31 Oct 2026).
+    await screen.findByTestId('taste-profile-gender-either');
+    expect(isChecked('taste-profile-gender-either')).toBe(true);
+    expect(isChecked('taste-profile-gender-female')).toBe(false);
     fireEvent.press(screen.getByTestId('taste-profile-region-south-indian'));
     fireEvent.press(screen.getByTestId('taste-profile-meal-office-meals'));
     fireEvent.press(screen.getByTestId('taste-profile-hassle-office-weekends'));
@@ -487,6 +533,50 @@ describe('saving', () => {
 
     await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
     expect(mockRouter.replace).not.toHaveBeenCalledWith('/address/location?onboarding=1');
+  });
+
+  it('redoes a finished profile from step 1 and saves it as the current steps', async () => {
+    mockSearchParams = { context: 'onboarding' };
+    const put = jest.fn(() => savedProfile({ profileUpdateRequired: false }));
+    renderWithRuntime(<ProfileDetailsRoute />, {
+      runtime: runtimeWith({
+        'GET /v1/me': () => ({
+          ...ME_COMPLETE,
+          mealStructure: 'regular-cook',
+          dietaryPreference: 'vegetarian',
+          householdAdults: 2,
+          profileUpdateRequired: true,
+        }),
+        'PUT /v1/me/profile': put,
+      }),
+    });
+
+    // Step 1, prefilled, rather than the first gap (there is none).
+    expect(await screen.findByTestId('taste-profile-name')).toBeTruthy();
+    fireEvent.press(cta());
+    await screen.findByTestId('taste-profile-diet-vegetarian');
+    fireEvent.press(cta());
+    await screen.findByTestId('taste-profile-oil');
+    fireEvent.press(cta());
+    await screen.findByTestId('taste-profile-meal-regular-cook');
+    fireEvent.press(cta());
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put).toHaveBeenLastCalledWith(expect.objectContaining({ flowVersion: 2 }));
+  });
+
+  it('never sends a steps version to a backend that does not report one', async () => {
+    mockSearchParams = { context: 'onboarding' };
+    const put = jest.fn(() => savedProfile());
+    renderWithRuntime(<ProfileDetailsRoute />, {
+      runtime: runtimeWith({ 'GET /v1/me': () => ME_INCOMPLETE, 'PUT /v1/me/profile': put }),
+    });
+
+    await answerRequiredSteps();
+    fireEvent.press(cta());
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put).toHaveBeenLastCalledWith(expect.not.objectContaining({ flowVersion: 2 }));
   });
 
   it('stays on the last step when the save is rejected, keeping every answer', async () => {

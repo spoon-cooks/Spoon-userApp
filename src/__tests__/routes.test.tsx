@@ -34,7 +34,6 @@ import MealBriefRoute from '@/app/(app)/meal-brief';
 import ProfileRoute from '@/app/(app)/profile';
 import ProfileDetailsRoute from '@/app/(app)/profile/details';
 import RefundsRoute from '@/app/(app)/refunds';
-import RescheduleRoute from '@/app/(app)/reschedule/[id]';
 import ScheduledRoute from '@/app/(app)/scheduled';
 import LoginRoute from '@/app/(auth)/login';
 import OtpRoute from '@/app/(auth)/otp';
@@ -108,7 +107,6 @@ describe('routes render', () => {
   it.each([
     ['home', HomeRoute, 'home-redesign-screen'],
     ['scheduled', ScheduledRoute, 'schedule-later'],
-    ['reschedule/[id]', RescheduleRoute, 'schedule-screen'],
     ['meal-brief', MealBriefRoute, 'meal-brief-screen'],
     ['booking/[id]', BookingRoute, 'booking-detail-screen'],
     ['profile', ProfileRoute, 'profile-screen'],

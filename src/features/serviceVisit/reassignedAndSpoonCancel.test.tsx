@@ -82,7 +82,7 @@ const REFUND = {
 
 const MODEL: ServiceVisitModel = {
   phase: 'assigned',
-  title: 'On-time visit',
+  title: 'One-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: '', name: 'Cook Meera', note: '' },
@@ -231,7 +231,7 @@ describe('Cancelled by Spoon (2342:4195, dev note 2342:4405)', () => {
     render(
       <VisitDetailsScreen
         model={cancelledVisitModelFrom(cancelledBy('system'), REFUND, null)}
-        title="On-time visit"
+        title="One-time visit"
         onBack={jest.fn()}
         cancelledSlot={
           data === null ? undefined : (
@@ -269,7 +269,7 @@ describe('Cancelled by Spoon (2342:4195, dev note 2342:4405)', () => {
     render(
       <VisitDetailsScreen
         model={cancelledVisitModelFrom(cancelledBy('customer', 'URGENT_CHANGE'), REFUND, null)}
-        title="On-time visit"
+        title="One-time visit"
         onBack={jest.fn()}
       />,
     );

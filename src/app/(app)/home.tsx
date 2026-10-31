@@ -6,7 +6,7 @@ import { isGuest } from '@core/auth';
 import { useNavigationGuard } from '@core/navigation';
 import { getLogger } from '@core/logging';
 import { useSessionStore } from '@core/store';
-import { useTriedPlace } from '@features/address';
+import { useAddressRedo, useTriedPlace } from '@features/address';
 import { useMe } from '@features/auth';
 import { destinationForPayment, durationIdFor, useBookingSubmission } from '@features/booking';
 import {
@@ -117,6 +117,11 @@ function SignedInHomeRoute() {
   });
   /** No saved address: the header's address opens the map to add one, not the empty list. */
   const hasAddress = home.addressId !== null;
+  /**
+   * A saved address that predates the current address steps (owner, 31 Oct 2026). Each redo ends
+   * here, so Home opens the next one until none is left.
+   */
+  const addressRedo = useAddressRedo();
   const join = useJoinWaitlist();
   /** A Recurring booking whose Autopay the bank is still confirming (note 2317:13605). */
   const confirmingAutopay = useConfirmingAutopay();
@@ -158,6 +163,9 @@ function SignedInHomeRoute() {
 
   if (home.needsAddress) {
     return <Redirect href="/address/location?onboarding=1" />;
+  }
+  if (addressRedo !== null && addressRedo !== 'resolving') {
+    return <Redirect href={addressRedo} />;
   }
 
   const bookNow = (request: BookingRequest) => {

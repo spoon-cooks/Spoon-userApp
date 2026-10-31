@@ -38,6 +38,9 @@ export interface ProfileDetailsValues {
   readonly pressingIssue: string;
 }
 
+/** V0's `either`, drawn as "No preference": the cook gender answer when none is picked. */
+export const NO_GENDER_PREFERENCE = 'either';
+
 /** Adults 1, others 0, Light oil, ghee off; no diet and no meal setup (dev notes). */
 export const EMPTY_PROFILE_DETAILS: ProfileDetailsValues = {
   name: '',
@@ -49,7 +52,8 @@ export const EMPTY_PROFILE_DETAILS: ProfileDetailsValues = {
   grownUpEating: [],
   oilLevel: DEFAULT_OIL_LEVEL,
   gheeOnly: false,
-  genderPreference: null,
+  // "No preference" is chosen until the customer picks a cook gender (31 Oct 2026).
+  genderPreference: NO_GENDER_PREFERENCE,
   regionPreference: null,
   mealStructure: null,
   mealHassles: [],

@@ -62,6 +62,7 @@ export { useDeletePlan } from './deletePlan';
 export { ActionDock } from './components/visit/ActionDock';
 export { BeforeArrivalCard } from './components/visit/BeforeArrivalCard';
 export { CookAssignedCard } from './components/visit/CookAssignedCard';
+export type { CookAssignedCardProps } from './components/visit/CookAssignedCard';
 export { RecipeShareRow } from './components/visit/RecipeShareRow';
 export { VisitHeader } from './components/visit/VisitHeader';
 export { VisitToast } from './components/visit/VisitToast';

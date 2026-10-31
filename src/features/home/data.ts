@@ -5,8 +5,9 @@ import { addressLineOf, currentAddressOf, useAddresses } from '@features/address
 import { useCatalogue } from '@features/catalogue';
 import { useInstantAvailability } from '@features/availability';
 import { ready } from '@core/data';
+import { formatMinutes } from '@core/format';
 import type { ScreenQuery } from '@core/data';
-import { currentSkewMs, slotHasEnded } from '@core/time';
+import { currentSkewMs, serviceWindowOf, slotHasEnded } from '@core/time';
 
 import {
   formatClockLabel,
@@ -194,6 +195,18 @@ export function useHomeData(): ScreenQuery<HomeViewModel> {
                 if (detail?.state.status !== 'ready') return null;
                 const detailData = detail.state.data;
                 const trackingData = trackingByBookingId.get(summary.id);
+                // The banner's date and time are the visit's own: the booked slot until the
+                // start OTP, then its time and the end it runs to (owner, 31 Oct 2026).
+                const shown = serviceWindowOf({
+                  bookedStart: detailData.scheduledStart,
+                  durationMinutes: detailData.durationMinutes,
+                  timing: detailData.timing,
+                });
+                // Once started, the whole session's length, extensions included.
+                const shownMinutes =
+                  shown.phase === 'booked'
+                    ? detailData.durationMinutes
+                    : (detailData.totalDurationMinutes ?? detailData.durationMinutes);
 
                 return homeBannerFor({
                   bookingId: summary.id,
@@ -202,8 +215,8 @@ export function useHomeData(): ScreenQuery<HomeViewModel> {
                   // The backend's photo; a cook without one renders the banner without a photo.
                   // See `homeCookPhotoFor`.
                   ...homeCookPhotoFor(detailData.cook),
-                  dateLabel: formatDateLabel(detailData.scheduledStart, serverNow),
-                  timeLabel: formatTimeLabel(detailData.scheduledStart, detailData.durationMinutes),
+                  dateLabel: formatDateLabel(shown.start, serverNow),
+                  timeLabel: formatTimeLabel(shown.start, shownMinutes),
                   etaMinutes: minutesUntil(trackingData?.eta.estimatedArrivalAt, serverNow),
                   minutesLeft:
                     detailData.status === 'cooking'
@@ -323,10 +336,13 @@ export function useHomeData(): ScreenQuery<HomeViewModel> {
               }
             : {
                 ...base,
-                header: { ...base.header, etaHeadline: `Spoon in ${promiseMinutes} mins` },
+                header: {
+                  ...base.header,
+                  etaHeadline: `Spoon in ${formatMinutes(promiseMinutes)}`,
+                },
                 tiles: base.tiles.map((tile) =>
                   tile.id === 'instant' && tile.subtitleEmphasis !== undefined
-                    ? { ...tile, subtitleEmphasis: ` ${promiseMinutes} mins` }
+                    ? { ...tile, subtitleEmphasis: ` ${formatMinutes(promiseMinutes)}` }
                     : tile,
                 ),
               },

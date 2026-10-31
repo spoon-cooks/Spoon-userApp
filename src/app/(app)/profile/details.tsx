@@ -5,7 +5,7 @@ import type { Href } from 'expo-router';
 import { LoadingState, QueryBoundary } from '@ui';
 import { getUserMessage, normalizeError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
-import { useAddressGate } from '@features/address';
+import { useAddressGate, useAddressRedo } from '@features/address';
 import {
   TasteProfileWizard,
   discardProfileDraft,
@@ -94,6 +94,8 @@ function WizardRoute({
    * to the first-run map would ask for an address they have. The same gate `/` and Home read.
    */
   const addressGate = useAddressGate();
+  // Then any saved address that predates the current address steps (owner, 31 Oct 2026).
+  const addressRedo = useAddressRedo();
 
   // One screen per tap: a quick double tap must not pop the screen twice (`4e0b9e6`).
   const guard = useNavigationGuard();
@@ -120,9 +122,11 @@ function WizardRoute({
   const initialValues = draft?.values ?? data.values;
   // Resume where the customer left, but never past a step whose required answer is missing. With
   // no device draft, answers already saved to the server (R-AREA-23) resume at the first gap.
+  // A customer redoing a finished profile for the new steps (owner, 31 Oct 2026) starts at the
+  // first step rather than the first gap: their old answers would otherwise skip most of it.
   const initialStep =
     draft === null || draft === undefined
-      ? onboarding
+      ? onboarding && !data.profileComplete
         ? firstIncompleteStep(data.values)
         : 'family'
       : resumeStep(draft.step, draft.values);
@@ -154,7 +158,11 @@ function WizardRoute({
               // `replace`, so back cannot return to a wizard already answered and saved.
               // `onboarding=1` is what makes the address step draw no back control and end at Home.
               router.replace(
-                (addressGate === 'required' ? '/address/location?onboarding=1' : '/home') as Href,
+                (addressGate === 'required'
+                  ? '/address/location?onboarding=1'
+                  : addressRedo !== null && addressRedo !== 'resolving'
+                    ? addressRedo
+                    : '/home') as Href,
               );
               return;
             }

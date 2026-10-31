@@ -110,16 +110,16 @@ describe('Explainer with a video', () => {
   });
 
   it('starts where a preview asks', () => {
-    renderPlayer({ initialPlayerAt: 112 });
+    renderPlayer({ initialPlayerAt: 38 });
 
-    expect(mockPlayer.currentTime).toBe(112);
-    expect(elapsed()).toBe('1:52');
+    expect(mockPlayer.currentTime).toBe(38);
+    expect(elapsed()).toBe('0:38');
   });
 
   it('follows the video: its position, and its length once it has loaded', () => {
     renderPlayer();
-    // Until it loads, the length is the one the page was given (3:45).
-    expect(total()).toBe('3:45');
+    // Until it loads, the length is the one the page was given (1:17).
+    expect(total()).toBe('1:17');
 
     mockPlayer.emit('sourceLoad', { duration: 130 });
     expect(total()).toBe('2:10');

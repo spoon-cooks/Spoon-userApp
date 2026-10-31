@@ -1,8 +1,8 @@
-import { formatPaise } from '@core/format';
+import { formatMinutes, formatPaise } from '@core/format';
 import { RATING_EXCEPTIONAL, RATING_VALUES } from '@ui';
 import type { CookViewModel, DetailRow, RatingSelection } from '@ui';
 
-import { currentSkewMs } from '@core/time';
+import { currentSkewMs, serviceWindowOf } from '@core/time';
 import { refundTrackerFrom } from '@features/refunds';
 import type { RefundTrackerView } from '@features/refunds';
 
@@ -150,8 +150,14 @@ export function scheduleLineFrom(dto: BookingDetailDto, now: Date = new Date()):
   // Same reasoning as the Duration row: an extended service ran longer than it was priced for.
   const duration = durationTextFrom(servedDurationMinutes(dto));
 
-  if (dto.scheduledStart === null) return duration;
-  const start = new Date(dto.scheduledStart);
+  // The visit's own start: the booked slot until the start OTP, then its (owner, 31 Oct 2026).
+  const shownStart = serviceWindowOf({
+    bookedStart: dto.scheduledStart,
+    durationMinutes: dto.durationMinutes,
+    timing: dto.timing,
+  }).start;
+  if (shownStart === null) return duration;
+  const start = new Date(shownStart);
   if (Number.isNaN(start.getTime())) return duration;
 
   const sameDay =
@@ -789,11 +795,10 @@ function etaCountdownFrom(estimatedArrivalAt: string | null, nowMs: number): str
 
   const remainingMs = at.getTime() - nowMs;
   // Reached or passed: how far past it, never negative.
-  if (remainingMs <= 0) return `${Math.round(-remainingMs / 60_000)} mins`;
+  if (remainingMs <= 0) return formatMinutes(Math.round(-remainingMs / 60_000));
 
-  // Still ahead: floored at one, so a cook 20 seconds away is "1 mins" under "arriving in".
-  // The plural is the house form -- `etaMinutesFor` and `InServiceBody` both write "mins" flat.
-  return `${Math.max(1, Math.round(remainingMs / 60_000))} mins`;
+  // Still ahead: floored at one, so a cook 20 seconds away is "1 min" under "arriving in".
+  return formatMinutes(Math.max(1, Math.round(remainingMs / 60_000)));
 }
 
 /** The persisted backend arrival instant, never a handset detection time or an ETA. */

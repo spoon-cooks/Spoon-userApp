@@ -125,6 +125,11 @@ export const addressSchema = z.object({
     .string()
     .nullish()
     .transform((value) => value ?? null),
+  /**
+   * The version of the address steps that last saved it; below `ADDRESS_STEPS_VERSION` the
+   * customer goes through them again (owner, 31 Oct 2026). Absent from a V0 that predates it.
+   */
+  detailsVersion: z.number().int().optional(),
 });
 
 export type AddressDto = z.infer<typeof addressSchema>;
@@ -200,6 +205,11 @@ export interface AddressWriteInput {
   /** A society from `GET /v1/societies`; or, under "Others", the name typed. Never both. */
   readonly societyId?: string;
   readonly customSociety?: string;
+  /**
+   * The version of the address steps that sent this save (`ADDRESS_STEPS_VERSION`). Sent only by
+   * the details form, and only to a V0 that knows it; "set as default" never sends it.
+   */
+  readonly detailsVersion?: number;
 }
 
 /** One row of the society dropdown: an entry of `GET /v1/societies`. */

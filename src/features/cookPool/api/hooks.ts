@@ -3,6 +3,7 @@ import { idempotency } from '@core/api';
 import { useApiQuery } from '@core/data';
 import type { ScreenQuery } from '@core/data';
 import { useRuntime } from '@core/runtimeContext';
+import { useMe } from '@features/auth';
 import { recurringKeys } from '@features/recurringSetup';
 
 import { cookPoolAddScope, createCookPoolApi } from './cookPoolApi';
@@ -23,6 +24,21 @@ import type {
  * server's, and its `count` is what unlocks Recurring.
  */
 
+/**
+ * The answers V0 filters a cook's dish shelves by: the diet and the non-veg picks (workbook E3 and
+ * E5). They sit in the profile and candidates cache keys, so a profile save that changes them
+ * reads the cards again with the new answers; before, a card kept the old diet's dishes until the
+ * app restarted (device test, 31 Oct 2026). `null` while `/me` is still loading, so a card is not
+ * read once without the answers and again with them; `''` if it could not be read.
+ */
+function useHomeTaste(): string | null {
+  const me = useMe();
+  if (me.state.status === 'loading') return null;
+  if (me.state.status !== 'ready') return '';
+  const { dietaryPreference, nonVegPreferences } = me.state.data;
+  return `${dietaryPreference ?? 'none'}|${[...(nonVegPreferences ?? [])].sort().join(',')}`;
+}
+
 export function useCookPoolList(options: { enabled?: boolean } = {}): ScreenQuery<CookPoolListDto> {
   const { api } = useRuntime();
   const pool = createCookPoolApi(api);
@@ -38,23 +54,30 @@ export function useCookPoolCandidates(
 ): ScreenQuery<CookPoolCandidatesDto> {
   const { api } = useRuntime();
   const pool = createCookPoolApi(api);
+  const taste = useHomeTaste();
   return useApiQuery<CookPoolCandidatesDto>({
-    queryKey: cookPoolKeys.candidates(),
+    queryKey: cookPoolKeys.candidates(taste ?? ''),
     queryFn: ({ signal }) => pool.candidates(signal),
-    enabled: options.enabled !== false,
+    enabled: options.enabled !== false && taste !== null,
   });
 }
 
 export function useCookPoolProfile(
   cookId: string,
-  options: { enabled?: boolean } = {},
+  /**
+   * `bookingId`: the booking whose cook card this is. Send it only to a V0 that takes it
+   * (`useStepVersionsSupported`, both ship in V0#203): an older one refuses unknown query keys.
+   */
+  options: { enabled?: boolean; bookingId?: string | null } = {},
 ): ScreenQuery<PoolCookProfileDto> {
   const { api } = useRuntime();
   const pool = createCookPoolApi(api);
+  const bookingId = options.bookingId ?? null;
+  const taste = useHomeTaste();
   return useApiQuery<PoolCookProfileDto>({
-    queryKey: cookPoolKeys.profile(cookId),
-    queryFn: ({ signal }) => pool.profile(cookId, signal),
-    enabled: options.enabled !== false,
+    queryKey: cookPoolKeys.profile(cookId, bookingId, taste ?? ''),
+    queryFn: ({ signal }) => pool.profile(cookId, signal, bookingId),
+    enabled: options.enabled !== false && taste !== null,
   });
 }
 

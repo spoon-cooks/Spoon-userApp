@@ -1070,6 +1070,19 @@ describe('a blocked deletion leaves a way out', () => {
 });
 
 describe('reschedule', () => {
+  /** The redesigned Schedule for Later screen, not the old Schedule screens (31 Oct 2026). */
+  it('opens the new schedule screen as a free reschedule of the same length', async () => {
+    mockSearchParams = { id: 'bk-9' };
+
+    render(<RescheduleRoute />);
+
+    expect(await screen.findByTestId('schedule-later')).toBeTruthy();
+    expect(screen.queryByTestId('schedule-screen')).toBeNull();
+    expect(screen.getAllByText('Reschedule').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('Confirm Booking')).toBeNull();
+    expect(screen.queryByTestId('schedule-later-payment-details')).toBeNull();
+  });
+
   /** §25 — abandoning a reschedule returns to the BOOKING it was about, never to Home. */
   it('backs out to the booking being rescheduled', async () => {
     mockRouter = makeRouter(false);
@@ -1077,7 +1090,7 @@ describe('reschedule', () => {
 
     render(<RescheduleRoute />);
 
-    fireEvent.press(await screen.findByTestId('schedule-header-back'));
+    fireEvent.press(await screen.findByTestId('schedule-later-header-back'));
 
     expect(mockRouter.replace).toHaveBeenCalledWith('/booking/bk-9');
   });

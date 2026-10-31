@@ -56,6 +56,11 @@ export {
   useVerifyOtp,
 } from './api';
 export { useCrashIdentity } from './useCrashIdentity';
+export {
+  ADDRESS_STEPS_VERSION,
+  PROFILE_STEPS_VERSION,
+  useStepVersionsSupported,
+} from './stepVersions';
 export type {
   LoginVerifyFailure,
   AuthApi,

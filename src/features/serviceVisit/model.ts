@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import { bookingStrikeOf } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto, TrackingDto } from '@features/booking';
 import type { PaymentDetailsSheetData } from '@features/recurringLive';
@@ -90,6 +91,44 @@ export function reassignedOneTime(booking: BookingDetailDto): boolean {
   return booking.reassignment?.occurred === true && (booking.recurring ?? null) === null;
 }
 
+/**
+ * The visit banner's two lines. A scheduled visit names its time: the start and length while the
+ * visit is live ("9:00 AM · 1 hr"), the date over the slot before and after it ("Wed, 14 Oct" /
+ * "9:00 AM – 10:00 AM · 1 hr").
+ *
+ * The times are the visit's own (`serviceWindowOf`, owner 31 Oct 2026): the booked slot until the
+ * start OTP, then when it was entered and the end the session runs to, then the end OTP's time.
+ * Once started, the length is the whole session's, extensions included, so it matches the times.
+ *
+ * An Instant visit has no booked time, so until its start OTP it says "Instant · 1 hr" where a
+ * scheduled one says its time (Figma `Visit details / In progress · Cook on the way (ETA)`).
+ */
+export function visitBannerOf(
+  booking: Pick<
+    BookingDetailDto,
+    'slotType' | 'scheduledStart' | 'durationMinutes' | 'totalDurationMinutes' | 'timing'
+  >,
+  phase: ServicePhase,
+): { readonly title: string; readonly slot: string | null } {
+  const window = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
+  const length = duration(
+    window.phase === 'booked'
+      ? booking.durationMinutes
+      : (booking.totalDurationMinutes ?? booking.durationMinutes),
+  );
+  const dated = phase === 'assigned' || phase === 'completed';
+  const { start, end } = window;
+  if (start === null || end === null) {
+    return { title: booking.slotType === 'instant' ? `Instant · ${length}` : length, slot: null };
+  }
+  if (!dated) return { title: `${clock(start)} · ${length}`, slot: null };
+  return { title: day(start), slot: `${clock(start)} – ${clock(end)} · ${length}` };
+}
+
 /** "1 hr", "1.5 hrs", "45 min". */
 export function duration(minutes: number): string {
   if (minutes < 60) return `${String(minutes)} min`;
@@ -115,11 +154,20 @@ export function endsAt(booking: BookingDetailDto): string | null {
   return new Date(Date.parse(start) + totalMinutes(booking) * 60_000).toISOString();
 }
 
-/** Dev note `2165:12402`: time left, whole minutes, never negative. */
+/**
+ * Dev note `2165:12402`: time left, whole minutes, never negative, and never more than the visit's
+ * booked total.
+ *
+ * The cap is the fix for a 30-min visit that opened on "31" (device test, 31 Oct 2026). Time left
+ * rounds UP, so any `now` even a second before the true start reads one minute over: a clock read
+ * while the screen showed "Arrived" and not yet ticked past the Start OTP, or a phone whose clock
+ * runs behind the server's. A visit cannot have more left than it was booked for.
+ */
 export function minutesLeft(booking: BookingDetailDto, now: Date): number {
+  const total = totalMinutes(booking);
   const end = endsAt(booking);
-  if (end === null) return totalMinutes(booking);
-  return Math.max(0, Math.ceil((Date.parse(end) - now.getTime()) / 60_000));
+  if (end === null) return total;
+  return Math.min(total, Math.max(0, Math.ceil((Date.parse(end) - now.getTime()) / 60_000)));
 }
 
 /** "1 : 42" — the hour tile (0–2) and the two minute tiles. */
@@ -227,7 +275,12 @@ function methodTypeOf(type: string): 'upi' | 'card' | 'wallet' | 'netbanking' {
  * is left out until the server knows it rather than guessed.
  */
 export function paymentSheetFrom(booking: BookingDetailDto, cookName: string | null) {
-  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  // The visit's own start: the booked slot until the start OTP, then when it was entered.
+  const { start } = serviceWindowOf({
+    bookedStart: booking.scheduledStart,
+    durationMinutes: booking.durationMinutes,
+    timing: booking.timing,
+  });
   const extensions = booking.charges?.extensions ?? [];
   const extensionTax = extensions.reduce(
     (sum, extension) => sum + Math.max(0, extension.chargedAmountPaise - extension.baseAmountPaise),

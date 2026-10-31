@@ -19,7 +19,7 @@ jest.mock('react-native-reanimated', () => jest.requireActual('react-native-rean
 
 const MODEL: ServiceVisitModel = {
   phase: 'assigned',
-  title: 'On-time visit',
+  title: 'One-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: '', name: 'Cook Sanchita', note: '' },

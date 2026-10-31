@@ -123,7 +123,9 @@ export default function OtpRoute() {
                  *
                  * Replacing rather than pushing, so Back cannot return to a spent OTP screen.
                  */
-                if (result.user.onboardingRequired) {
+                // `profileUpdateRequired`: a profile that predates the current steps is asked again
+                // (owner, 31 Oct 2026), straight from sign-in like a new customer's.
+                if (result.user.onboardingRequired || result.user.profileUpdateRequired === true) {
                   router.replace('/profile/details?context=onboarding' as Href);
                   return;
                 }

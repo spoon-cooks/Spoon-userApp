@@ -1,4 +1,5 @@
 import { formatPaise } from '@core/format';
+import { serviceWindowOf } from '@core/time';
 import type { BookingSummaryCookDto, BookingSummaryDto } from '@features/booking';
 import { formatServiceDate, formatServiceTime, serviceDateIn } from '@features/scheduled';
 import type { BookingCardViewModel, StatusTone } from '@ui';
@@ -93,8 +94,19 @@ export function myBookingPresentationFor(
  * `operatingWindow.timeZone`; `undefined` falls back to the device reading, which is what this
  * did everywhere before, so a catalogue that has not loaded degrades instead of blanking a label.
  */
+/** The visit's own start: the booked slot until the start OTP, then its (`serviceWindowOf`). */
+function shownStartOf(
+  dto: Pick<BookingSummaryDto, 'scheduledStart' | 'durationMinutes' | 'timing'>,
+): string | null {
+  return serviceWindowOf({
+    bookedStart: dto.scheduledStart,
+    durationMinutes: dto.durationMinutes,
+    timing: dto.timing,
+  }).start;
+}
+
 export function headlineFor(
-  dto: Pick<BookingSummaryDto, 'scheduledStart' | 'durationMinutes'>,
+  dto: Pick<BookingSummaryDto, 'scheduledStart' | 'durationMinutes' | 'timing'>,
   timeZone?: string | undefined,
 ): string {
   const duration =
@@ -102,8 +114,9 @@ export function headlineFor(
       ? `${dto.durationMinutes / 60} hr`
       : `${dto.durationMinutes} mins`;
 
-  if (dto.scheduledStart === null) return duration;
-  const instant = new Date(dto.scheduledStart);
+  const start = shownStartOf(dto);
+  if (start === null) return duration;
+  const instant = new Date(start);
   if (Number.isNaN(instant.getTime())) return duration;
 
   const day = formatServiceDate(serviceDateIn(timeZone, instant), {
@@ -139,12 +152,13 @@ export function cookFieldsFrom(
  * same time on every handset regardless of the reader's own timezone.
  */
 function slotSubtitleFor(
-  dto: Pick<BookingSummaryDto, 'slotType' | 'scheduledStart'>,
+  dto: Pick<BookingSummaryDto, 'slotType' | 'scheduledStart' | 'durationMinutes' | 'timing'>,
   timeZone?: string | undefined,
 ): string {
   if (dto.slotType === 'instant') return 'Instant';
-  if (dto.scheduledStart === null) return 'Scheduled';
-  const instant = new Date(dto.scheduledStart);
+  const start = shownStartOf(dto);
+  if (start === null) return 'Scheduled';
+  const instant = new Date(start);
   if (Number.isNaN(instant.getTime())) return 'Scheduled';
   return `Scheduled • ${formatServiceTime(timeZone, instant)}`;
 }

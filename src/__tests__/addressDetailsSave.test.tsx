@@ -9,6 +9,7 @@ import {
 } from '@/test/renderWithRuntime';
 import type { AppError } from '@core/errors';
 import { useAddressDraftStore } from '@core/store/addressDraftStore';
+import { addressToRedo } from '@features/address';
 
 /**
  * The details form (`1870:2485` / `1870:2576` / `1870:2672`) as a WRITE contract: what Save sends,
@@ -433,5 +434,56 @@ describe('editing an address (1870:2672)', () => {
     fireEvent.press(screen.getByTestId('address-details-remove'));
 
     expect(await screen.findByText('Remove this address?')).toBeTruthy();
+  });
+});
+
+describe('redoing an address saved by the older steps (owner, 31 Oct 2026)', () => {
+  const me = () => ({
+    ...(DEFAULT_API_STUBS['GET /v1/me']?.(undefined) as Record<string, unknown>),
+    profileUpdateRequired: false,
+  });
+  const oldAddress = () => [
+    {
+      ...(DEFAULT_API_STUBS['GET /v1/me/addresses']?.(undefined) as Record<string, unknown>[])[0],
+      detailsVersion: 1,
+    },
+  ];
+
+  beforeEach(() => {
+    mockSearchParams = { addressId: 'addr-1', onboarding: '1' };
+  });
+
+  it('offers Save without a change, saves it as the current steps and moves on via Home', async () => {
+    render({ 'GET /v1/me': me, 'GET /v1/me/addresses': oldAddress });
+    await screen.findByTestId('address-details');
+    await waitFor(() => expect(isDisabled()).toBe(false));
+
+    fireEvent.press(save());
+
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect(writes[0]).toMatchObject({ method: 'PUT', body: { detailsVersion: 2 } });
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
+  });
+
+  it('moves on when an upcoming booking still uses it, and does not ask again this run', async () => {
+    const inUse: AppError = {
+      kind: 'validation',
+      status: 409,
+      message: 'This address is used in an upcoming booking.',
+      code: 'ADDRESS_IN_USE',
+    };
+    render({
+      'GET /v1/me': me,
+      'GET /v1/me/addresses': oldAddress,
+      'PUT /v1/me/addresses/addr-1': () => {
+        throw inUse;
+      },
+    });
+    await screen.findByTestId('address-details');
+    await waitFor(() => expect(isDisabled()).toBe(false));
+    fireEvent.press(save());
+
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/home'));
+    expect(addressToRedo(oldAddress() as never)).toBeNull();
   });
 });

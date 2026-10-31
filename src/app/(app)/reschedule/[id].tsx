@@ -1,95 +1,39 @@
-import { useCallback, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { ready } from '@core/data';
+import type { DataState } from '@core/data';
 import { useBookingDetail, useRescheduleBooking } from '@features/booking';
-import {
-  ScheduleView,
-  devScheduleSelection,
-  serviceDateIn,
-  useScheduleData,
-} from '@features/scheduled';
 import { useCatalogue } from '@features/catalogue';
-import type { ScheduleSelection } from '@features/scheduled';
+import { serviceDateIn } from '@features/scheduled';
+import { ScheduleForLaterView, useScheduleForLater } from '@features/scheduleLater';
 import { getUserMessage, isAppError } from '@core/errors';
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
-import { InfoDialog } from '@ui';
+import { InfoDialog, QueryBoundary } from '@ui';
 
 /**
- * Reschedule — Figma `sbIXeBfaMzUFUz2NYJIJTm`, finalized "Rescheduled flow" section `275:5217`.
+ * Reschedule — the redesigned Schedule for Later screen (`cCQlzTeiObQkpVBzwI8mZi` `2466:18844`) in
+ * its reschedule mode.
  *
- * This became its OWN finalized section in v4. In the previous file the same frames sat under a
- * second section also called "Scheduled flow", which is why they were byte-identical to Schedule
- * and were recorded as a duplicate; the rename resolves that — they were always the reschedule
- * variant.
+ * It used to draw the OLD Schedule screens (`@features/scheduled`'s `ScheduleView`, from the
+ * earlier Figma file's "Rescheduled flow" `275:5217`), so Reschedule opened a screen the rest of
+ * the app no longer looks like (device test, 31 Oct 2026). The redesign never gave Reschedule its
+ * own route, and this one was not moved over when "Book for later" was.
  *
- * The section holds **three** states, not Schedule's four:
- *   `275:5442`  Day
- *   `275:5490`  + Time
- *   `275:5218`  + Start time, CTA "Reschedule"
+ * The locked rules are unchanged: a reschedule moves WHEN, never how long (the carousel holds only
+ * the booking's own duration), and it is free (no payable, no "Check payment details", CTA
+ * "Reschedule"). The day the booking is on starts selected.
  *
- * The missing step is DURATION, and that matches the locked product rule: a reschedule moves
- * *when*, never *how long*. The screen already produces exactly this shape from `mode:
- * 'reschedule'` + an absent `durations` — no reschedule-specific layout exists or is needed.
+ * ## Submit, and ruling R-3
  *
- * The v4 CTA reads "Reschedule" and there is NO payment line, which is also the locked rule
- * (reschedule is free, max once, no Razorpay).
- *
- * ## Submit is live, and ruling R-3 is intact
- *
- * It used to be inert "until blocker B-4 resolves reschedule eligibility server-side", which left
- * the one CTA on the screen doing nothing at all — the dead control §11 forbids. B-4 is about who
- * DECIDES eligibility, and the answer has not changed: the server does.
- * `POST /v1/bookings/:id/reschedule` is that decision. This screen sends the slot the server
- * itself offered and renders whatever comes back, including a refusal. It infers nothing — which
- * is exactly what R-3 requires, and is not the same thing as refusing to ask.
- *
- * DEV reachability (task §16): `?step=1..3` seeds the selection so each finalized state opens
- * directly. `__DEV__`-only.
+ * `POST /v1/bookings/:id/reschedule` decides eligibility. This screen sends the slot the server
+ * itself offered and renders whatever comes back, including a refusal. It infers nothing.
  */
 export default function RescheduleRoute() {
-  const router = useRouter();
-  const { id, step } = useLocalSearchParams<{ id: string; step?: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const bookingId = typeof id === 'string' ? id : '';
   const booking = useBookingDetail(bookingId === '' ? null : bookingId);
   const catalogue = useCatalogue();
-  const bookingData = booking.state.status === 'ready' ? booking.state.data : null;
-  const serviceTimeZone =
-    catalogue.state.status === 'ready'
-      ? catalogue.state.data.operatingWindow.timeZone
-      : 'Asia/Kolkata';
-  const bookingDate =
-    bookingData?.scheduledStart === null || bookingData?.scheduledStart === undefined
-      ? null
-      : serviceDateIn(serviceTimeZone, new Date(bookingData.scheduledStart));
-  const selectionScope = `${bookingId}:${bookingDate ?? 'pending'}:${bookingData?.durationMinutes ?? 'pending'}`;
-  const [selectionState, setSelectionState] = useState<{
-    scope: string;
-    value: ScheduleSelection | null;
-  }>({ scope: '', value: null });
-  const selection = selectionState.scope === selectionScope ? selectionState.value : null;
-
-  const handleSelectionChange = useCallback(
-    (value: ScheduleSelection) => setSelectionState({ scope: selectionScope, value }),
-    [selectionScope],
-  );
-
-  const { state, refetch } = useScheduleData('reschedule', {
-    date: selection?.dayId ?? bookingDate,
-    durationMinutes: bookingData?.durationMinutes ?? null,
-  });
-  const reschedule = useRescheduleBooking();
-  const [error, setError] = useState<string | null>(null);
-
-  const seed = __DEV__ ? devScheduleSelection(state, step) : undefined;
-  const initialSelection =
-    bookingDate === null
-      ? seed
-      : {
-          dayId: bookingDate,
-          periodId: seed?.periodId ?? null,
-          durationId: null,
-          slotId: seed?.slotId ?? null,
-        };
 
   /**
    * The BOOKING being rescheduled — the only screen this one can be about. A notification that
@@ -100,19 +44,76 @@ export default function RescheduleRoute() {
   const guard = useNavigationGuard();
   const goBack = useSafeBack(bookingId === '' ? '/home' : `/booking/${bookingId}`);
 
+  // The presets are read once, when the screen opens, so it waits for the booking first.
+  const state = useMemo<DataState<{ durationId: string; dayId: string | null }>>(() => {
+    if (booking.state.status !== 'ready') return booking.state;
+    if (catalogue.state.status !== 'ready') return catalogue.state;
+    const { scheduledStart, durationMinutes } = booking.state.data;
+    const timeZone = catalogue.state.data.operatingWindow.timeZone;
+    return ready({
+      durationId: `dur-${String(durationMinutes)}`,
+      dayId: scheduledStart === null ? null : serviceDateIn(timeZone, new Date(scheduledStart)),
+    });
+  }, [booking.state, catalogue.state]);
+
+  return (
+    <QueryBoundary state={state} onRetry={booking.refetch}>
+      {(preset) => (
+        <RescheduleScreen
+          bookingId={bookingId}
+          presetDurationId={preset.durationId}
+          presetDayId={preset.dayId}
+          onBack={guard(goBack)}
+        />
+      )}
+    </QueryBoundary>
+  );
+}
+
+function RescheduleScreen({
+  bookingId,
+  presetDurationId,
+  presetDayId,
+  onBack,
+}: {
+  readonly bookingId: string;
+  readonly presetDurationId: string;
+  readonly presetDayId: string | null;
+  readonly onBack: () => void;
+}) {
+  const router = useRouter();
+  // Re-read every 30 seconds only while this screen is showing (DEC-094).
+  const [focused, setFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const later = useScheduleForLater({ presetDurationId, presetDayId, focused });
+  const reschedule = useRescheduleBooking();
+  const [error, setError] = useState<string | null>(null);
+  const { selection } = later;
+
   return (
     <>
-      <ScheduleView
-        key={selectionScope}
-        state={state}
-        onRetry={refetch}
-        onBack={guard(goBack)}
-        {...(initialSelection === undefined ? {} : { initialSelection })}
-        onSelectionChange={handleSelectionChange}
-        /* Reschedule is free, so there is no quote to wait on — but the call in flight still has
-           to hold the CTA, or a second tap moves the booking twice. */
+      <ScheduleForLaterView
+        mode="reschedule"
+        state={later.state}
+        selection={selection}
+        lostPick={later.lostPick}
+        onBack={onBack}
+        onRetry={later.refetch}
+        onSelectDuration={later.selectDuration}
+        onSelectDay={later.selectDay}
+        onSelectPeriod={later.selectPeriod}
+        onSelectSlot={later.selectSlot}
+        // Reschedule is free, so there is no quote to wait on.
+        canSubmit={bookingId !== ''}
+        /* The call in flight still has to hold the CTA, or a second tap moves the booking twice. */
         submitting={reschedule.isPending}
-        onSubmit={(selection) => {
+        submitError={null}
+        onSubmit={() => {
           // The slot id IS the server's ISO start, so what is sent back is exactly what was
           // offered. No slot is constructed here, and an unselected grid cannot submit.
           if (bookingId === '' || selection.slotId === null || reschedule.isPending) return;
@@ -126,6 +127,8 @@ export default function RescheduleRoute() {
               scope: `booking.reschedule:${bookingId}:${selection.slotId}`,
             })
             .then(() => {
+              // The freed slot and the taken one both change what is free.
+              void later.refreshFresh();
               /**
                * REPLACE, not push. The booking has moved, so returning to a grid still showing
                * the old slots would offer the customer a choice that no longer describes their
@@ -145,7 +148,6 @@ export default function RescheduleRoute() {
         }}
       />
 
-      {/* FIGMA_PENDING — `275:5218` draws no failure state for the reschedule. */}
       <InfoDialog
         visible={error !== null}
         onClose={() => setError(null)}

@@ -1,3 +1,4 @@
+import { formatMinutes } from '@core/format';
 import type { RatingSelection } from '@ui';
 
 import type { BookingStatus } from '@features/booking';
@@ -199,7 +200,7 @@ const COPY = {
 } as const;
 
 function minutesBadge(minutes: number | null | undefined, fallback: string): string {
-  return minutes === null || minutes === undefined ? fallback : `${minutes} mins`;
+  return minutes === null || minutes === undefined ? fallback : formatMinutes(minutes);
 }
 
 /**
@@ -222,7 +223,7 @@ function liveBadge(input: HomeBannerInput): { caption: string; value: string } {
   const minutes = over % 60;
   return {
     caption: COPY.captionRunningOver,
-    value: hours === 0 ? `${minutes} mins` : `${hours}h ${minutes}m`,
+    value: hours === 0 ? formatMinutes(minutes) : `${hours}h ${minutes}m`,
   };
 }
 

@@ -83,7 +83,7 @@ export const EXPLAINER_HEADING = 'Plans, Visits, Cook Pool & more';
 /** `970:5524` — and after: the video has covered them, so it stops listing them. */
 export const EXPLAINER_HEADING_WATCHED = 'Plans, visits and more';
 /** `970:5451`. */
-export const EXPLAINER_SUBHEAD = 'See the whole flow in under 4 minutes.';
+export const EXPLAINER_SUBHEAD = 'See the whole flow in under 2 minutes.';
 /** `970:5456`. */
 export const EXPLAINER_TITLE = 'Understand Recurring';
 /** `970:5457`. */
@@ -91,4 +91,4 @@ export const EXPLAINER_PROMPT = 'Tap to watch!';
 /** `970:5531` — the design reads "Swipe to repwatch", a typo for "rewatch". */
 export const EXPLAINER_WATCHED = 'Watched · Swipe to rewatch';
 /** `970:5532`. */
-export const EXPLAINER_COVERS = '3:45 sec · Covers Plans, Visits, Cook Pool and more!';
+export const EXPLAINER_COVERS = 'Under 2 mins · Covers Plans, Visits, Cook Pool and more!';

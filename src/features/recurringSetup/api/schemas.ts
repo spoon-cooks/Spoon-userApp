@@ -238,6 +238,17 @@ export const visitSummarySchema = z.object({
     })
     .nullable(),
   bookingId: z.string().nullable(),
+  /**
+   * The visit's booking's session moments (start OTP, the end it runs to, end OTP), null until
+   * each happens. Absent from a V0 that predates it; the visit then shows its planned slot.
+   */
+  timing: z
+    .object({
+      actualStart: instant.nullable(),
+      expectedEnd: instant.nullable(),
+      actualEnd: instant.nullable(),
+    })
+    .nullish(),
   totalPaise: paise,
   cancelledBy: z.enum(['customer', 'payment_failed', 'spoon']).nullable(),
 });

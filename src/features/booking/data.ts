@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 
-import { formatPaise } from '@core/format';
+import { formatMinutes, formatPaise } from '@core/format';
 import { useApiQuery, ready } from '@core/data';
 import type { ScreenQuery } from '@core/data';
 import { getUserMessage, normalizeError } from '@core/errors';
@@ -419,9 +419,9 @@ function etaMinutesFor(live: InstantAvailabilityDto | null): string {
   if (live === null || live.available !== true) return '';
 
   const estimated = live.projectedArrival?.etaMinutes;
-  if (typeof estimated === 'number' && estimated > 0) return `${Math.round(estimated)} mins`;
+  if (typeof estimated === 'number' && estimated > 0) return formatMinutes(Math.round(estimated));
 
-  return live.arrivalTargetMinutes > 0 ? `${live.arrivalTargetMinutes} mins` : '';
+  return live.arrivalTargetMinutes > 0 ? formatMinutes(live.arrivalTargetMinutes) : '';
 }
 
 export function useInstantData(

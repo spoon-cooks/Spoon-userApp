@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 import { View } from 'react-native';
 
-import { FullScreenLoadingHost } from './FullScreenLoading';
+import { FullScreenLoadingHost, FullScreenLoadingProvider } from './FullScreenLoading';
 import { LoadingState } from './LoadingState';
 
 /** A screen's full-screen wait is drawn by the root host, over the whole window (31 Oct 2026). */
@@ -26,6 +26,22 @@ describe('the full-screen wait', () => {
 
     rerender(<App waiting={false} />);
     expect(screen.queryByTestId('full-screen-loading')).toBeNull();
+  });
+
+  it('never draws the toss inside a screen, not even on the first render, under the provider', () => {
+    // The host alone registers in an effect, after the screens' first render; the provider says
+    // it is there from the start, so a launch wait never shows an inset toss for a frame.
+    const Probe = () => <LoadingState variant="screen" testID="screen-wait" />;
+    render(
+      <FullScreenLoadingProvider>
+        <View style={{ padding: 16 }}>
+          <Probe />
+        </View>
+      </FullScreenLoadingProvider>,
+    );
+    expect(screen.getByTestId('full-screen-loading')).toBeTruthy();
+    expect(screen.getByTestId('screen-wait').props.children).toBeUndefined();
+    expect(screen.queryAllByLabelText(/Loading/).length).toBeLessThanOrEqual(1);
   });
 
   it('draws the toss in place when there is no host', () => {

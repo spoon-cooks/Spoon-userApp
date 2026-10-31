@@ -72,6 +72,7 @@ function bodyOf(input: AddressWriteInput): JsonValue {
     ...(input.placeName === undefined ? {} : { placeName: input.placeName }),
     ...(input.societyId === undefined ? {} : { societyId: input.societyId }),
     ...(input.customSociety === undefined ? {} : { customSociety: input.customSociety }),
+    ...(input.detailsVersion === undefined ? {} : { detailsVersion: input.detailsVersion }),
     ...(input.locality === undefined ? {} : { locality: input.locality }),
     ...(input.areaLine === undefined ? {} : { areaLine: input.areaLine }),
     ...(input.city === undefined ? {} : { city: input.city }),

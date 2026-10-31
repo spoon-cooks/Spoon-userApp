@@ -45,7 +45,7 @@ const option = (minutes: number, totalAmountPaise: number) => ({
 
 const MODEL: ServiceVisitModel = {
   phase: 'assigned',
-  title: 'On-time visit',
+  title: 'One-time visit',
   bannerTitle: 'Wed, 14 Oct',
   bannerSlot: '9:00 AM – 10:00 AM · 1 hr',
   cook: { eyebrow: 'SPOON TRAINED · VERIFIED', name: 'Cook Meera', note: '' },
@@ -108,6 +108,24 @@ describe('model', () => {
     });
     expect(servicePhaseOf(cooking, now)).toBe('cooking');
     expect(minutesLeft(cooking, now)).toBe(48);
+
+    // A 30-min visit read a moment before its start (a clock not yet ticked past the Start OTP, or
+    // a phone behind the server) said "31" before settling on 30 (device test, 31 Oct 2026).
+    const thirty = booking({
+      status: 'cooking',
+      durationMinutes: 30,
+      totalDurationMinutes: 30,
+      timing: {
+        arrivedAt: null,
+        actualStart: '2026-10-14T03:28:00.000Z',
+        expectedEnd: '2026-10-14T03:58:00.000Z',
+        actualEnd: null,
+      },
+    });
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:27:40.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:28:00.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:28:01.000Z'))).toBe(30);
+    expect(minutesLeft(thirty, new Date('2026-10-14T03:29:01.000Z'))).toBe(29);
     expect(servicePhaseOf(cooking, new Date('2026-10-14T04:30:00.000Z'))).toBe('timesUp');
     expect(servicePhaseOf(booking({ status: 'created' }), now)).toBeNull();
     expect(servicePhaseOf(booking({ status: 'cancelled' }), now)).toBeNull();
@@ -134,7 +152,7 @@ describe('model', () => {
 describe('Service flow screen (2165:11841)', () => {
   it('assigned: banner, cook, recipe and before-arrival checklist, with Modify booking', () => {
     renderPhase({ phase: 'assigned' });
-    expect(screen.getByText('On-time visit')).toBeTruthy();
+    expect(screen.getByText('One-time visit')).toBeTruthy();
     expect(screen.getByText('ASSIGNED')).toBeTruthy();
     expect(screen.getByTestId('service-visit-prep')).toBeTruthy();
     expect(screen.getByTestId('service-visit-dock-modify')).toBeTruthy();
@@ -166,6 +184,16 @@ describe('Service flow screen (2165:11841)', () => {
     expect(props.onExtend).toHaveBeenCalledWith(20);
     expect(screen.getByText('END OTP')).toBeTruthy();
     expect(screen.getByText('What she’ll clean up')).toBeTruthy();
+  });
+
+  it('cooking: Check payment details under Extend opens the tax details, not the payment sheet', () => {
+    const props = renderPhase(
+      { phase: 'cooking', bannerSlot: null },
+      { onExtendPaymentDetails: jest.fn() },
+    );
+    fireEvent.press(screen.getByTestId('service-visit-extend-payment-details'));
+    expect(props.onExtendPaymentDetails).toHaveBeenCalled();
+    expect(props.onPaymentDetails).not.toHaveBeenCalled();
   });
 
   it('cooking with nothing free: "Can’t extend this visit" and Book another visit', () => {

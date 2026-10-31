@@ -5,7 +5,14 @@ import { clearProfileDraft, readProfileDraft, writeProfileDraft } from '@core/au
 import { ready } from '@core/data';
 import type { ScreenQuery } from '@core/data';
 import { useRuntime } from '@core/runtimeContext';
-import { authKeys, createAuthApi, useMe, useUpdateProfile } from '@features/auth';
+import {
+  PROFILE_STEPS_VERSION,
+  authKeys,
+  createAuthApi,
+  useMe,
+  useStepVersionsSupported,
+  useUpdateProfile,
+} from '@features/auth';
 import type { MeResponse, ProfileUpdateRequest } from '@features/auth';
 
 import {
@@ -19,7 +26,7 @@ import {
   isMealSetup,
 } from './fields';
 import type { WizardStepId } from './fields';
-import { EMPTY_PROFILE_DETAILS, showsNonVegPreferences } from './validation';
+import { EMPTY_PROFILE_DETAILS, NO_GENDER_PREFERENCE, showsNonVegPreferences } from './validation';
 import type { ProfileDetailsValues } from './validation';
 
 /**
@@ -73,7 +80,7 @@ export function profileDetailsFromMe(me: MeResponse): ProfileDetailsValues {
     grownUpEating: [...new Set(cuisines)],
     oilLevel: known(OIL_STOPS, me.oilLevel) ?? EMPTY_PROFILE_DETAILS.oilLevel,
     gheeOnly: me.gheeOnly ?? false,
-    genderPreference: known(GENDER_OPTIONS, me.genderPreference),
+    genderPreference: known(GENDER_OPTIONS, me.genderPreference) ?? NO_GENDER_PREFERENCE,
     // Kept even when it is V8's `my-state`, which no tile draws: the customer did not change it.
     regionPreference: me.regionPreference,
     mealStructure,
@@ -95,7 +102,7 @@ export function profileUpdateFrom(values: ProfileDetailsValues): ProfileUpdateRe
     grownUpEating: [...values.grownUpEating],
     oilLevel: values.oilLevel,
     gheeOnly: values.gheeOnly,
-    genderPreference: values.genderPreference,
+    genderPreference: values.genderPreference ?? NO_GENDER_PREFERENCE,
     regionPreference: values.regionPreference,
     mealStructure: values.mealStructure,
     mealHassles: [...values.mealHassles],
@@ -127,11 +134,18 @@ export function useProfileDetailsData(): ScreenQuery<ProfileDetailsData> {
 
 export function useSaveProfileDetails() {
   const update = useUpdateProfile();
+  const versioned = useStepVersionsSupported();
 
   return {
     ...update,
+    /**
+     * Save & Continue. Only this final save says which version of the steps sent it, which is what
+     * clears `profileUpdateRequired`; the answer-by-answer autosave never does, so leaving halfway
+     * still leaves the steps owed.
+     */
     save(values: ProfileDetailsValues, options?: { onSuccess?: () => void }) {
-      update.mutate(profileUpdateFrom(values), {
+      const request = profileUpdateFrom(values);
+      update.mutate(versioned ? { ...request, flowVersion: PROFILE_STEPS_VERSION } : request, {
         ...(options?.onSuccess === undefined ? {} : { onSuccess: options.onSuccess }),
       });
     },
@@ -251,12 +265,17 @@ export function parseDraft(raw: string): ProfileDraft | null {
 
 export type ProfileGate = 'resolving' | 'required' | 'satisfied';
 
-/** Whether the boot gate owes this customer the wizard. The SERVER's `profileComplete` decides. */
+/**
+ * Whether the boot gate owes this customer the wizard. The SERVER decides: `profileComplete`, or
+ * `profileUpdateRequired` for a customer whose profile predates the current steps (owner, 31 Oct
+ * 2026, everyone goes through the new steps once).
+ */
 export function useProfileGate(options: { enabled?: boolean } = {}): ProfileGate {
   const me = useMe({ enabled: options.enabled ?? true });
 
   if (options.enabled === false) return 'resolving';
   if (me.state.status === 'loading') return 'resolving';
   if (me.state.status !== 'ready') return 'satisfied';
-  return me.state.data.profileComplete ? 'satisfied' : 'required';
+  const { profileComplete, profileUpdateRequired } = me.state.data;
+  return profileComplete && profileUpdateRequired !== true ? 'satisfied' : 'required';
 }

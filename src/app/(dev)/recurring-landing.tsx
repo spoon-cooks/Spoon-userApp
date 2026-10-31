@@ -9,7 +9,7 @@ import { RouteScaffold } from '@ui';
  *
  *   top      scrolled to the top, the sticky footer parked below the screen (`970:5392`)
  *   bottom   scrolled to the end, the footer in (`970:5397`)
- *   player   the player up over the page, at 1:52 (`970:5546`)
+ *   player   the player up over the page, at 0:38 (Figma `970:5546` draws 1:52 of a 3:45 video)
  *   watched  scrolled to the end with the video already watched (`970:5472`)
  *
  * `?pool=1` draws the Cook Pool button as for a household with a pool ("Check your Cook Pool");
@@ -24,7 +24,7 @@ import { RouteScaffold } from '@ui';
  * outside `(app)`. Here "schedule" opens the dev preview of the plan flow, and "Make your Cook
  * Pool" / "Check your Cook Pool" the Cook Pool's.
  */
-const PLAYER_AT_SECONDS = 112;
+const PLAYER_AT_SECONDS = 38;
 
 export default function RecurringLandingPreviewRoute() {
   const router = useRouter();

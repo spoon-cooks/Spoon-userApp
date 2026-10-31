@@ -16,7 +16,7 @@ describe('formatClock', () => {
     expect(formatClock(9)).toBe('0:09');
     expect(formatClock(60)).toBe('1:00');
     expect(formatClock(112)).toBe('1:52');
-    expect(formatClock(VIDEO_DURATION_SECONDS)).toBe('3:45');
+    expect(formatClock(VIDEO_DURATION_SECONDS)).toBe('1:17');
   });
 
   it('drops a fraction of a second and never goes negative', () => {

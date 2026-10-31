@@ -25,6 +25,11 @@ import type { LaterSelection } from '../laterData';
  *
  * What is free comes from the three-day overview (DEC-094): a duration, a day, a time of day or a
  * start time with nothing free is greyed and cannot be chosen.
+ *
+ * `mode="reschedule"` is the same screen moving a booked visit (device test, 31 Oct 2026: Reschedule
+ * opened the old Schedule screens). A reschedule moves WHEN, never how long, and is free: the
+ * carousel holds only the booking's own duration, the CTA reads "Reschedule", and there is no
+ * payable or "Check payment details".
  */
 export interface ScheduleForLaterViewProps {
   readonly state: DataState<LaterModel>;
@@ -44,6 +49,8 @@ export interface ScheduleForLaterViewProps {
   readonly submitError: string | null;
   /** `2466:19098` — the quote's payable, formatted. Absent until priced. */
   readonly amountLabel?: string | undefined;
+  /** `book` (default) or `reschedule`: moving a booked visit, its duration fixed and no charge. */
+  readonly mode?: 'book' | 'reschedule';
 }
 
 export function ScheduleForLaterView({
@@ -51,8 +58,10 @@ export function ScheduleForLaterView({
   selection,
   lostPick,
   onRetry,
+  mode = 'book',
   ...actions
 }: ScheduleForLaterViewProps) {
+  const rescheduling = mode === 'reschedule';
   const [focusedId, setFocusedId] = useState<string | null>(selection.durationId);
   const [taxOpen, setTaxOpen] = useState(false);
   /**
@@ -64,15 +73,18 @@ export function ScheduleForLaterView({
   return (
     <QueryBoundary state={state} onRetry={onRetry}>
       {(model) => {
-        const durations: DurationOption[] = model.durations.map((duration) => ({
-          id: duration.id,
-          minutes: duration.minutes,
-          label: duration.label,
-          pricePaise: duration.pricePaise,
-          mrpPaise: duration.mrpPaise,
-          payablePaise: duration.payablePaise,
-          available: { now: duration.available, later: duration.available },
-        }));
+        const durations: DurationOption[] = model.durations
+          // A reschedule keeps the booked length: only that card is offered.
+          .filter((duration) => !rescheduling || duration.id === selection.durationId)
+          .map((duration) => ({
+            id: duration.id,
+            minutes: duration.minutes,
+            label: duration.label,
+            pricePaise: duration.pricePaise,
+            mrpPaise: duration.mrpPaise,
+            payablePaise: duration.payablePaise,
+            available: { now: duration.available, later: duration.available },
+          }));
         const chosen = model.durations.find((duration) => duration.id === selection.durationId);
         const period = model.periods.find((candidate) => candidate.id === selection.periodId);
         const slot = model.periods
@@ -92,7 +104,7 @@ export function ScheduleForLaterView({
             header={
               <ScreenHeader
                 density="nav"
-                title="Schedule for Later"
+                title={rescheduling ? 'Reschedule' : 'Schedule for Later'}
                 onBack={actions.onBack}
                 testID="schedule-later-header"
               />
@@ -117,7 +129,7 @@ export function ScheduleForLaterView({
                         </Text>
                       )}
                     </View>
-                    {actions.amountLabel === undefined ? null : (
+                    {rescheduling || actions.amountLabel === undefined ? null : (
                       <Text variant="emphasis" color="textPrimary">
                         {actions.amountLabel}
                       </Text>
@@ -125,7 +137,7 @@ export function ScheduleForLaterView({
                   </View>
                 ) : null}
                 <Button
-                  label="Confirm Booking"
+                  label={rescheduling ? 'Reschedule' : 'Confirm Booking'}
                   onPress={() => {
                     if (bookable) actions.onSubmit();
                   }}
@@ -139,7 +151,7 @@ export function ScheduleForLaterView({
                 />
                 {/* `2466:19025` / dev note `2466:19113`: with a slot picked, "Check payment details"
                     sits under Confirm Booking and opens the tax details, as on Home. */}
-                {complete ? (
+                {complete && !rescheduling ? (
                   <Pressable
                     accessibilityRole="link"
                     onPress={() => setTaxOpen(true)}
@@ -186,7 +198,7 @@ export function ScheduleForLaterView({
                 onFocus={setFocusedId}
                 onSelect={(id) => {
                   setFocusedId(id);
-                  actions.onSelectDuration(id);
+                  if (!rescheduling) actions.onSelectDuration(id);
                 }}
                 onPressUnavailable={() => undefined}
                 onRetry={onRetry}
