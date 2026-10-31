@@ -83,7 +83,7 @@ export const EXPLAINER_HEADING = 'Plans, Visits, Cook Pool & more';
 /** `970:5524` — and after: the video has covered them, so it stops listing them. */
 export const EXPLAINER_HEADING_WATCHED = 'Plans, visits and more';
 /** `970:5451`. */
-export const EXPLAINER_SUBHEAD = 'See the whole flow in under 4 minutes.';
+export const EXPLAINER_SUBHEAD = 'See the whole flow in under 2 minutes.';
 /** `970:5456`. */
 export const EXPLAINER_TITLE = 'Understand Recurring';
 /** `970:5457`. */

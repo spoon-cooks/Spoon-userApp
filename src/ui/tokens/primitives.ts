@@ -332,7 +332,7 @@ export const palette = {
   // ---------------------------------------------------------------------------
   // Recurring landing — Spoon — User (`cCQlzTeiObQkpVBzwI8mZi`), `970:5392` … `970:5546`.
   // ---------------------------------------------------------------------------
-  /** `970:5451` — "See the whole flow in under 4 minutes.". */
+  /** `970:5451` — "See the whole flow in under 2 minutes." (Figma has 4; owner, 31 Oct 2026). */
   stone600: '#6B6A60',
   /** `970:5610` — the player's elapsed and total time. */
   stone380: '#B9B8AE',
