@@ -74,8 +74,15 @@ export interface RecurringLandingScreenProps {
    * Cook Pool" (`983:6046`). False or absent (empty, or not known yet) reads "Make your Cook Pool".
    */
   readonly hasCookPool?: boolean;
-  /** The explainer video. Absent until there is one. */
-  readonly videoSource?: ExplainerVideoSource;
+  /**
+   * The explainer block ("Plans, Visits, Cook Pool & more" and its card), set from Remote Config
+   * (`video.ts`). Absent: there is no video, and the block is left out rather than offering a
+   * player with nothing to play. `source` absent plays the placeholder (previews only).
+   */
+  readonly explainer?: {
+    readonly source?: ExplainerVideoSource;
+    readonly subhead?: string | null;
+  };
   /** Where the page opens: scrolled to the top (the default) or to the end. For previews. */
   readonly initialScroll?: 'top' | 'end';
   /** Opens with the video already watched. For previews. */
@@ -92,7 +99,7 @@ export function RecurringLandingScreen({
   onOpenLive,
   onMakeCookPool,
   hasCookPool = false,
-  videoSource,
+  explainer,
   initialScroll = 'top',
   initialWatched = false,
   initialPlayerAt,
@@ -225,21 +232,23 @@ export function RecurringLandingScreen({
                 </View>
 
                 {/* `970:5448` (and `970:5523`, watched: 12 between the three, not 16 before the card) */}
-                <View style={[styles.explainer, watched ? styles.explainerWatched : null]}>
-                  <View style={styles.explainerCopy}>
-                    <Text variant="emphasis" color="textPrimary" accessibilityRole="header">
-                      {watched ? EXPLAINER_HEADING_WATCHED : EXPLAINER_HEADING}
-                    </Text>
-                    <Text variant="bodyLarge" color="textExplainer">
-                      {EXPLAINER_SUBHEAD}
-                    </Text>
+                {explainer === undefined ? null : (
+                  <View style={[styles.explainer, watched ? styles.explainerWatched : null]}>
+                    <View style={styles.explainerCopy}>
+                      <Text variant="emphasis" color="textPrimary" accessibilityRole="header">
+                        {watched ? EXPLAINER_HEADING_WATCHED : EXPLAINER_HEADING}
+                      </Text>
+                      <Text variant="bodyLarge" color="textExplainer">
+                        {explainer.subhead ?? EXPLAINER_SUBHEAD}
+                      </Text>
+                    </View>
+                    <ExplainerCard
+                      watched={watched}
+                      onPress={openPlayer}
+                      testID={`${testID}-explainer`}
+                    />
                   </View>
-                  <ExplainerCard
-                    watched={watched}
-                    onPress={openPlayer}
-                    testID={`${testID}-explainer`}
-                  />
-                </View>
+                )}
               </View>
             </View>
 
@@ -260,9 +269,9 @@ export function RecurringLandingScreen({
         testID={`${testID}-footer`}
       />
 
-      {playerAt === null ? null : (
+      {playerAt === null || explainer === undefined ? null : (
         <ExplainerPlayer
-          {...(videoSource === undefined ? {} : { source: videoSource })}
+          {...(explainer.source === undefined ? {} : { source: explainer.source })}
           initialPosition={playerAt}
           onEnded={onEnded}
           onClose={closePlayer}

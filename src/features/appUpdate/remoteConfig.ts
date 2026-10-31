@@ -1,6 +1,7 @@
-import { fetchAndActivate, getRemoteConfig, getString } from '@react-native-firebase/remote-config';
-
 import type { AppEnv } from '@core/config';
+import { readRemoteStrings } from '@core/remoteConfig';
+
+export { parameterName } from '@core/remoteConfig';
 
 /**
  * The update policy, read from Firebase Remote Config.
@@ -30,47 +31,18 @@ export interface UpdatePolicy {
   readonly message: string | null;
 }
 
-/**
- * How stale a fetch may be before the SDK asks the network again.
- *
- * Firebase throttles a client to a handful of real fetches an hour, and a call inside the window
- * is answered from cache rather than failing — so asking on every foreground is safe. Fifteen
- * minutes is the answer to "how soon does a console change reach someone with the app open";
- * development gets 0 so a change can be seen at once.
- */
-const MIN_FETCH_INTERVAL_MS = __DEV__ ? 0 : 15 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 10_000;
-
-/** `min_app_version_ios` in production; `staging_min_app_version_ios` in staging; and so on. */
-export function parameterName(base: string, appEnv: AppEnv): string {
-  return appEnv === 'production' ? base : `${appEnv}_${base}`;
-}
-
-function valueOf(raw: string): string | null {
-  const trimmed = raw.trim();
-  return trimmed === '' ? null : trimmed;
-}
-
-/** `null` when Remote Config could not be reached or read — the caller then enforces nothing. */
 export async function fetchUpdatePolicy(
   platform: 'ios' | 'android',
   appEnv: AppEnv,
 ): Promise<UpdatePolicy | null> {
-  try {
-    const remoteConfig = getRemoteConfig();
-    remoteConfig.settings = {
-      minimumFetchIntervalMillis: MIN_FETCH_INTERVAL_MS,
-      fetchTimeoutMillis: FETCH_TIMEOUT_MS,
-    };
-    await fetchAndActivate(remoteConfig);
-
-    const read = (base: string) => valueOf(getString(remoteConfig, parameterName(base, appEnv)));
-    return {
-      minimum: read(`min_app_version_${platform}`),
-      latest: read(`latest_app_version_${platform}`),
-      message: read('update_message'),
-    };
-  } catch {
-    return null;
-  }
+  const values = await readRemoteStrings(
+    [`min_app_version_${platform}`, `latest_app_version_${platform}`, 'update_message'],
+    appEnv,
+  );
+  if (values === null) return null;
+  return {
+    minimum: values[`min_app_version_${platform}`],
+    latest: values[`latest_app_version_${platform}`],
+    message: values.update_message,
+  };
 }

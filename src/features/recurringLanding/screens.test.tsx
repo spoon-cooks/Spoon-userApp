@@ -24,11 +24,25 @@ function renderScrolledLanding() {
 
 function renderLanding(props: Partial<Parameters<typeof RecurringLandingScreen>[0]> = {}) {
   const handlers = { onBack: jest.fn(), onSchedule: jest.fn(), onMakeCookPool: jest.fn() };
-  render(<RecurringLandingScreen {...handlers} {...props} />);
+  // An explainer is set (the placeholder player) unless a test says otherwise.
+  render(<RecurringLandingScreen {...handlers} explainer={{}} {...props} />);
   return handlers;
 }
 
 describe('Recurring landing', () => {
+  it('leaves the explainer block out when no video is set in Remote Config', () => {
+    const handlers = { onBack: jest.fn(), onSchedule: jest.fn(), onMakeCookPool: jest.fn() };
+    render(<RecurringLandingScreen {...handlers} />);
+    expect(screen.queryByTestId('recurring-landing-explainer')).toBeNull();
+    expect(screen.queryByText('Plans, Visits, Cook Pool & more')).toBeNull();
+  });
+
+  it('shows the subhead set in Remote Config, and its own line without one', () => {
+    renderLanding({ explainer: { subhead: 'The whole flow in 2 minutes.' } });
+    expect(screen.getByText('The whole flow in 2 minutes.')).toBeTruthy();
+    expect(screen.queryByText('See the whole flow in under 4 minutes.')).toBeNull();
+  });
+
   it('draws the page, top to bottom', () => {
     renderLanding();
     expect(screen.getByText('Recurring')).toBeTruthy();

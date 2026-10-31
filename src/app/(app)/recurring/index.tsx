@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 
 import { useNavigationGuard, useSafeBack } from '@core/navigation';
-import { RecurringLandingScreen, useExplainerVideoSource } from '@features/recurringLanding';
+import { RecurringLandingScreen, useExplainerVideo } from '@features/recurringLanding';
 import type { RecurringCta } from '@features/recurringLanding';
 import { useRecurringEligibility } from '@features/recurringSetup';
 
@@ -26,7 +26,8 @@ export default function RecurringRoute() {
   // One screen per tap: a quick double tap must not open (or pop) a screen twice.
   const guard = useNavigationGuard();
   const goBack = useSafeBack('/home');
-  const videoSource = useExplainerVideoSource();
+  // Set from Firebase Remote Config; with none set the explainer block is left out.
+  const explainer = useExplainerVideo();
   const eligibility = useRecurringEligibility();
   const ready = eligibility.state.status === 'ready' ? eligibility.state.data : null;
   const liveBookings = ready?.liveBookings ?? [];
@@ -58,7 +59,7 @@ export default function RecurringRoute() {
           })}
       onMakeCookPool={guard(() => router.push('/cook-pool'))}
       hasCookPool={hasCookPool}
-      {...(videoSource === undefined ? {} : { videoSource })}
+      {...(explainer === null ? {} : { explainer })}
     />
   );
 }
