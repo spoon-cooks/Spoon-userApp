@@ -11,6 +11,7 @@ import {
   useCookPoolProfile,
   useDishLikes,
 } from '@features/cookPool';
+import { useStepVersionsSupported } from '@features/auth';
 import { TaxDetailsDialog } from '@features/homeRedesign';
 import {
   PaymentDetailsSheet,
@@ -111,7 +112,13 @@ export function ServiceVisitHost({
     phase === 'onTheWay' || phase === 'arrived' || phase === 'cooking' || phase === 'timesUp';
   const tracking = useTracking(live ? booking.id : null, { poll: true });
   const cookId = booking.cook?.id ?? null;
-  const profile = useCookPoolProfile(cookId ?? 'none', { enabled: cookId !== null });
+  // Read for THIS booking: its time orders the dish shelves (workbook T1), and its cook is answered
+  // on a first visit. Only a V0 that takes the booking is sent it (`useCookPoolProfile`).
+  const profileForBooking = useStepVersionsSupported();
+  const profile = useCookPoolProfile(cookId ?? 'none', {
+    enabled: cookId !== null,
+    bookingId: profileForBooking ? booking.id : null,
+  });
   const prep = useBookingPrep(phase === 'assigned' || phase === 'onTheWay' ? booking.id : null);
   const updatePrep = useUpdateBookingPrep();
   const extension = useExtensionOptions(

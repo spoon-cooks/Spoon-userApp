@@ -10,6 +10,7 @@ import { useBookingDetail } from '@features/booking';
 import { CancelVisitSheet, cancelReasonsFrom } from '@features/cancellation';
 import type { CancelQuote, CancelStep, CancelVisit } from '@features/cancellation';
 import { useCatalogue } from '@features/catalogue';
+import { useStepVersionsSupported } from '@features/auth';
 import {
   cookCardLines,
   cookProfileFrom,
@@ -79,7 +80,14 @@ export default function RecurringVisitRoute() {
   const booking = useRecurringBooking(bookingId ?? null);
   const quote = useRecurringVisitCancellationQuote(bookingId ?? null, visitId ?? null);
   const cookId = visit.state.status === 'ready' ? (visit.state.data.cook?.cookId ?? null) : null;
-  const profile = useCookPoolProfile(cookId ?? 'none', { enabled: cookId !== null });
+  // Read for the visit's own booking once it has one: its time orders the dish shelves (workbook
+  // T1), and its cook is answered on a first visit. Only a V0 that takes it is sent it.
+  const profileForBooking = useStepVersionsSupported();
+  const visitBookingId = visit.state.status === 'ready' ? visit.state.data.bookingId : null;
+  const profile = useCookPoolProfile(cookId ?? 'none', {
+    enabled: cookId !== null,
+    bookingId: profileForBooking ? visitBookingId : null,
+  });
 
   const state = useMemo<DataState<VisitDetailsModel>>(() => {
     if (visit.state.status !== 'ready') return visit.state;

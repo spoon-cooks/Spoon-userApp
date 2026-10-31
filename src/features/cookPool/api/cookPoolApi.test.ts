@@ -101,6 +101,23 @@ describe('Cook Pool reads', () => {
     expect(profile.dishesByCategory.map((group) => group.category)).toEqual(['veg', 'jain']);
   });
 
+  it('reads a booking’s cook card for that booking, so its time orders the shelves (T1)', async () => {
+    const { pool, calls } = recording({
+      cook: CARD,
+      available: true,
+      inPool: false,
+      addedAt: null,
+      dishesByCategory: [],
+    });
+
+    await pool.profile(COOK_ID, undefined, 'bk-42');
+
+    expect(calls[0]).toMatchObject({
+      path: `/v1/me/cooks/${COOK_ID}?bookingId=bk-42`,
+      method: 'GET',
+    });
+  });
+
   it('refuses a card missing a field the backend always sends', async () => {
     const { visitsWithYou: _dropped, ...partial } = CARD;
     const { pool } = recording({ cooks: [partial] });

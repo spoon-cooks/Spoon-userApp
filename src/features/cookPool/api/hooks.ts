@@ -47,13 +47,18 @@ export function useCookPoolCandidates(
 
 export function useCookPoolProfile(
   cookId: string,
-  options: { enabled?: boolean } = {},
+  /**
+   * `bookingId`: the booking whose cook card this is. Send it only to a V0 that takes it
+   * (`useStepVersionsSupported`, both ship in V0#203): an older one refuses unknown query keys.
+   */
+  options: { enabled?: boolean; bookingId?: string | null } = {},
 ): ScreenQuery<PoolCookProfileDto> {
   const { api } = useRuntime();
   const pool = createCookPoolApi(api);
+  const bookingId = options.bookingId ?? null;
   return useApiQuery<PoolCookProfileDto>({
-    queryKey: cookPoolKeys.profile(cookId),
-    queryFn: ({ signal }) => pool.profile(cookId, signal),
+    queryKey: cookPoolKeys.profile(cookId, bookingId),
+    queryFn: ({ signal }) => pool.profile(cookId, signal, bookingId),
     enabled: options.enabled !== false,
   });
 }

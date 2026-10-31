@@ -36,7 +36,10 @@ import type {
 export const COOK_POOL_PATHS = {
   pool: '/v1/me/cooks',
   candidates: '/v1/me/cooks/candidates',
-  cook: (cookId: string) => `/v1/me/cooks/${cookId}`,
+  cook: (cookId: string, bookingId: string | null = null) =>
+    bookingId === null
+      ? `/v1/me/cooks/${cookId}`
+      : `/v1/me/cooks/${cookId}?bookingId=${encodeURIComponent(bookingId)}`,
   dishLikes: '/v1/me/dish-likes',
   dishLike: (dishCode: string) => `/v1/me/dish-likes/${encodeURIComponent(dishCode)}`,
 } as const;
@@ -69,8 +72,16 @@ export function createCookPoolApi(api: ApiClient) {
     },
 
     /** `GET /v1/me/cooks/:cookId` — a tried or pooled cook's profile and menu. */
-    async profile(cookId: string, signal?: AbortSignal): Promise<PoolCookProfileDto> {
-      return api.request(COOK_POOL_PATHS.cook(cookId), {
+    /**
+     * `GET /v1/me/cooks/:cookId`. With `bookingId` (a booking's cook card), the booking's time
+     * orders the shelves (workbook T1) and its assigned cook is answered on a first visit.
+     */
+    async profile(
+      cookId: string,
+      signal?: AbortSignal,
+      bookingId: string | null = null,
+    ): Promise<PoolCookProfileDto> {
+      return api.request(COOK_POOL_PATHS.cook(cookId, bookingId), {
         parse: (data) => poolCookProfileSchema.parse(data),
         ...withSignal(signal),
       });
