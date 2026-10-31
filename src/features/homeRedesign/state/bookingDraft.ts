@@ -45,9 +45,9 @@ export function initialDraft(input: {
     mode: wanted === 'now' && !input.instantAvailable ? 'later' : wanted,
     focusedDurationId: input.focusedDurationId,
     selectedDurationId: null,
-    // `1625:11215` — the dial opens on Complex, 2 dishes, 4 people.
+    // The dial opens on Complex, 3 dishes, 4 people (owner, 31 Oct 2026; `1625:11215` drew 2).
     complexity: 'complex',
-    dishes: 2,
+    dishes: 3,
     people: 4,
   };
 }

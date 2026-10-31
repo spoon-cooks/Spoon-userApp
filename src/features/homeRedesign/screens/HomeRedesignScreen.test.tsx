@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
 import {
@@ -319,7 +319,8 @@ describe('Active bookings', () => {
         onPressViewAllBookings={onPressViewAllBookings}
       />,
     );
-    expect(screen.getByText('3')).toBeTruthy();
+    // Scoped to the section: the dial's dishes stepper opens on 3 too.
+    expect(within(screen.getByTestId('home-active-bookings')).getByText('3')).toBeTruthy();
     expect(screen.getByText('In progress')).toBeTruthy();
     // The two upcoming cards sit further along the track, hidden from screen readers until the
     // carousel brings them on screen.
