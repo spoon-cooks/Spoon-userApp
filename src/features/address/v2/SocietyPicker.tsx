@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import type { DataState } from '@core/data';
 import { Icon } from '@ui';
@@ -19,15 +27,28 @@ export interface SocietyChoice {
   readonly societyLegacy: boolean;
 }
 
-/** At most this many matches are listed; typing narrows them. "Others" is always added. */
-const MAX_ROWS = 8;
+/**
+ * Where `needle` starts a word of `name` (its first letter or one after a space), or -1. A society
+ * is matched by the start of any of its words: "pres" finds Prestige Shantiniketan, "lake" Prestige
+ * Lakeside Habitat — never the middle of a word.
+ */
+export function wordMatchAt(name: string, needle: string): number {
+  if (needle === '') return -1;
+  const lower = name.toLowerCase();
+  for (let at = lower.indexOf(needle); at >= 0; at = lower.indexOf(needle, at + 1)) {
+    if (at === 0 || /\s/u.test(lower.charAt(at - 1))) return at;
+  }
+  return -1;
+}
 
 /**
  * Society / Building name — Figma `2825:4858` (searching), `2825:4996` (selected), `2825:5126`
  * (no match) and `2829:4973` (Others), built to dev note `2075:11932`:
  *
  * - a required single-select dropdown with type-to-filter, its options the backend's active
- *   societies at the pin (`GET /v1/societies`), each shown by its display name only;
+ *   societies at the pin (`GET /v1/societies`), each shown by its display name only. The list
+ *   appears only once a first letter is typed, and then holds EVERY society with a word starting
+ *   with what was typed (owner, 31 Oct 2026); an empty field shows no list;
  * - tapping an option IS the selection: it fills the field and closes the list. There is no tick
  *   or confirm step, and the list closes only through a selection;
  * - "Others" is always the last row and the fallback when nothing matches (no "no result" error).
@@ -54,6 +75,10 @@ export function SocietyPicker({
   const [query, setQuery] = useState(chosen ? '' : value.society);
 
   const pick = (patch: Partial<SocietyChoice>) => {
+    // The search box unmounts while it still has focus; closing the keyboard first lets the
+    // screen's keyboard avoider drop its padding, which otherwise stayed as a blank gap on Android
+    // after a society was picked (device test, 31 Oct 2026).
+    Keyboard.dismiss();
     onChange(patch);
     setOpen(false);
     setQuery('');
@@ -90,9 +115,7 @@ export function SocietyPicker({
   const needle = query.trim().toLowerCase();
   const matches =
     societies.status === 'ready'
-      ? societies.data
-          .filter((society) => needle === '' || society.name.toLowerCase().includes(needle))
-          .slice(0, MAX_ROWS)
+      ? societies.data.filter((society) => wordMatchAt(society.name, needle) >= 0)
       : [];
 
   return (
@@ -120,68 +143,67 @@ export function SocietyPicker({
           </Pressable>
         )}
       </View>
-      <View style={styles.list} testID={`${testID}-list`}>
-        {societies.status === 'loading' ? (
-          <View style={styles.row} testID={`${testID}-loading`}>
-            <ActivityIndicator color={C.text} />
-          </View>
-        ) : null}
-        {societies.status === 'error' ? (
+      {needle === '' ? null : (
+        <View style={styles.list} testID={`${testID}-list`}>
+          {societies.status === 'loading' ? (
+            <View style={styles.row} testID={`${testID}-loading`}>
+              <ActivityIndicator color={C.text} />
+            </View>
+          ) : null}
+          {societies.status === 'error' ? (
+            <Pressable
+              onPress={onRetry}
+              accessibilityRole="button"
+              style={styles.row}
+              testID={`${testID}-retry`}
+            >
+              <Text style={styles.muted}>Couldn’t load societies. Tap to retry.</Text>
+            </Pressable>
+          ) : null}
+          {matches.map((society, index) => (
+            <Pressable
+              key={society.id}
+              onPress={() =>
+                pick({
+                  societyId: society.id,
+                  society: society.name,
+                  societyOthers: false,
+                  customSociety: '',
+                  societyLegacy: false,
+                })
+              }
+              accessibilityRole="button"
+              accessibilityLabel={society.name}
+              style={({ pressed }) => [styles.row, (pressed || index === 0) && styles.rowActive]}
+              testID={`${testID}-option-${society.id}`}
+            >
+              <Highlighted text={society.name} needle={needle} />
+            </Pressable>
+          ))}
+          {matches.length > 0 || societies.status !== 'ready' ? <View style={styles.rule} /> : null}
           <Pressable
-            onPress={onRetry}
-            accessibilityRole="button"
-            style={styles.row}
-            testID={`${testID}-retry`}
-          >
-            <Text style={styles.muted}>Couldn’t load societies. Tap to retry.</Text>
-          </Pressable>
-        ) : null}
-        {matches.map((society, index) => (
-          <Pressable
-            key={society.id}
             onPress={() =>
-              pick({
-                societyId: society.id,
-                society: society.name,
-                societyOthers: false,
-                customSociety: '',
-                societyLegacy: false,
-              })
+              pick({ societyId: null, society: '', societyOthers: true, societyLegacy: false })
             }
             accessibilityRole="button"
-            accessibilityLabel={society.name}
+            accessibilityLabel="Others"
             style={({ pressed }) => [
               styles.row,
-              (pressed || index === 0) && needle !== '' && styles.rowActive,
+              (pressed || matches.length === 0) && styles.rowActive,
             ]}
-            testID={`${testID}-option-${society.id}`}
+            testID={`${testID}-others`}
           >
-            <Highlighted text={society.name} needle={needle} />
+            <Text style={styles.strong}>Others</Text>
           </Pressable>
-        ))}
-        {matches.length > 0 || societies.status !== 'ready' ? <View style={styles.rule} /> : null}
-        <Pressable
-          onPress={() =>
-            pick({ societyId: null, society: '', societyOthers: true, societyLegacy: false })
-          }
-          accessibilityRole="button"
-          accessibilityLabel="Others"
-          style={({ pressed }) => [
-            styles.row,
-            (pressed || (matches.length === 0 && needle !== '')) && styles.rowActive,
-          ]}
-          testID={`${testID}-others`}
-        >
-          <Text style={styles.strong}>Others</Text>
-        </Pressable>
-      </View>
+        </View>
+      )}
     </View>
   );
 }
 
 /** The name with the typed part in bold, as `2825:4858` draws it. */
 function Highlighted({ text, needle }: { readonly text: string; readonly needle: string }) {
-  const at = needle === '' ? -1 : text.toLowerCase().indexOf(needle);
+  const at = wordMatchAt(text, needle);
   if (at < 0) return <Text style={styles.body}>{text}</Text>;
   return (
     <Text style={styles.body}>
