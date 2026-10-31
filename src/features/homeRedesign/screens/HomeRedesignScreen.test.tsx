@@ -231,7 +231,7 @@ describe('Duration carousel', () => {
   it('opens the dial on Complex, as `1625:11215` draws it', () => {
     render(<HomeRedesignView model={DEMO_HOME_FIRST_TIME} {...actions()} />);
     expect(
-      screen.getByRole('button', { name: 'Complex (biryani, kofta)' }).props.accessibilityState,
+      screen.getByRole('button', { name: 'Complex (kofta, biryani)' }).props.accessibilityState,
     ).toMatchObject({ selected: true });
   });
 

@@ -39,7 +39,7 @@ export const USE_CASES = [
 
 export const DISH_TYPES = [
   { id: 'simple', label: 'Simple (dal, roti, sabzi)' },
-  { id: 'complex', label: 'Complex (biryani, kofta)' },
+  { id: 'complex', label: 'Complex (kofta, biryani)' },
 ] as const;
 
 export const TRUST_POINTS = [
