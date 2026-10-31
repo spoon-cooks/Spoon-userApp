@@ -10,8 +10,8 @@ import type { ExplainerVideoSource } from './components/ExplainerPlayer';
  * so it changes without a release:
  *
  *   recurring_explainer_video_url   the video: an `https://` link to an `.mp4` (or HLS `.m3u8`)
- *                                   on S3. Unset, blank or not `https://`: there is no video, and
- *                                   the landing leaves its explainer block out.
+ *                                   on S3. Unset, blank or not `https://`: no video yet. The
+ *                                   block still shows; its card opens the placeholder player.
  *   recurring_explainer_subhead     the line under the heading ("See the whole flow in under 4
  *                                   minutes."). Unset: that default.
  *

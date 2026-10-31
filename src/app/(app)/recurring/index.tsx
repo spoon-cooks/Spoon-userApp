@@ -26,7 +26,7 @@ export default function RecurringRoute() {
   // One screen per tap: a quick double tap must not open (or pop) a screen twice.
   const guard = useNavigationGuard();
   const goBack = useSafeBack('/home');
-  // Set from Firebase Remote Config; with none set the explainer block is left out.
+  // Set from Firebase Remote Config. The block always shows; the video plays once it is set.
   const explainer = useExplainerVideo();
   const eligibility = useRecurringEligibility();
   const ready = eligibility.state.status === 'ready' ? eligibility.state.data : null;
