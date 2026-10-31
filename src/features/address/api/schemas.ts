@@ -172,6 +172,8 @@ export const addressWriteResponseSchema = z.object({
     longitude: z.number(),
     isDefault: z.boolean(),
     serviceability: addressServiceabilitySchema,
+    /** The address steps' version now stored (V0 #203); absent from an older V0. */
+    detailsVersion: z.number().int().optional(),
   }),
 });
 

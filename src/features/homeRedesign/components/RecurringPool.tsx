@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ART } from '../assets';
@@ -26,14 +27,25 @@ export function RecurringPool({
   onPressCookPool,
   onPressCook,
 }: RecurringPoolProps) {
+  const [rowWidth, setRowWidth] = useState(0);
+  const [chipWidth, setChipWidth] = useState(0);
+  const headline = headlineFit(rowWidth, chipWidth);
   return (
     <View style={styles.section}>
       <Image source={ART.thread} style={styles.thread} resizeMode="stretch" />
 
-      <View style={styles.header}>
-        <Text style={styles.title}>Book for multiple days at once!</Text>
+      <View style={styles.header} onLayout={(event) => setRowWidth(event.nativeEvent.layout.width)}>
+        <Text
+          style={[
+            styles.title,
+            { width: headline.width, fontSize: headline.fontSize, lineHeight: headline.lineHeight },
+          ]}
+        >
+          Book for multiple days at once!
+        </Text>
 
         <Pressable
+          onLayout={(event) => setChipWidth(event.nativeEvent.layout.width)}
           accessibilityRole="button"
           onPress={onPressChip}
           style={[
@@ -81,34 +93,46 @@ export function RecurringPool({
   );
 }
 
+/** `1256:1012` — the headline: 180pt wide, Bold 24/32, three lines. */
+const TITLE_WIDTH = 180;
+const TITLE_SIZE = 24;
+const TITLE_LINE = 32;
+/** Figma's 4pt between the headline and the chip (x 196 → 200). */
+const TITLE_GAP = 4;
+
+/**
+ * The headline beside the chip, as Figma draws it, on any width (device test, 31 Oct 2026).
+ *
+ * Figma's row is 180 + 4 + the chip, about 370pt; a 360dp phone (the S21) has 328 inside its
+ * gutters, and the chip was drawn over "days". The chip keeps its size and its place on the right;
+ * the headline takes what is left beside it and its type scales by the same ratio, so it breaks
+ * into Figma's three lines ("Book for / multiple days / at once!"), smaller. Where Figma's row fits
+ * it is Figma's exactly.
+ */
+function headlineFit(rowWidth: number, chipWidth: number) {
+  const room = rowWidth === 0 || chipWidth === 0 ? TITLE_WIDTH : rowWidth - chipWidth - TITLE_GAP;
+  const scale = Math.max(0.7, Math.min(1, room / TITLE_WIDTH));
+  return {
+    width: Math.min(TITLE_WIDTH, room),
+    fontSize: Math.round(TITLE_SIZE * scale * 10) / 10,
+    lineHeight: Math.round(TITLE_LINE * scale * 10) / 10,
+  };
+}
+
 const styles = StyleSheet.create({
   section: { height: 283, width: '100%', paddingHorizontal: 16, overflow: 'hidden' },
   /** `1256:1013` — 432 × 199 at (−14, 45), its image inset −1.51 % top and bottom. */
   thread: { position: 'absolute', left: -14, top: 45 - 3, width: 432, height: 205 },
-  /**
-   * The headline and the recurring chip share one row that wraps (device test, 31 Oct 2026). Figma
-   * draws a 180pt headline with the chip 16 from the right, which on a 360dp phone (the S21) put
-   * the chip over "days". Now the headline needs at least 170pt beside the chip (Figma's 4pt gap,
-   * so a 393pt iPhone still fits): where it has that, the row reads as Figma (chip on the right,
-   * centred on the headline, ~23pt down); where it does not, the headline takes the full width
-   * (two lines) and the chip sits below it, still above the beads at 134.
-   */
+  /** `1256:1011` — the headline and, centred on it, the chip on the right (`headlineFit`). */
   header: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    columnGap: 4,
-    rowGap: 8,
   },
   title: {
-    flexGrow: 1,
-    flexShrink: 0,
-    flexBasis: 170,
-    maxWidth: '100%',
     fontFamily: F.bold,
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: TITLE_SIZE,
+    lineHeight: TITLE_LINE,
     color: C.text,
   },
   pill: {
@@ -122,8 +146,8 @@ const styles = StyleSheet.create({
   },
   /**
    * `1257:1016` sits at x 200, 186 wide — i.e. 16 from the right edge, in the header row above.
-   * A longer label ("Check Recurring", "Recurring · Live") takes room from the headline, or moves
-   * the chip under it, instead of running off-screen.
+   * A longer label ("Check Recurring", "Recurring · Live") takes room from the headline, whose type
+   * then scales down (`headlineFit`), instead of running off-screen or over it.
    */
   recurring: { flexShrink: 0, backgroundColor: C.lime },
   /** `1290:1183` — 'Check Recurring': white with a 1pt `#FFD600` hairline. */
