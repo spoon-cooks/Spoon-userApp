@@ -186,6 +186,16 @@ describe('Service flow screen (2165:11841)', () => {
     expect(screen.getByText('What she’ll clean up')).toBeTruthy();
   });
 
+  it('cooking: Check payment details under Extend opens the tax details, not the payment sheet', () => {
+    const props = renderPhase(
+      { phase: 'cooking', bannerSlot: null },
+      { onExtendPaymentDetails: jest.fn() },
+    );
+    fireEvent.press(screen.getByTestId('service-visit-extend-payment-details'));
+    expect(props.onExtendPaymentDetails).toHaveBeenCalled();
+    expect(props.onPaymentDetails).not.toHaveBeenCalled();
+  });
+
   it('cooking with nothing free: "Can’t extend this visit" and Book another visit', () => {
     const props = renderPhase({ phase: 'cooking', extendChoices: extendChoicesFrom([]) });
     expect(screen.getByText('Can’t extend this visit')).toBeTruthy();

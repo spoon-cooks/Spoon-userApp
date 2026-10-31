@@ -513,7 +513,12 @@ export function ExtendCard({
             </Text>
           </Pressable>
           {onPaymentDetails === undefined ? null : (
-            <Pressable onPress={onPaymentDetails} accessibilityRole="link" hitSlop={6}>
+            <Pressable
+              onPress={onPaymentDetails}
+              accessibilityRole="link"
+              hitSlop={6}
+              testID={`${testID}-payment-details`}
+            >
               <Text style={styles.linkSecondary}>Check payment details</Text>
             </Pressable>
           )}

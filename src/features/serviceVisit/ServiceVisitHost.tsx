@@ -6,6 +6,7 @@ import { currentSkewMs } from '@core/time';
 import { useExtensionOptions, useMyRatingMedia, useTracking } from '@features/booking';
 import type { BookingDetailDto, ExtensionOptionDto } from '@features/booking';
 import { cookCardLines, cookProfileFrom, useCookPoolProfile } from '@features/cookPool';
+import { TaxDetailsDialog } from '@features/homeRedesign';
 import {
   PaymentDetailsSheet,
   RateVisitCard,
@@ -117,6 +118,7 @@ export function ServiceVisitHost({
     () => briefByBooking.get(booking.id) ?? [],
   );
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [taxOpen, setTaxOpen] = useState(false);
   const [tipPaid, setTipPaid] = useState<ServiceVisitModel['tipPaid']>(null);
   const [rated, setRated] = useState(false);
   // The score picked on the rate card; 4 and above warms the tip card (`2165:14445`).
@@ -303,6 +305,7 @@ export function ServiceVisitHost({
         model={model}
         onBack={onBack}
         onPaymentDetails={() => setPaymentOpen(true)}
+        onExtendPaymentDetails={() => setTaxOpen(true)}
         onModifyBooking={onModifyBooking}
         onHelp={onHelp}
         onCall={booking.allowedActions.canCallCook ? onCall : undefined}
@@ -362,6 +365,12 @@ export function ServiceVisitHost({
           : {})}
       />
       {wholeBooking.sheet}
+      {/* The extension is taxed at the booking's rate. */}
+      <TaxDetailsDialog
+        visible={taxOpen}
+        onClose={() => setTaxOpen(false)}
+        gstPercent={booking.price.taxRateBps / 100}
+      />
     </>
   );
 }

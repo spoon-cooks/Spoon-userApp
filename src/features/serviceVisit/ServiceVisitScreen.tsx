@@ -95,6 +95,11 @@ export interface ServiceVisitScreenProps {
   readonly model: ServiceVisitModel;
   readonly onBack: () => void;
   readonly onPaymentDetails: () => void;
+  /**
+   * "Check payment details" under Extend: the tax details popup, as under Schedule for Later's
+   * Confirm Booking (device test, 31 Oct 2026). Falls back to `onPaymentDetails` when not given.
+   */
+  readonly onExtendPaymentDetails?: (() => void) | undefined;
   readonly onModifyBooking?: (() => void) | undefined;
   readonly onHelp?: (() => void) | undefined;
   readonly onCall?: (() => void) | undefined;
@@ -119,6 +124,7 @@ export function ServiceVisitScreen({
   model,
   onBack,
   onPaymentDetails,
+  onExtendPaymentDetails,
   onModifyBooking,
   onHelp,
   onCall,
@@ -209,7 +215,7 @@ export function ServiceVisitScreen({
       cookName={model.cookName}
       extending={extending}
       onExtend={onExtend}
-      onPaymentDetails={onPaymentDetails}
+      onPaymentDetails={onExtendPaymentDetails ?? onPaymentDetails}
       onBookAnother={onBookAnother}
       testID={`${testID}-extend`}
     />
