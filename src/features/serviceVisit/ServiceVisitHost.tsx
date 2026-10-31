@@ -49,6 +49,7 @@ import {
   reassignedOneTime,
   recurringPaymentSheetFrom,
   servicePhaseOf,
+  visitBannerOf,
 } from './model';
 import type { ServicePhase } from './model';
 
@@ -174,6 +175,7 @@ export function ServiceVisitHost({
    * never shows it (dev note `2353:17578`).
    */
   const reassigned = reassignedOneTime(booking);
+  const banner = visitBannerOf(booking, phase);
 
   const model: ServiceVisitModel = {
     phase,
@@ -183,18 +185,8 @@ export function ServiceVisitHost({
     title:
       // Every one-time visit, Instant or scheduled, is "One-time visit" (Figma's "On-time" was a typo, 31 Oct 2026).
       link !== null ? 'Recurring visit' : 'One-time visit',
-    bannerTitle:
-      start === null
-        ? length
-        : phase === 'assigned' || phase === 'completed'
-          ? day(start)
-          : `${clock(start)} · ${length}`,
-    bannerSlot:
-      start === null || !(phase === 'assigned' || phase === 'completed')
-        ? null
-        : `${clock(start)} – ${clock(
-            new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString(),
-          )} · ${length}`,
+    bannerTitle: banner.title,
+    bannerSlot: banner.slot,
     cook: {
       name: cookNameOf(cookName) ?? 'Your cook',
       ...lines,

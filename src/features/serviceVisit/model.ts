@@ -90,6 +90,34 @@ export function reassignedOneTime(booking: BookingDetailDto): boolean {
   return booking.reassignment?.occurred === true && (booking.recurring ?? null) === null;
 }
 
+/**
+ * The visit banner's two lines. A scheduled visit names its time: the start and length while the
+ * visit is live ("9:00 AM · 1 hr"), the date over the slot before and after it ("Wed, 14 Oct" /
+ * "9:00 AM – 10:00 AM · 1 hr").
+ *
+ * An Instant visit has no booked time, so it says "Instant · 1 hr" where a scheduled one says its
+ * time (Figma `Visit details / In progress · Cook on the way (ETA)`, device test 31 Oct 2026):
+ * the title while it is live, the line under the date once it is done.
+ */
+export function visitBannerOf(
+  booking: Pick<BookingDetailDto, 'slotType' | 'scheduledStart' | 'durationMinutes' | 'timing'>,
+  phase: ServicePhase,
+): { readonly title: string; readonly slot: string | null } {
+  const start = booking.scheduledStart ?? booking.timing.actualStart;
+  const length = duration(booking.durationMinutes);
+  const dated = phase === 'assigned' || phase === 'completed';
+  if (booking.slotType === 'instant') {
+    const instant = `Instant · ${length}`;
+    return dated && start !== null
+      ? { title: day(start), slot: instant }
+      : { title: instant, slot: null };
+  }
+  if (start === null) return { title: length, slot: null };
+  if (!dated) return { title: `${clock(start)} · ${length}`, slot: null };
+  const end = new Date(Date.parse(start) + booking.durationMinutes * 60_000).toISOString();
+  return { title: day(start), slot: `${clock(start)} – ${clock(end)} · ${length}` };
+}
+
 /** "1 hr", "1.5 hrs", "45 min". */
 export function duration(minutes: number): string {
   if (minutes < 60) return `${String(minutes)} min`;

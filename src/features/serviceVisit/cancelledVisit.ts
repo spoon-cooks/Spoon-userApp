@@ -215,10 +215,20 @@ export function cancelledVisitModelFrom(
   return {
     ...base,
     variant: 'cancelled',
-    banner: {
-      date: start === null ? length : day(start),
-      slot: start === null || end === null ? length : `${clock(start)} – ${clock(end)} · ${length}`,
-    },
+    // An Instant visit has no booked time: "Instant · 1 hr" where a scheduled one has its slot.
+    banner:
+      booking.slotType === 'instant'
+        ? {
+            date: start === null ? `Instant · ${length}` : day(start),
+            slot: `Instant · ${length}`,
+          }
+        : {
+            date: start === null ? length : day(start),
+            slot:
+              start === null || end === null
+                ? length
+                : `${clock(start)} – ${clock(end)} · ${length}`,
+          },
     menu: [],
     cancelled: {
       ...base.cancelled,

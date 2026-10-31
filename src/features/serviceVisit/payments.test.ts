@@ -1,7 +1,7 @@
 import type { BookingDetailDto, RefundDto } from '@features/booking';
 
 import { cancelledVisitModelFrom } from './cancelledVisit';
-import { paidTipOf, paymentSheetFrom, recurringPaymentSheetFrom } from './model';
+import { paidTipOf, paymentSheetFrom, recurringPaymentSheetFrom, visitBannerOf } from './model';
 
 const START = '2026-10-14T03:30:00.000Z';
 
@@ -254,5 +254,37 @@ describe('Visit details · Cancelled for a one-time booking (2165:11853, dev not
     );
     expect(model.refund).toBeNull();
     expect(model.charge.amount).toBe('₹0');
+  });
+});
+
+describe('Visit banner: Instant in place of a time (device test, 31 Oct 2026)', () => {
+  const scheduled = booking();
+  const instant = booking({
+    slotType: 'instant',
+    scheduledStart: null,
+    timing: { arrivedAt: null, actualStart: null, expectedEnd: null, actualEnd: null },
+  });
+
+  it('names a scheduled visit by its time', () => {
+    expect(visitBannerOf(scheduled, 'onTheWay')).toEqual({ title: '9:00 AM · 1 hr', slot: null });
+    expect(visitBannerOf(scheduled, 'assigned')).toEqual({
+      title: 'Wed, 14 Oct',
+      slot: '9:00 AM – 10:00 AM · 1 hr',
+    });
+  });
+
+  it('says "Instant · 1 hr" for an Instant visit, live or not yet started', () => {
+    expect(visitBannerOf(instant, 'onTheWay')).toEqual({ title: 'Instant · 1 hr', slot: null });
+    expect(visitBannerOf(instant, 'assigned')).toEqual({ title: 'Instant · 1 hr', slot: null });
+    const cooking = { ...instant, timing: { ...instant.timing, actualStart: START } };
+    expect(visitBannerOf(cooking, 'cooking')).toEqual({ title: 'Instant · 1 hr', slot: null });
+  });
+
+  it('dates a finished Instant visit, with "Instant" under it in place of the slot', () => {
+    const done = { ...instant, timing: { ...instant.timing, actualStart: START } };
+    expect(visitBannerOf(done, 'completed')).toEqual({
+      title: 'Wed, 14 Oct',
+      slot: 'Instant · 1 hr',
+    });
   });
 });
