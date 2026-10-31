@@ -3,7 +3,13 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 
 import { fromStatus } from '@core/errors';
 import { DEMO_COOK_POOL } from '@/demo/fixtures/cookPool';
-import { createStubApi, createTestRuntime, renderWithRuntime } from '@/test/renderWithRuntime';
+import {
+  DEFAULT_API_STUBS,
+  createStubApi,
+  createTestRuntime,
+  renderWithRuntime,
+} from '@/test/renderWithRuntime';
+import { authKeys } from '@features/auth';
 import type { StubHandlers } from '@/test/renderWithRuntime';
 
 import { CookPoolSourceProvider } from './data';
@@ -232,6 +238,33 @@ describe('Cook Pool on the API (default source)', () => {
     expect(deleted).toEqual([COOK_ID]);
     const keys = invalidate.mock.calls.map(([filters]) => filters?.queryKey);
     expect(keys).toEqual(expect.arrayContaining([['cookPool'], ['recurring']]));
+  });
+
+  it('reads the profile again when the household changes its diet, so its dishes follow', async () => {
+    // Device test, 31 Oct 2026: the shelves kept the old diet's dishes until a restart.
+    const me = {
+      ...(DEFAULT_API_STUBS['GET /v1/me']?.(undefined) as Record<string, unknown>),
+      dietaryPreference: 'non-vegetarian',
+      nonVegPreferences: ['chicken'],
+    };
+    let reads = 0;
+    const { queryClient } = renderApi(
+      <CookProfileScreen cookId={COOK_ID} onBack={jest.fn()} onRemoved={jest.fn()} />,
+      {
+        'GET /v1/me': () => me,
+        [`GET /v1/me/cooks/${COOK_ID}`]: () => {
+          reads += 1;
+          return PROFILE;
+        },
+      },
+    );
+    await waitFor(() => expect(screen.getByText('Visits with you: 3')).toBeTruthy());
+    expect(reads).toBe(1);
+
+    // A profile save puts the new answers in the cached identity, as `useUpdateProfile` does.
+    queryClient.setQueryData(authKeys.me(), { ...me, dietaryPreference: 'vegetarian' });
+
+    await waitFor(() => expect(reads).toBe(2));
   });
 
   it('keeps the dialog open with the reason when the DELETE fails', async () => {
