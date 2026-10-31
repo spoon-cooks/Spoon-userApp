@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { formatMinutes } from '@core/format';
 import { createServerClock, splitDuration, useCountdown } from '@core/time';
 import { CookCard, StatusBanner } from '@ui';
 import type { CookViewModel } from '@ui';
@@ -67,7 +68,7 @@ export interface InServiceBodyProps {
  * rounding an overrun up would overstate how late a service is running.
  */
 function formatRemaining(ms: number): string {
-  return `${Math.ceil(ms / 60_000)} mins`;
+  return formatMinutes(Math.ceil(ms / 60_000));
 }
 
 /**
@@ -80,7 +81,7 @@ function formatRemaining(ms: number): string {
  */
 function formatOverrun(ms: number): string {
   const { hours, minutes } = splitDuration(ms);
-  return hours === 0 ? `${minutes} mins` : `${hours}h ${minutes}m`;
+  return hours === 0 ? formatMinutes(minutes) : `${hours}h ${minutes}m`;
 }
 
 export function InServiceBody({

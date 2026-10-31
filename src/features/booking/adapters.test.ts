@@ -172,7 +172,7 @@ describe('trackingDetailFrom', () => {
     expect(view.reassigned?.etaLabel).toBe('21 mins');
   });
 
-  it('rounds to the nearest minute and never draws "0 mins" under "arriving in"', () => {
+  it('rounds to the nearest minute and never draws "0 min" under "arriving in"', () => {
     const at = new Date('2026-08-18T09:35:00.000Z');
     const labelAt = (nowIso: string) =>
       trackingDetailFrom({
@@ -183,7 +183,7 @@ describe('trackingDetailFrom', () => {
 
     expect(labelAt('2026-08-18T09:19:40.000Z')).toBe('15 mins'); // 15m20s rounds down
     expect(labelAt('2026-08-18T09:19:20.000Z')).toBe('16 mins'); // 15m40s rounds up
-    expect(labelAt('2026-08-18T09:34:40.000Z')).toBe('1 mins'); // 20s floors to one
+    expect(labelAt('2026-08-18T09:34:40.000Z')).toBe('1 min'); // 20s floors to one
   });
 
   it('counts down on the LATE banner — `292:469` draws the same panel as on-time', () => {
@@ -226,7 +226,7 @@ describe('trackingDetailFrom', () => {
     expect(view.tracking?.tone).toBe('warning');
     expect(view.tracking?.bannerMessage).toBe('Asha is heading over');
     // One minute past the ETA: the minutes past it, positive, as the Cook App shows.
-    expect(view.tracking?.etaLabel).toBe('1 mins');
+    expect(view.tracking?.etaLabel).toBe('1 min');
   });
 
   it('reads "0 mins" at the ETA and counts up past it, never "—"', () => {
@@ -254,7 +254,7 @@ describe('trackingDetailFrom', () => {
       }),
     });
 
-    expect(view.tracking?.etaLabel).toBe('1 mins');
+    expect(view.tracking?.etaLabel).toBe('1 min');
     expect(view.tracking?.tone).toBe('positive');
   });
 

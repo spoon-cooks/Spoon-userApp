@@ -1,6 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { formatPaise } from '@core/format';
+import { formatMinutes, formatPaise } from '@core/format';
 import { DurationCarousel } from '@ui/v2/DurationCarousel';
 
 import { ART } from '../assets';
@@ -99,7 +99,7 @@ export function BookSection({
               <View style={styles.etaRow}>
                 <Text style={styles.etaLabel}>Arriving in</Text>
                 <View style={styles.etaChip}>
-                  <Text style={styles.etaValue}>{`${etaMins} mins`}</Text>
+                  <Text style={styles.etaValue}>{formatMinutes(etaMins)}</Text>
                 </View>
               </View>
             )}

@@ -5,6 +5,7 @@ import { addressLineOf, currentAddressOf, useAddresses } from '@features/address
 import { useCatalogue } from '@features/catalogue';
 import { useInstantAvailability } from '@features/availability';
 import { ready } from '@core/data';
+import { formatMinutes } from '@core/format';
 import type { ScreenQuery } from '@core/data';
 import { currentSkewMs, slotHasEnded } from '@core/time';
 
@@ -323,10 +324,13 @@ export function useHomeData(): ScreenQuery<HomeViewModel> {
               }
             : {
                 ...base,
-                header: { ...base.header, etaHeadline: `Spoon in ${promiseMinutes} mins` },
+                header: {
+                  ...base.header,
+                  etaHeadline: `Spoon in ${formatMinutes(promiseMinutes)}`,
+                },
                 tiles: base.tiles.map((tile) =>
                   tile.id === 'instant' && tile.subtitleEmphasis !== undefined
-                    ? { ...tile, subtitleEmphasis: ` ${promiseMinutes} mins` }
+                    ? { ...tile, subtitleEmphasis: ` ${formatMinutes(promiseMinutes)}` }
                     : tile,
                 ),
               },
