@@ -204,6 +204,8 @@ describe('Service flow screen (2165:11841)', () => {
     expect(input.props.value).toBe('₹');
     fireEvent.changeText(input, '₹75');
     expect(screen.getByTestId('service-visit-tip-other-input').props.value).toBe('₹75');
+    // "₹" and five digits at most, held by the field itself.
+    expect(screen.getByTestId('service-visit-tip-other-input').props.maxLength).toBe(6);
     fireEvent.press(screen.getByTestId('service-visit-tip-pay'));
     expect(props.onTip).toHaveBeenCalledWith(7500);
   });

@@ -253,11 +253,33 @@ export function AddressDetailsScreen({
   const leaveReceiver = () => {
     receiverFocused.current = false;
   };
+
+  /*
+   * The society search box: while it is in use the form scrolls it to the top of what the
+   * keyboard leaves visible, so neither the box nor the matches under it are cut off by the
+   * keyboard and the Save dock (device test, 31 Oct 2026). On focus, when the keyboard finishes
+   * opening, and as the typed text changes the list.
+   */
+  const scrollY = useRef(0);
+  const scrollTop = useRef(0);
+  const societyBox = useRef<View>(null);
+  const societySearching = useRef(false);
+  const toSociety = () =>
+    societyBox.current?.measureInWindow((_x, y) => {
+      const target = scrollY.current + y - (scrollTop.current + SOCIETY_TOP_GAP);
+      scrollRef.current?.scrollTo({ y: Math.max(0, target), animated: true });
+    });
+  const onSocietySearching = (searching: boolean) => {
+    societySearching.current = searching;
+    if (searching) setTimeout(toSociety, 50);
+  };
+
   useEffect(() => {
     // After a beat: the keyboard avoider pads the form on this same event, and scrolling before
     // that layout lands scrolls a form that has not shrunk yet.
     const shown = Keyboard.addListener('keyboardDidShow', () => {
       if (receiverFocused.current) setTimeout(toReceiver, 150);
+      if (societySearching.current) setTimeout(toSociety, 150);
     });
     return () => shown.remove();
   }, []);
@@ -279,6 +301,13 @@ export function AddressDetailsScreen({
           if (!receiverOpening.current) return;
           receiverOpening.current = false;
           toReceiver();
+        }}
+        onScroll={(event) => {
+          scrollY.current = event.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
+        onLayout={(event) => {
+          scrollTop.current = event.nativeEvent.layout.y;
         }}
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
@@ -365,13 +394,16 @@ export function AddressDetailsScreen({
                     }}
                     testID={`${testID}-tower`}
                   />
-                  <SocietyPicker
-                    value={form}
-                    societies={societies}
-                    onRetry={onRetrySocieties}
-                    onChange={set}
-                    testID={`${testID}-society`}
-                  />
+                  <View ref={societyBox} collapsable={false}>
+                    <SocietyPicker
+                      value={form}
+                      societies={societies}
+                      onRetry={onRetrySocieties}
+                      onChange={set}
+                      onSearching={onSocietySearching}
+                      testID={`${testID}-society`}
+                    />
+                  </View>
                 </>
               ) : (
                 <>
@@ -685,6 +717,9 @@ function LabelChip({
     </Pressable>
   );
 }
+
+/** Space kept above the society box when the form scrolls it up for the keyboard. */
+const SOCIETY_TOP_GAP = 12;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.base },

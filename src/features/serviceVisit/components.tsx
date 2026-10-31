@@ -683,6 +683,9 @@ export function TipCard({
                   <TextInput
                     value={`₹${other}`}
                     onChangeText={(text) => setOther(text.replace(/\D/g, '').slice(0, 5))}
+                    // "₹" + five digits, stopped by the keyboard itself: trimming a 6th digit after
+                    // it was drawn made it flash in and out (device test, 31 Oct 2026).
+                    maxLength={6}
                     keyboardType="number-pad"
                     autoFocus
                     style={styles.tipInput}
@@ -1086,13 +1089,17 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     backgroundColor: C.positive,
   },
+  /** The amounts' own 24pt line, so the "Other" pill is exactly as tall as theirs. */
   tipInput: {
     flex: 1,
     minWidth: 24,
+    height: T.button.lineHeight,
     padding: 0,
     textAlign: 'center',
+    textAlignVertical: 'center',
     fontFamily: T.button.fontFamily,
     fontSize: T.button.fontSize,
+    lineHeight: T.button.lineHeight,
     color: C.text,
     includeFontPadding: false,
   },

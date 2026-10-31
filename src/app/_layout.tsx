@@ -15,7 +15,7 @@ import { createAppRuntime } from '@core/runtime';
 import { RuntimeProvider } from '@core/runtimeContext';
 import { useSessionStore } from '@core/store';
 import { AppUpdateGate } from '@features/appUpdate';
-import { ErrorBoundary, LaunchSplash, ThemeProvider } from '@ui';
+import { ErrorBoundary, FullScreenLoadingHost, LaunchSplash, ThemeProvider } from '@ui';
 import { BackdropTargetRoot } from '@ui/v2/Backdrop';
 
 /**
@@ -125,6 +125,8 @@ function RootProviders({ runtime }: { readonly runtime: ReturnType<typeof create
                   </BackdropTargetRoot>
                 </AppUpdateGate>
               </ErrorBoundary>
+              {/* Every screen's full-screen wait, over the whole window (`FullScreenLoading`). */}
+              <FullScreenLoadingHost />
             </ThemeProvider>
           </RuntimeProvider>
         </QueryProvider>
